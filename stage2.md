@@ -27,9 +27,33 @@ Purpose of the project is to propose a web app with an intuitive interface for g
 
 ## Scopes
 
+### In-Scope
+
+| Feature | Description |
+|------------|----------|
+| Web platform to retrieve betting informations | Creation of a website with all information provided. |
+| Create users profiles | Have the possibilities to have an user and admin account, with authentification. |
+| Filters | Had filters to select informations users want. |
+| Dashboard | Make the website the most intuitive as possible with a dashboard, like tops of bookmakers. |
+| Settings | In admin settings, give the possibilty to chosse the time between refresh of informations. |
+| Calculate TRJ | Calculate TRJ from betting coasts and retrieve as a top with bookmakers.|
+| Alerts | We want to send an email when there is a significant variance in coasts.|
+| Langage | The website will be in english. |
+
+
+### Out-of-Scope
+
+| Feature | Description |
+|------------|----------|
+| Mobile App | We are just doing a website. |
+| Scrap from bookmakers | Scrapping directly from bookmakers is really difficult, we are going to scrap from referentials betting coasts websites. |
+| All sports | We concentrated on only few sports for the moment. |
+| Notifications | We just want to send emails for alerts. |
+| Translation | The website will be in english. |
 
 ## Risks Identified
 
 
 ## High-level Plan
+
 
