@@ -19,10 +19,12 @@ The purpose of this project is to develop a web application with an intuitive in
 
 | Role | Responsabilities | Affectation | 
 |------------|----------|------------|
-| Project Manager | responsable | name | 
-| Front-end developer | responsable | name |
-| Back-end developer | responsable |  name |
-| Scrapper | responsable | name |
+| Project Manager | responsable | Dorine LEMEE |
+| Database Administrator | responsable | Simon PAULIN |
+| DevOps | responsable | Simon PAULIN |
+| Front-end developer | responsable | Dorine LEMEE |
+| Back-end developer | responsable | Louis MANCHON |
+| Scrapper | responsable | Simon PAULIN |
 
 
 ## Scopes
@@ -95,4 +97,5 @@ Phase 6 : Testing & Risk Management (Week 7)
 Phase 7 : Deployment & Final Presentation (Week 8)
 - Deploy on server/VM or Docker.
 - Prepare final presentation and user documentation.
+
 
