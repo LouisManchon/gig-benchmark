@@ -1,0 +1,43 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: app
+      MYSQL_USER: app
+      MYSQL_PASSWORD: app
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - dbdata:/var/lib/mysql # persist DB
+    expose:
+      - "3306:3306" # expose MySQL
+
+  backend:
+    build: ./backend
+    depends_on:
+      - db # wait for DB
+    ports:
+      - "8000:8000" # Django API
+    volumes:
+      - backend_media:/app/media
+      - backend_static:/app/staticfiles
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - db
+      - backend
+    ports:
+      - "3000:80" # Symfony app
+
+  scraper:
+    build: ./scrapping
+    depends_on:
+      - db
+      - backend
+
+volumes:
+  dbdata:
+  backend_media:
+  backend_static:

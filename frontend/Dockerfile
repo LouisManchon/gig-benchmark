@@ -2,7 +2,7 @@
 # Base image: Official PHP 8.2 with Apache HTTPD
 # Provides Apache + PHP pre-installed (stable, maintained upstream).
 # ------------------------------------------------------------------------------
-FROM php:8.2-apache
+FROM php:8.2-apache AS base
 
 # ------------------------------------------------------------------------------
 # Install system dependencies required by PHP extensions and Composer
@@ -11,11 +11,8 @@ FROM php:8.2-apache
 # - libzip-dev: required for zip extension
 # ------------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git \
-    unzip \
-    libicu-dev \
-    libzip-dev \
-  && rm -rf /var/lib/apt/lists/*
+    git unzip libicu-dev libzip-dev \
+    && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------------------------------------------------------
 # Install PHP extensions commonly needed by Symfony
@@ -25,7 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # - opcache: Boosts PHP performance by caching compiled scripts
 # ------------------------------------------------------------------------------
 RUN docker-php-ext-configure intl \
-  && docker-php-ext-install -j"$(nproc)" pdo_mysql intl zip opcache
+    && docker-php-ext-install -j"$(nproc)" pdo_mysql intl zip opcache
 
 # ------------------------------------------------------------------------------
 # Enable Apache modules required by Symfony
@@ -54,6 +51,56 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 # ------------------------------------------------------------------------------
 WORKDIR /var/www/html
 
+
+# ==============================================================================
+# Builder stage: install Composer deps with cache-friendly layers
+# (no rebuild when you down)
+# ==============================================================================
+FROM base AS builder
+
+# ------------------------------------------------------------------------------
+# Copy only composer files first (cache layer for deps)
+# ------------------------------------------------------------------------------
+COPY --chown=www-data:www-data composer.json ./
+
+# ------------------------------------------------------------------------------
+# Install PHP dependencies (prod by default; switch with --build-arg APP_ENV=dev)
+# ------------------------------------------------------------------------------
+ARG APP_ENV=prod
+ENV APP_ENV=${APP_ENV}
+
+# --no-dev en prod, sinon on garde les dev-deps
+RUN if [ "$APP_ENV" = "prod" ]; then \
+    composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader; \
+    else \
+    composer install --no-interaction --prefer-dist --no-progress; \
+    fi
+
+# ------------------------------------------------------------------------------
+# Copy the rest of the application source
+# ------------------------------------------------------------------------------
+COPY --chown=www-data:www-data . .
+
+# ==============================================================================
+# Runtime stage
+# ==============================================================================
+FROM base AS runtime
+
+# ------------------------------------------------------------------------------
+# Copy app from builder (vendor + code + public)
+# ------------------------------------------------------------------------------
+COPY --from=builder --chown=www-data:www-data /var/www/html /var/www/html
+
+# ------------------------------------------------------------------------------
+# Opcache recommended settings (améliore les perfs en prod)
+# ------------------------------------------------------------------------------
+RUN { \
+    echo 'opcache.enable=1'; \
+    echo 'opcache.validate_timestamps=0'; \
+    echo 'opcache.preload=/var/www/html/config/preload.php'; \
+    echo 'opcache.preload_user=www-data'; \
+    } > /usr/local/etc/php/conf.d/opcache-recommended.ini || true
+
 # ------------------------------------------------------------------------------
 # Permissions: Apache (www-data) should own app dir for cache/logs
 # ------------------------------------------------------------------------------
@@ -64,3 +111,8 @@ USER www-data
 # Expose Apache default port
 # ------------------------------------------------------------------------------
 EXPOSE 80
+
+# ------------------------------------------------------------------------------
+# Default command (Apache in foreground)
+# ------------------------------------------------------------------------------
+CMD ["apache2-foreground"]

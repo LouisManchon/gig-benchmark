@@ -5,48 +5,37 @@
 FROM python:3.11-slim
 
 # ------------------------------------------------------------------------------
-# System build tools and headers commonly required by scraping stacks:
-# - build-essential: compilers for native extensions
-# - libxml2-dev, libxslt1-dev: enable lxml (HTML/XML parsing)
-# - libffi-dev: required by some cryptography/auth libraries
-# - curl, ca-certificates: network tooling and TLS roots
-# Keep it minimal; add only what's necessary for your dependencies.
+# Basic Python container best practices: no .pyc, unbuffered logs, no pip cache
+# ------------------------------------------------------------------------------
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# ------------------------------------------------------------------------------
+# System deps often needed by scrapers (lxml, cryptography, etc.)
 # ------------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    libxml2-dev \
-    libxslt1-dev \
-    libffi-dev \
-    curl \
-    ca-certificates \
-  && rm -rf /var/lib/apt/lists/*
+    build-essential libxml2-dev libxslt1-dev libffi-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # ------------------------------------------------------------------------------
-# Create a non-root runtime user for better container security.
-# ------------------------------------------------------------------------------
-RUN useradd -m appuser
-USER appuser
-
-# ------------------------------------------------------------------------------
-# Workdir for the scraper application code.
+# App workspace
 # ------------------------------------------------------------------------------
 WORKDIR /app
 
 # ------------------------------------------------------------------------------
-# Install Python dependencies via requirements.txt (added in next step).
-# Copying the manifest first leverages Docker layer caching.
-# If the file is absent/empty, pip will no-op.
+# Install Python deps (cache-friendly: copy requirements first)
 # ------------------------------------------------------------------------------
-COPY --chown=appuser:appuser requirements.txt /app/requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt || true
+COPY requirements.txt .
+RUN python -m pip install --upgrade pip \
+ && pip install -r requirements.txt
 
 # ------------------------------------------------------------------------------
-# Copy the rest of the project files (your scraper sources).
+# Copy sources
 # ------------------------------------------------------------------------------
-COPY --chown=appuser:appuser . /app
+COPY . .
 
 # ------------------------------------------------------------------------------
 # Default command (override with docker compose if needed).
 # ------------------------------------------------------------------------------
 CMD ["python", "app.py"]
-
