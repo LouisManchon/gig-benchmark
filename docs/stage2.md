@@ -19,12 +19,12 @@ The purpose of this project is to develop a web application with an intuitive in
 
 | Role | Responsabilities | Affectation | 
 |------------|----------|------------|
-| Project Manager | responsable | Dorine LEMEE |
-| Database Administrator | responsable | Simon PAULIN |
-| DevOps | responsable | Simon PAULIN |
-| Front-end developer | responsable | Dorine LEMEE |
-| Back-end developer | responsable | Louis MANCHON |
-| Scrapper | responsable | Simon PAULIN |
+| Project Manager | Coordinates the project, ensures deadlines are met | Dorine LEMEE |
+| Database Administrator | Designs schema, manages performance and integrity | Simon PAULIN |
+| DevOps | Manages deployment, Docker environments | Simon PAULIN |
+| Front-end developer | Develops the user interface, ensures responsiveness | Dorine LEMEE |
+| Back-end developer | Implements business logic, API, database connections | Louis MANCHON |
+| Scrapper | Develops and maintains scraping scripts | Simon PAULIN |
 
 
 ## Scopes
@@ -97,5 +97,6 @@ Phase 6 : Testing & Risk Management (Week 7)
 Phase 7 : Deployment & Final Presentation (Week 8)
 - Deploy on server/VM or Docker.
 - Prepare final presentation and user documentation.
+
 
 
