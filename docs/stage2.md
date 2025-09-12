@@ -3,8 +3,11 @@
 ## Project purpose
 
 The purpose of this project is to develop a web application with an intuitive interface that aggregates betting odds from different bookmakers.
+To achieve this goal, we have defined several SMART objectives that will guide the development process step by step.
 
 ## SMART Objectives
+
+The objectives are detailed using the SMART methodology (Specific, Measurable, Achievable, Relevant, Time-bound) to ensure clarity and feasibility. These objectives represent the concrete features and functionalities that will progressively shape the application.
 
 | Objectives | Specific | Measurable | Achievable | Relevant | Time-bound |
 |------------|----------|------------|------------|----------|------------|
@@ -17,6 +20,11 @@ The purpose of this project is to develop a web application with an intuitive in
 
 ## Stackeholders and Team Roles
 
+The success of the project relies on well-structured collaboration between team members. Each role has been carefully assigned to ensure that technical, organizational, and managerial aspects are covered.
+With the team structure clarified, we can now delimit the scope of the project to make sure efforts remain focused and realistic.
+
+### Team Roles
+
 | Role | Responsabilities | Affectation | 
 |------------|----------|------------|
 | Project Manager | Coordinates the project, ensures deadlines are met | Dorine LEMEE |
@@ -26,8 +34,19 @@ The purpose of this project is to develop a web application with an intuitive in
 | Back-end developer | Implements business logic, API, database connections | Louis MANCHON |
 | Scrapper | Develops and maintains scraping scripts | Simon PAULIN |
 
+### Stakeholders
+
+| Stakeholder | Role/Interest | Influence on Project | 
+|------------|----------|------------|
+| Tutor | Provides guidance, validates technical and functional choices, ensures alignment with project objectives. | High : validates deliverables and scope. |
+| End-Users | Use the platform to compare odds and evaluate usability. Provide feedback on dashboard and filters. | Medium : their feedback impacts usability and relevance. |
+| Development Team | Designs, develops, deploys, and maintains the application. | Low : they maintains application after the end of the project. |
+| University | Define academic expectations, deadlines, and evaluation criteria. | High : determine constraints and final assessment. |
 
 ## Scopes
+
+The scope defines what will be included in the project (in-scope) and what will be intentionally excluded (out-of-scope). This helps avoid unnecessary complexity and ensures alignment with the tutor’s expectations.
+However, even with a well-defined scope, certain risks remain and must be anticipated.
 
 ### In-Scope
 
@@ -54,6 +73,9 @@ The purpose of this project is to develop a web application with an intuitive in
 | Translation | The website will be in english. |
 
 ## Risks Identified
+
+Several risks could affect the timeline or quality of the project, such as technical learning curves, scraping challenges, or coordination issues. Identifying them early allows us to establish mitigation strategies and to adapt if necessary.
+With risks accounted for, we can move on to the high-level plan that structures the development process across eight weeks.
 
 | Risk | Probability | Impact | Strategy |
 |------------|----------|----------|----------|
@@ -97,6 +119,7 @@ Phase 6 : Testing & Risk Management (Week 7)
 Phase 7 : Deployment & Final Presentation (Week 8)
 - Deploy on server/VM or Docker.
 - Prepare final presentation and user documentation.
+
 
 
 
