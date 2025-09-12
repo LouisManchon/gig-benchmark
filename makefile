@@ -2,6 +2,8 @@
 DC  := docker compose
 S   ?= backend   # default service
 CMD ?= sh        # default command
+SRV ?= backend   # service par défaut pour scale
+N   ?= 2         # réplicas par défaut pour scale
 
 # -------- Basic lifecycle --------
 
@@ -32,5 +34,5 @@ exec:       ## exec into container (S, CMD)
 run:        ## run one-off command (S, CMD)
 	$(DC) run --rm $(S) $(CMD)
 
-scale:      ## scale backend (override SRV/N if needed)
-	$(DC) up -d --scale $(SRV:=backend)=$(N:=2)
+scale:      ## scale a service (SRV=service, N=replicas)
+	$(DC) up -d --scale $(SRV)=$(N)
