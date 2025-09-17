@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'core',             # ton app métier (modèles/logiciel benchmark)
 
     'rest_framework',   # API Django REST Framework
+    'django_filters',
     'corsheaders',      # CORS pour autoriser le front Symfony (autre origine)
 ]
 
@@ -89,32 +90,48 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # DRF: Auth par défaut = Keycloak (Bearer JWT), tout est protégé
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'oidc_auth.authentication.BearerTokenAuthentication',  # drf-oidc-auth
+        # Valide d’abord un JWT signé par ton fournisseur OIDC
+        'oidc_auth.authentication.JSONWebTokenAuthentication',
+        # À défaut de JWT, tente une validation via l’endpoint UserInfo (Bearer)
+        'oidc_auth.authentication.BearerTokenAuthentication',
+        # (Optionnel en dev pour l’API browsable)
+        # 'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS':
+'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
 }
 
-# OpenID Connect (Keycloak) — ADAPTE ces valeurs à ton Keycloak
+    # Penser a configurer l'auth Keycloak quand tout sera ok
+
 OIDC_AUTH = {
-    # URL du realm (issuer), SANS suffixe /protocol/...
-    'OIDC_ISSUER': 'https://keycloak.example.com/realms/mon-realm',
+    # URL du realm (pas besoin d’ajouter /.well-known, la lib le fait)
+    'OIDC_ENDPOINT': 'https://keycloak.example.com/realms/mon-realm',
 
-    # client_id que Keycloak associe à TON API Django (audience attendue)
-    'OIDC_AUDIENCE': 'gig-django-api',
+    # On exige que le claim "aud" contienne le client_id de ton API
+    'OIDC_CLAIMS_OPTIONS': {
+        'aud': {
+            'values': ['gig-django-api'],  # <-- remplace par le client_id côté Keycloak
+            'essential': True,
+        },
+    },
 
-    # Endpoint JWKS pour récupérer les clés publiques (signature RS256)
-    'OIDC_JWKS_ENDPOINT': 'https://keycloak.example.com/realms/mon-realm/protocol/openid-connect/certs',
+    # Options pratiques
+    'OIDC_LEEWAY': 600,                         # marge d’horloge (secondes)
+    'OIDC_JWKS_EXPIRATION_TIME': 24 * 60 * 60,  # cache des clés publiques (JWKS)
+    'OIDC_BEARER_TOKEN_EXPIRATION_TIME': 10 * 60,
 
-    # Tolérance de dérive d’horloge (secondes)
-    'OIDC_LEEWAY': 10,
-
-    # Audiences acceptées (si tu veux être strict)
-    'OIDC_ACCEPTED_TOKEN_AUDIENCE': ['gig-django-api'],
-    'OIDC_REQUIRE_SIGNATURE': True,
+    # Préfixes acceptés dans Authorization
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer',   # tu peux aussi mettre 'JWT', mais 'Bearer' est le plus courant
+    'BEARER_AUTH_HEADER_PREFIX': 'Bearer',
 }
 
 # CORS: autorise le front Symfony (ports/domaine à adapter)
