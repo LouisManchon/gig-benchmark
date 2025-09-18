@@ -49,11 +49,11 @@ class Team(models.Model):
 
 class Player(models.Model):
     team = models.ForeignKey(Team, on_delete=models.SET_NULL, null=True, blank=True, related_name="players")
-    full_name = models.CharField(max_length=150)
+    name = models.CharField(max_length=150)
     nationality = models.CharField(max_length=100, null=True, blank=True)
 
     class Meta:
         db_table = 'Players'
 
     def __str__(self):
-        return self.full_name
+        return self.name
