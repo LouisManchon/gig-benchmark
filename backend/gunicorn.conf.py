@@ -1,7 +1,9 @@
-bind = "0.0.0.0:8000"
-workers = 3
-timeout = 60
-worker_class = "sync"   # default
-accesslog = "-"         # logs sur stdout
-errorlog = "-"          # logs sur stdout
-graceful_timeout = 30
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+bind = f"0.0.0.0:{os.getenv('BACKEND_PORT', '8000')}"
+workers = 4
+worker_class = "gevent"
+timeout = 0

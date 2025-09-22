@@ -1,118 +1,34 @@
-# ------------------------------------------------------------------------------
-# Base image: Official PHP 8.2 with Apache HTTPD
-# Provides Apache + PHP pre-installed (stable, maintained upstream).
-# ------------------------------------------------------------------------------
-FROM php:8.2-apache AS base
+FROM php:8.1-fpm-alpine
 
-# ------------------------------------------------------------------------------
-# Install system dependencies required by PHP extensions and Composer
-# - git, unzip: needed by Composer for installing packages
-# - libicu-dev: required for intl extension (i18n, formatting, etc.)
-# - libzip-dev: required for zip extension
-# ------------------------------------------------------------------------------
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    git unzip libicu-dev libzip-dev \
-    && rm -rf /var/lib/apt/lists/*
+# 1. Installer toutes les dépendances système nécessaires
+RUN apk add --no-cache \
+    libzip-dev \
+    freetype-dev \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+    gd \
+    pdo \
+    pdo_mysql \
+    zip
 
-# ------------------------------------------------------------------------------
-# Install PHP extensions commonly needed by Symfony
-# - pdo_mysql: Database driver for MySQL/MariaDB
-# - intl: Internationalization (dates, locales, currencies)
-# - zip: Used by Symfony and Composer for archive handling
-# - opcache: Boosts PHP performance by caching compiled scripts
-# ------------------------------------------------------------------------------
-RUN docker-php-ext-configure intl \
-    && docker-php-ext-install -j"$(nproc)" pdo_mysql intl zip opcache
+# 2. Installer Composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# ------------------------------------------------------------------------------
-# Enable Apache modules required by Symfony
-# - rewrite: allows clean URLs via front controller (index.php)
-# - headers: for setting HTTP security and cache headers
-# ------------------------------------------------------------------------------
-RUN a2enmod rewrite headers
-
-# ------------------------------------------------------------------------------
-# Configure Apache DocumentRoot to point to /public (Symfony web root)
-# By default it's /var/www/html, we override it to /var/www/html/public
-# ------------------------------------------------------------------------------
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN set -eux; \
-    sed -ri "s#DocumentRoot /var/www/html#DocumentRoot ${APACHE_DOCUMENT_ROOT}#g" /etc/apache2/sites-available/000-default.conf; \
-    sed -ri "s#<Directory /var/www/>#<Directory ${APACHE_DOCUMENT_ROOT}/>#g" /etc/apache2/apache2.conf; \
-    sed -ri "s#<Directory /var/www/html/>#<Directory ${APACHE_DOCUMENT_ROOT}/>#g" /etc/apache2/apache2.conf
-
-# ------------------------------------------------------------------------------
-# Add Composer binary (from official Composer image)
-# ------------------------------------------------------------------------------
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
-
-# ------------------------------------------------------------------------------
-# Set working directory to Symfony project root
-# ------------------------------------------------------------------------------
+# 3. Configurer l'environnement
 WORKDIR /var/www/html
 
+# 4. Copier composer.json et installer les dépendances
+COPY composer.json ./
+RUN composer install --optimize-autoloader --no-dev --ignore-platform-req=ext-gd
 
-# ==============================================================================
-# Builder stage: install Composer deps with cache-friendly layers
-# (no rebuild when you down)
-# ==============================================================================
-FROM base AS builder
+# 5. Copier le reste de l'application
+COPY . .
 
-# ------------------------------------------------------------------------------
-# Copy only composer files first (cache layer for deps)
-# ------------------------------------------------------------------------------
-COPY --chown=www-data:www-data composer.json ./
+# 6. Configurer PHP-FPM
+RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" \
+    && sed -i 's/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/' "$PHP_INI_DIR/php.ini"
 
-# ------------------------------------------------------------------------------
-# Install PHP dependencies (prod by default; switch with --build-arg APP_ENV=dev)
-# ------------------------------------------------------------------------------
-ARG APP_ENV=prod
-ENV APP_ENV=${APP_ENV}
-
-# --no-dev en prod, sinon on garde les dev-deps
-RUN if [ "$APP_ENV" = "prod" ]; then \
-    composer install --no-dev --no-interaction --prefer-dist --no-progress --optimize-autoloader; \
-    else \
-    composer install --no-interaction --prefer-dist --no-progress; \
-    fi
-
-# ------------------------------------------------------------------------------
-# Copy the rest of the application source
-# ------------------------------------------------------------------------------
-COPY --chown=www-data:www-data . .
-
-# ==============================================================================
-# Runtime stage
-# ==============================================================================
-FROM base AS runtime
-
-# ------------------------------------------------------------------------------
-# Copy app from builder (vendor + code + public)
-# ------------------------------------------------------------------------------
-COPY --from=builder --chown=www-data:www-data /var/www/html /var/www/html
-
-# ------------------------------------------------------------------------------
-# Opcache recommended settings (améliore les perfs en prod)
-# ------------------------------------------------------------------------------
-RUN { \
-    echo 'opcache.enable=1'; \
-    echo 'opcache.validate_timestamps=0'; \
-    echo 'opcache.preload=/var/www/html/config/preload.php'; \
-    echo 'opcache.preload_user=www-data'; \
-    } > /usr/local/etc/php/conf.d/opcache-recommended.ini || true
-
-# ------------------------------------------------------------------------------
-# Permissions: Apache (www-data) should own app dir for cache/logs
-# ------------------------------------------------------------------------------
+# 7. Donner les bonnes permissions
 RUN chown -R www-data:www-data /var/www/html
-USER www-data
-
-# ------------------------------------------------------------------------------
-# Expose Apache default port
-# ------------------------------------------------------------------------------
-EXPOSE 80
-
-# ------------------------------------------------------------------------------
-# Default command (Apache in foreground)
-# ------------------------------------------------------------------------------
-CMD ["apache2-foreground"]

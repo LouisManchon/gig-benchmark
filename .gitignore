@@ -3,6 +3,7 @@ backend/.env
 database/.env
 scraping/.env
 frontend/.env
+.env
 
 # Docker
 *.log
