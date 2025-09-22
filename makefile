@@ -1,38 +1,41 @@
 # -------- Settings --------
 DC  := docker compose
-S   ?= backend   # default service
-CMD ?= sh        # default command
-SRV ?= backend   # service par défaut pour scale
-N   ?= 2         # réplicas par défaut pour scale
+S   ?= backend   # service pour logs/exec
+CMD ?= sh        # commande par défaut
+SRV ?= backend   # service à scaler
+N   ?= 2         # nombre de réplicas
 
 # -------- Basic lifecycle --------
 
 .PHONY: build up down logs ps restart exec run scale
-build:      ## build all images
+
+build:
 	$(DC) build
 
-up:         ## start in detached mode
+
+build-nc:
+	$(DC) build --no-cache
+
+up:
 	$(DC) up -d
 
-down:       ## stop and remove containers
+down:
 	$(DC) down
 
-restart:    ## restart all services
+restart:
 	$(DC) restart
 
-logs:       ## follow logs (S=service)
+logs:
 	$(DC) logs -f $(S)
 
-ps:         ## list services
+ps:
 	$(DC) ps
 
-# -------- Shortcuts --------
-.PHONY: exec run scale
-exec:       ## exec into container (S, CMD)
+exec:
 	$(DC) exec $(S) $(CMD)
 
-run:        ## run one-off command (S, CMD)
+run:
 	$(DC) run --rm $(S) $(CMD)
 
-scale:      ## scale a service (SRV=service, N=replicas)
+scale:
 	$(DC) up -d --scale $(SRV)=$(N)

@@ -1,0 +1,25 @@
+# Environnement
+backend/.env
+database/.env
+scraping/.env
+frontend/.env
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# Base de données
+database/init/
+database/db.sqlite3  # Si tu utilises SQLite
+
+# IDE/OS
+.DS_Store
+.idea/
+.vscode/

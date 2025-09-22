@@ -13,8 +13,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # ------------------------------------------------------------------------------
 # Install system packages commonly required by Django + MySQL:
 # - build-essential: compilers for native extensions (e.g., pillow)
-# - default-libmysqlclient-dev: MySQL client headers for mysqlclient
-# - curl, ca-certificates: network tooling and TLS trust store
+# - default-libmysqlclient-dev / libmariadb-dev-compat: headers for mysqlclient
 # ------------------------------------------------------------------------------
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
@@ -30,36 +29,31 @@ RUN python -m venv /venv
 ENV PATH="/venv/bin:$PATH"
 
 # ------------------------------------------------------------------------------
-# Set the working directory inside the container
+# Working directory
 # ------------------------------------------------------------------------------
 WORKDIR /app
 
 # ------------------------------------------------------------------------------
 # Install Python dependencies
-# - Copy requirements first to leverage Docker layer caching
 # ------------------------------------------------------------------------------
 COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --upgrade pip \
-    && pip install --no-cache-dir -r /app/requirements.txt
+    && pip install --no-cache-dir -r /app/requirements.txt gunicorn
 
 # ------------------------------------------------------------------------------
-# Copy the rest of the project (Django app code will live under /app)
+# Copy project files (including gunicorn.conf.py and entrypoint.sh)
 # ------------------------------------------------------------------------------
 COPY . /app
 
 # ------------------------------------------------------------------------------
-# Create a non-root user for better security & give it ownership of the app & venv
+# Create non-root user and set permissions
 # ------------------------------------------------------------------------------
 RUN useradd -m appuser \
     && chown -R appuser:appuser /app /venv
 USER appuser
 
 # ------------------------------------------------------------------------------
-# Runtime configuration via environment variables
-# - PORT: HTTP port inside the container (default 8000)
-# - DJANGO_SETTINGS_MODULE: Django settings module path
-# - DJANGO_WSGI_MODULE: WSGI entrypoint "package.module"
-# - STATIC_ROOT: where collectstatic will place compiled assets
+# Runtime environment
 # ------------------------------------------------------------------------------
 ENV PORT=8000 \
     DJANGO_SETTINGS_MODULE=app.settings \
@@ -67,9 +61,14 @@ ENV PORT=8000 \
     STATIC_ROOT=/app/staticfiles
 
 # ------------------------------------------------------------------------------
-# Ensure STATIC_ROOT exists (collectstatic can target this directory)
+# Ensure STATIC_ROOT exists
 # ------------------------------------------------------------------------------
 RUN mkdir -p "${STATIC_ROOT}"
+
+# ------------------------------------------------------------------------------
+# Make entrypoint executable
+# ------------------------------------------------------------------------------
+RUN chmod +x /app/entrypoint.sh
 
 # ------------------------------------------------------------------------------
 # Expose HTTP port
@@ -77,6 +76,6 @@ RUN mkdir -p "${STATIC_ROOT}"
 EXPOSE 8000
 
 # ------------------------------------------------------------------------------
-# Default command: production-grade WSGI server with Gunicorn
+# Start via entrypoint (wait DB -> migrate -> collectstatic -> gunicorn)
 # ------------------------------------------------------------------------------
-CMD ["sh", "-lc", "gunicorn --bind 0.0.0.0:${PORT} --workers 3 --timeout 60 ${DJANGO_WSGI_MODULE}:application"]
+CMD ["/app/entrypoint.sh"]
