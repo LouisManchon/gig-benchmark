@@ -1,0 +1,106 @@
+version: '3.8'  # Ajout de la version pour une meilleure compatibilité
+
+services:
+  db:
+    image: mysql:5.7
+    container_name: gig-benchmark-db
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-gig_benchmark_db}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root_password}
+      MYSQL_USER: ${DB_USER:-gig_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-gig_password}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend Django + Gunicorn
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gig-benchmark-backend
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE:-config.settings.production}
+      DB_HOST: db
+      DB_NAME: ${DB_DATABASE:-gig_benchmark}
+      DB_USER: ${DB_USERNAME:-gig_user}
+      DB_PASSWORD: ${DB_PASSWORD:-gigpassword}
+      DB_PORT: 3306
+    command: >
+      sh -c "python manage.py wait_for_db &&
+             python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 --workers 4 config.wsgi:application"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # Service PHP-FPM
+  php:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gig-benchmark-php
+    volumes:
+      - ./frontend:/var/www/html
+    environment:
+      DB_HOST: db
+      DB_DATABASE: ${DB_DATABASE:-gig_benchmark}
+      DB_USERNAME: ${DB_USERNAME:-gig_user}
+      DB_PASSWORD: ${DB_PASSWORD:-gigpassword}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - app_network
+
+  # Serveur Web Nginx
+  nginx:
+    image: nginx:alpine
+    container_name: gig-benchmark-nginx
+    ports:
+      - "10014:80"
+      - "443:443"
+    volumes:
+      - ./frontend:/var/www/html
+      - ./backend/static:/static
+      - ./backend/media:/media
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - php
+      - backend
+    networks:
+      - app_network
+
+  # Service Composer
+  composer:
+    image: composer:latest
+    container_name: gig-benchmark-composer
+    volumes:
+      - ./frontend:/var/www/html
+    working_dir: /var/www/html
+    command: install --ignore-platform-reqs --no-interaction --optimize-autoloader
+    networks:
+      - app_network
+
+# Déclaration des volumes (en dehors de "services")
+volumes:
+  db_data:
+    name: gig-benchmark_db_data
+
+# Déclaration des réseaux
+networks:
+  app_network:
+    driver: bridge
