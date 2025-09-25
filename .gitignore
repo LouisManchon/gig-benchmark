@@ -24,3 +24,6 @@ database/db.sqlite3  # Si tu utilises SQLite
 .DS_Store
 .idea/
 .vscode/
+
+vendor
+composer.lock
