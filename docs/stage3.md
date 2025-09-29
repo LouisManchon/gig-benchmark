@@ -35,7 +35,7 @@ Filtering:
 User Authentication:
 - Not needed for MVP.
 
-## Mock-up
+# Mock-up
 
 # Design System Architecture
 
@@ -49,6 +49,87 @@ User Authentication:
 
 <img>
 
+# High-Level Diagrams
 
+## 1. Scraper fetches match odds and sends to message queue
 
+## 2. WebApp displays match odds to user
+
+## 3. User applies filters to refine displayed odds
+
+# Externals and Internals APIs
+
+## Externals API
+
+|API|Purpose|
+|---|--------|
+|None currently|The project scrapes data directly from the target betting website, so no external odds API is required.|
+
+## Internals API
+
+### Endpoint: List all odds for a given match
+
+|Field|Description|
+|---|--------|
+|URL Path|/api/match/|
+|HTTP Method|GET|
+|Input|Path parameter: match_id|
+|Output|JSON array of bookmaker odds|
+```
+[
+  {
+    "bookmaker": "Pmu",
+    "cote_1": "3.50",
+    "cote_N": "3.60",
+    "cote_2": "2.00"
+  },
+  {
+    "bookmaker": "Vbet",
+    "cote_1": "3.38",
+    "cote_N": "3.64",
+    "cote_2": "2.00"
+  }
+]
+```
+
+### Endpoint: Filter odds by bookmaker
+
+|Field|Description|
+|---|--------|
+|URL Path|/api/odds?bookmaker=Pmu|
+|HTTP Method|GET|
+|Input|Query parameter: bookmaker|
+|Output|JSON array of matches with odds only for the selected bookmaker|
+
+```
+[
+  {
+    "match": "STRASBOURG - MARSEILLE",
+    "bookmaker": "Pmu",
+    "cote_1": "3.50",
+    "cote_N": "3.60",
+    "cote_2": "2.00"
+  }
+]
+```
+
+### Endpoint: Add new scraped odds (used by producer)
+
+|Field|Description|
+|---|--------|
+|URL Path|/api/odds|
+|HTTP Method|POST|
+|Output|JSON body|
+
+```
+[
+  {
+    "match": "STRASBOURG - MARSEILLE",
+    "bookmaker": "Pmu",
+    "cote_1": "3.50",
+    "cote_N": "3.60",
+    "cote_2": "2.00"
+  }
+]
+```
 
