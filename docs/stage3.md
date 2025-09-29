@@ -82,71 +82,113 @@ User Authentication:
 
 ## Internals API
 
-### Endpoint: List all odds for a given match
 
-|Field|Description|
-|---|--------|
-|URL Path|/api/match/|
-|HTTP Method|GET|
-|Input|Path parameter: match_id|
-|Output|JSON array of bookmaker odds|
+- Base URL (dev): http://localhost:8000
+- Prefix: /api/
+- Auth: Bearer JWT via header Authorization: Bearer <token>
+- Interactive docs: /swagger/ (Swagger UI), /redoc/ (ReDoc)
+- Pagination: PageNumberPagination (page, page_size), default size 50
+- CORS: allows http://localhost:8001 and http://127.0.0.1:8001
+
+### 2.1 Existing endpoints (already in code)
+
+Standard CRUD (GET/POST/GET{id}/PUT/PATCH/DELETE), protected by JWT:
+
+- /api/sports/, /api/sports/{id}/
+- /api/market-names/, /api/market-names/{id}/ ← represents “markets” (e.g., 1X2)
+- /api/leagues/, /api/leagues/{id}/
+- /api/teams/, /api/teams/{id}/
+- /api/players/, /api/players/{id}/
+
+Authentication:
+
+- POST /api/auth/login/ → returns access + refresh
+- POST /api/auth/refresh/ → returns a new access token
+
+Swagger/ReDoc:
+
+- GET /swagger/, GET /redoc/
+
+### 2.2 Odds endpoints — backend contract
+
+Modeling notes
+
+- MarketName holds market metadata (e.g., code: "1X2", name: "Match Winner").
+- Prefer explicit keys: prices.home, prices.draw, prices.away.
+- bookmaker is a string; match_id is an internal ID.
+
+A) List odds for a match
+
+- Method/URL: GET /api/matches/{match_id}/odds/?market_code=1X2&bookmaker=Pmu
+- Auth: Bearer
+- Status: 200, 401, 404
+- Response item:
+```
+{
+  "bookmaker": "Pmu",
+  "market": { "code": "1X2", "name": "Match Winner" },
+  "prices": { "home": "3.50", "draw": "3.60", "away": "2.00" },
+  "collected_at": "2025-09-29T12:30:00Z"
+}
+```
+
+B) Filter odds across matches
+
+
+- Method/URL: GET /api/odds/?bookmaker=Pmu&market_code=1X2&page=1&page_size=20
+- Auth: Bearer
+- Status: 200, 400 (missing bookmaker), 401
+- Response:
+```
+{
+  "count": 1,
+  "results": [
+    {
+      "match": {
+        "id": 456,
+        "home_team": "STRASBOURG",
+        "away_team": "MARSEILLE",
+        "kickoff_at": "2025-09-29T19:00:00Z"
+      },
+      "bookmaker": "Pmu",
+      "market": { "code": "1X2", "name": "Match Winner" },
+      "prices": { "home": "3.50", "draw": "3.60", "away": "2.00" },
+      "collected_at": "2025-09-29T12:30:00Z"
+    }
+  ]
+}
+```
+
+C) Ingest scraped odds
+
+- Method/URL: POST /api/odds/
+- Auth: Bearer
+- Status: 201 or 207; 400 (validation), 401, 409 (duplicate ingestion_key)
+- Request:
 ```
 [
   {
+    "match_id": 456,
     "bookmaker": "Pmu",
-    "cote_1": "3.50",
-    "cote_N": "3.60",
-    "cote_2": "2.00"
-  },
-  {
-    "bookmaker": "Vbet",
-    "cote_1": "3.38",
-    "cote_N": "3.64",
-    "cote_2": "2.00"
+    "market_code": "1X2",
+    "prices": { "home": "3.50", "draw": "3.60", "away": "2.00" },
+    "collected_at": "2025-09-29T12:30:00Z",
+    "ingestion_key": "4d3a3f0e-..."
   }
 ]
 ```
 
-### Endpoint: Filter odds by bookmaker
-
-|Field|Description|
-|---|--------|
-|URL Path|/api/odds?bookmaker=Pmu|
-|HTTP Method|GET|
-|Input|Query parameter: bookmaker|
-|Output|JSON array of matches with odds only for the selected bookmaker|
+- Success:
 
 ```
-[
-  {
-    "match": "STRASBOURG - MARSEILLE",
-    "bookmaker": "Pmu",
-    "cote_1": "3.50",
-    "cote_N": "3.60",
-    "cote_2": "2.00"
-  }
-]
+{ "accepted": 1, "rejected": 0, "errors": [] }
 ```
 
-### Endpoint: Add new scraped odds (used by producer)
+### 2.3 Cross-cutting conventions
 
-|Field|Description|
-|---|--------|
-|URL Path|/api/odds|
-|HTTP Method|POST|
-|Output|JSON body|
-
-```
-[
-  {
-    "match": "STRASBOURG - MARSEILLE",
-    "bookmaker": "Pmu",
-    "cote_1": "3.50",
-    "cote_N": "3.60",
-    "cote_2": "2.00"
-  }
-]
-```
+- Content-Type: application/json; charset=utf-8
+- Timestamps: ISO 8601 UTC (e.g., 2025-09-29T12:30:00Z)
+- Errors (DRF): {"detail":"..."} or {"field":["..."]}
 
 # SCM and QA Strategies
 
