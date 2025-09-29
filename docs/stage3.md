@@ -37,25 +37,40 @@ User Authentication:
 
 # Mock-up
 
+<img width="1031" height="698" alt="Mockup GIG" src="https://github.com/user-attachments/assets/dea0ebb6-f0c7-4c20-bd68-f24e2bb9ae15" />
+
+
 # Design System Architecture
 
-<img/>
+<p align=center>
+<img width="200" height="650" alt="Design System Architecture" src="https://github.com/user-attachments/assets/878899fc-e7e0-4ef2-a080-6be8acda76db" />
+</p>
 
 # Class Diagram
 
-<img>
+<p align=center>
+<img width="300" height="850" alt="Class diagram" src="https://github.com/user-attachments/assets/c03d76ce-a0b9-44c8-ae1c-1a607b358486" />
+</p>
 
 # Database Diagram
 
-<img>
+<p align=center>
+<img width="2206" height="1202" alt="Database Design" src="https://github.com/user-attachments/assets/6b23b31b-26d9-4a04-8051-8dc1d9fc4280" />
+</p>
 
 # High-Level Diagrams
 
 ## 1. Scraper fetches match odds and sends to message queue
 
+<img width="3840" height="1512" alt="High-Level Sequence Diagram Scraper _ Scraper fetches match odds and sends to message queue" src="https://github.com/user-attachments/assets/37541a8a-e18c-49a9-9876-2d4117fc5e59" />
+
 ## 2. WebApp displays match odds to user
 
+<img width="3840" height="1688" alt="High-Level Sequence Diagram Scraper _ WebApp displays match odds to user" src="https://github.com/user-attachments/assets/ce4cec93-f032-4492-9011-9ed81d9cab67" />
+
 ## 3. User applies filters to refine displayed odds
+
+<img width="3840" height="1449" alt="High-Level Sequence Diagram Scraper _ User applies filters to refine displayed odds" src="https://github.com/user-attachments/assets/70268623-a306-4cfa-91ea-38c19bf1bc30" />
 
 # Externals and Internals APIs
 
