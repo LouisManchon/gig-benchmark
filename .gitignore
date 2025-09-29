@@ -13,3 +13,6 @@ db.sqlite3
 *.sqlite3
 /media
 /staticfiles
+
+test/
+google-chrome-stable_current_amd64.deb
