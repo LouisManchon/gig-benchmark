@@ -148,3 +148,35 @@ User Authentication:
 ]
 ```
 
+# SCM and QA Strategies
+
+## SCM Strategy
+
+### Branches
+- main: Stable branch for production only.
+- simon, louis, dorine: Individual feature branches for each team member to develop or fix tasks.
+
+### Git Workflow
+1. Each member commits changes to their personal branch (simon, louis, dorine).
+2. Once the feature is ready, open a Pull Request to merge into main.
+3. Another team member performs a code review.
+4. After approval, merge into main.
+
+## QA Strategy
+
+### Automated Testing
+- pytest for Python to verify that scraping retrieves odds correctly.
+- Tests to ensure RabbitMQ messages are published and stored correctly in the database.
+
+### Manual Testing
+- Verify that the webapp displays odds correctly.
+- Check that filters work as expected.
+
+### Tools
+- Python/pytest for backend tests.
+- Postman/Swagger for API testing.
+
+### Deployement Pipeline
+- Deploy first to a staging environment.
+- Check logs and run tests.
+- Merge and deploy to production after verification.
