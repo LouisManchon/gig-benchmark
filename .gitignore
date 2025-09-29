@@ -16,7 +16,7 @@ __pycache__/
 venv/
 .venv/
 
-# Base de données
+# DB
 database/init/
 database/db.sqlite3  # Si tu utilises SQLite
 

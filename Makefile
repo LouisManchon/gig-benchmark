@@ -1,5 +1,3 @@
-# Makefile pour le projet gig-benchmark
-
 # Variables
 DOCKER_COMPOSE = docker compose
 DB_SERVICE = db

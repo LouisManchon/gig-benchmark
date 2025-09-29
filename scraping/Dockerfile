@@ -1,7 +1,5 @@
-# image Python légère
 FROM python:3.9-slim
 
-# dépendances système
 RUN apt-get update && apt-get install -y \
     default-libmysqlclient-dev \
     gcc \

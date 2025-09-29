@@ -1,4 +1,4 @@
-version: '3.8'  # Ajout de la version pour une meilleure compatibilité
+version: '3.8'
 
 services:
   db:
@@ -59,13 +59,17 @@ services:
       DB_DATABASE: ${DB_DATABASE:-gig_benchmark}
       DB_USERNAME: ${DB_USERNAME:-gig_user}
       DB_PASSWORD: ${DB_PASSWORD:-gigpassword}
+      SYMFONY_ENV: ${SYMFONY_ENV:-prod}
+      SYMFONY_SECRET: ${SYMFONY_SECRET}
+      PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-256M}
+      PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME:-180}
     depends_on:
       db:
         condition: service_healthy
     networks:
       - app_network
 
-  # Serveur Web Nginx
+  # Server Web Nginx
   nginx:
     image: nginx:alpine
     container_name: gig-benchmark-nginx
@@ -95,12 +99,10 @@ services:
     networks:
       - app_network
 
-# Déclaration des volumes (en dehors de "services")
 volumes:
   db_data:
     name: gig-benchmark_db_data
 
-# Déclaration des réseaux
 networks:
   app_network:
     driver: bridge
