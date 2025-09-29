@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     'rest_framework',   # API Django REST Framework
     'django_filters',
     'corsheaders',      # CORS pour autoriser le front Symfony (autre origine)
+    'drf_yasg'          # Documentation Swagger
 ]
 
 # Middleware (CORS doit être très tôt)
@@ -87,21 +88,18 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DRF: Auth par défaut = Keycloak (Bearer JWT), tout est protégé
+# DRF: Auth par défaut = JWT, tout est protégé
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # Valide d’abord un JWT signé par ton fournisseur OIDC
-        'oidc_auth.authentication.JSONWebTokenAuthentication',
-        # À défaut de JWT, tente une validation via l’endpoint UserInfo (Bearer)
-        'oidc_auth.authentication.BearerTokenAuthentication',
-        # (Optionnel en dev pour l’API browsable)
+        # Utilise uniquement l'authentification JWT
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        # (Optionnel en dev pour l'API browsable)
         # 'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
-    'DEFAULT_PAGINATION_CLASS':
-'rest_framework.pagination.PageNumberPagination',
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
@@ -110,34 +108,33 @@ REST_FRAMEWORK = {
     ],
 }
 
-    # Penser a configurer l'auth Keycloak quand tout sera ok
-
-OIDC_AUTH = {
-    # URL du realm (pas besoin d’ajouter /.well-known, la lib le fait)
-    'OIDC_ENDPOINT': 'https://keycloak.example.com/realms/mon-realm',
-
-    # On exige que le claim "aud" contienne le client_id de ton API
-    'OIDC_CLAIMS_OPTIONS': {
-        'aud': {
-            'values': ['gig-django-api'],  # <-- remplace par le client_id côté Keycloak
-            'essential': True,
-        },
-    },
-
-    # Options pratiques
-    'OIDC_LEEWAY': 600,                         # marge d’horloge (secondes)
-    'OIDC_JWKS_EXPIRATION_TIME': 24 * 60 * 60,  # cache des clés publiques (JWKS)
-    'OIDC_BEARER_TOKEN_EXPIRATION_TIME': 10 * 60,
-
-    # Préfixes acceptés dans Authorization
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer',   # tu peux aussi mettre 'JWT', mais 'Bearer' est le plus courant
-    'BEARER_AUTH_HEADER_PREFIX': 'Bearer',
-}
-
-# CORS: autorise le front Symfony (ports/domaine à adapter)
+# Configuration des origines autorisées pour les requêtes CORS
+# Permet au frontend de communiquer avec le backend malgré les restrictions de sécurité
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:8001",     # ex: front Symfony en dev
+    # Origine du frontend Symfony en développement
+    "http://localhost:8001",
+    # Alias local pour le frontend en développement
     "http://127.0.0.1:8001",
+
+    # Origine du backend Django en développement
+    # Utile pour les requêtes internes entre services
+    "http://localhost:8000",
+    # Alias local pour le backend en développement
+    "http://127.0.0.1:8000",
 ]
-# Autoriser le header Authorization pour Bearer <token> si tu customises les headers
+
 CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+        }
+    },
+    'USE_SESSION_AUTH': False,
+    'JSON_EDITOR': True,
+    'LOGIN_URL': '/api/auth/login/',
+    'LOGOUT_URL': '/api/auth/logout/',
+}

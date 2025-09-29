@@ -4,7 +4,7 @@ from .models import Sport, MarketName, League, Team, Player
 class SportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sport
-        fieds = ('id', 'code', 'name', 'created_at', 'updated_at')
+        fields = ('id', 'code', 'name', 'created_at', 'updated_at')
 
 class MarketNameSerializer(serializers.ModelSerializer):
     class Meta:
