@@ -1,6 +1,24 @@
+# Django Core
 Django==4.2
 gunicorn==20.1.0
+
+# Base de données
 mysqlclient==2.1.1
+
+# Utilitaires
 python-dotenv==1.0.0
+
+# CORS pour l'API
 django-cors-headers==4.2.0
+
+# Celery et RabbitMQ
 celery==5.3.1
+kombu==5.3.2
+amqp==5.1.1
+django-celery-beat==2.5.0
+
+# Django REST Framework(API°
+djangorestframework==3.14.0
+
+# Timezone
+pytz==2023.3

@@ -1,33 +1,79 @@
-# Variables
-DOCKER_COMPOSE = docker compose
-DB_SERVICE = db
-DB_USER = root
-DB_PASSWORD = $(shell grep DB_ROOT_PASSWORD .env | cut -d '=' -f2)
-DB_NAME = gig_benchmark
+.PHONY: help build up down restart logs clean rebuild
 
-.PHONY: build up down ps logs db-reset db-shell db-show-tables db-show-data
+help: ## Affiche l'aide
+	@echo "Commandes disponibles:"
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-build:
-	@echo "Construction des images Docker..."
-	${DOCKER_COMPOSE} build
+build: ## Construit les images Docker
+	docker compose build
 
-up:
-	@echo "Démarrage de tous les services..."
-	${DOCKER_COMPOSE} up -d
+up: ## Démarre tous les services
+	docker compose up -d
 
-down:
-	@echo "Arrêt de tous les services..."
-	${DOCKER_COMPOSE} down
+down: ## Arrête tous les services
+	docker compose down
 
-ps:
-	@echo "Affichage des conteneurs en cours d'exécution..."
-	${DOCKER_COMPOSE} ps
+restart: down up ## Redémarre tous les services
 
-logs:
-	@echo "Affichage des logs de tous les services..."
-	${DOCKER_COMPOSE} logs -f
+logs: ## Affiche les logs de tous les services
+	docker compose logs -f
 
-db:
-	@echo "Connexion à la base de données..."
-	${DOCKER_COMPOSE} exec -it ${DB_SERVICE} mysql -u${DB_USER} -p${DB_PASSWORD} ${DB_NAME}
+logs-backend: ## Affiche les logs du backend
+	docker compose logs -f backend
 
+logs-celery: ## Affiche les logs des workers Celery
+	docker compose logs -f celery-worker celery-beat
+
+logs-scraping: ## Affiche les logs du scraping
+	docker compose logs -f scraping
+
+logs-nginx: ## Affiche les logs Nginx
+	docker compose logs -f nginx
+
+logs-rabbitmq: ## Affiche les logs RabbitMQ
+	docker compose logs -f rabbitmq
+
+ps: ## Liste les services actifs
+	docker compose ps
+
+shell-backend: ## Ouvre un shell dans le container backend
+	docker compose exec backend /bin/bash
+
+shell-db: ## Ouvre un shell MySQL
+	docker compose exec db mysql -u gig_user -p gig_benchmark
+
+migrate: ## Exécute les migrations Django
+	docker compose exec backend python manage.py migrate
+
+makemigrations: ## Crée les migrations Django
+	docker compose exec backend python manage.py makemigrations
+
+collectstatic: ## Collecte les fichiers statiques Django
+	docker compose exec backend python manage.py collectstatic --noinput
+
+createsuperuser: ## Crée un superuser Django
+	docker compose exec backend python manage.py createsuperuser
+
+composer-install: ## Installe les dépendances Composer
+	docker compose exec php composer install
+
+clean: ## Nettoie les volumes et containers
+	docker compose down -v
+	docker system prune -f
+
+rebuild: clean build up ## Rebuild complet (attention: supprime les données)
+
+test-backend: ## Lance les tests Django
+	docker compose exec backend python manage.py test
+
+check-rabbitmq: ## Vérifie le statut de RabbitMQ
+	@echo "RabbitMQ Management UI: http://localhost:15672"
+	@echo "User: gig_user | Pass: gig_password"
+
+check-services: ## Vérifie que tous les services sont up
+	@echo "=== Vérification des services ==="
+	@echo "Backend API: http://localhost:8000/api/"
+	@echo "Django Admin: http://localhost:8000/admin/"
+	@echo "Frontend: http://localhost:10014"
+	@echo "RabbitMQ: http://localhost:15672"
+	@docker compose ps
