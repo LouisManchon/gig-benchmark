@@ -1,16 +1,17 @@
 # settings.py
 from pathlib import Path
 from corsheaders.defaults import default_headers
+from datetime import timedelta
+import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ATTENTION: en prod, lis ce secret depuis les variables d'environnement
-SECRET_KEY = 'django-insecure-d5i7cby6gm21g53c7=fpcdps==1sn&j$zhj1#xk&8&%!gba%0%'
+# ==== DJANGO SECRETS ====
+SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
+DEBUG = os.getenv("DEBUG", "True") == "True"
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
-DEBUG = True
-ALLOWED_HOSTS = []  # en prod: ["api.mondomaine.com"]
-
-# Applications
+# ==== APPLICATIONS ====
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -19,18 +20,18 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'core',             # ton app métier (modèles/logiciel benchmark)
+    'core',
 
-    'rest_framework',   # API Django REST Framework
+    'rest_framework',
     'django_filters',
-    'corsheaders',      # CORS pour autoriser le front Symfony (autre origine)
-    'drf_yasg'          # Documentation Swagger
+    'corsheaders',
+    'drf_yasg',
 ]
 
-# Middleware (CORS doit être très tôt)
+# ==== MIDDLEWARE ====
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # gère le préflight et les en-têtes CORS
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -58,19 +59,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gig_benchmark.wsgi.application'
 
-# Base de données MySQL (conforme à ton besoin)
+# ==== DATABASE ====
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'GIG',
-        'USER': 'giguser',
-        'PASSWORD': '1234',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.mysql"),
+        'NAME': os.getenv("DB_NAME", "GIG"),
+        'USER': os.getenv("DB_USER", "giguser"),
+        'PASSWORD': os.getenv("DB_PASSWORD", "1234"),
+        'HOST': os.getenv("DB_HOST", "localhost"),
+        'PORT': os.getenv("DB_PORT", "3306"),
+        'OPTIONS': eval(os.getenv("DB_OPTIONS", "{}")),
     }
 }
 
-# Password validators (par défaut)
+# ==== PASSWORD VALIDATORS ====
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -83,18 +85,21 @@ TIME_ZONE = 'Europe/Paris'
 USE_I18N = True
 USE_TZ = True
 
-# Fichiers statiques
 STATIC_URL = 'static/'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# DRF: Auth par défaut = JWT, tout est protégé
+# ==== CORS ====
+CORS_ALLOWED_ORIGINS = [
+    origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin
+]
+CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True") == "True"
+CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
+CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "DELETE,GET,OPTIONS,PATCH,POST,PUT").split(",")
+
+# ==== REST FRAMEWORK + JWT ====
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        # Utilise uniquement l'authentification JWT
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        # (Optionnel en dev pour l'API browsable)
-        # 'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -108,23 +113,20 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Configuration des origines autorisées pour les requêtes CORS
-# Permet au frontend de communiquer avec le backend malgré les restrictions de sécurité
-CORS_ALLOWED_ORIGINS = [
-    # Origine du frontend Symfony en développement
-    "http://localhost:8001",
-    # Alias local pour le frontend en développement
-    "http://127.0.0.1:8001",
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME", 60))),
+    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME", 1440))),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'ALGORITHM': os.getenv("JWT_ALGORITHM", "HS256"),
+    'SIGNING_KEY': os.getenv("JWT_SECRET_KEY", SECRET_KEY),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+}
 
-    # Origine du backend Django en développement
-    # Utile pour les requêtes internes entre services
-    "http://localhost:8000",
-    # Alias local pour le backend en développement
-    "http://127.0.0.1:8000",
-]
-
-CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
-
+# ==== SWAGGER ====
 SWAGGER_SETTINGS = {
     'SECURITY_DEFINITIONS': {
         'Bearer': {
@@ -138,3 +140,10 @@ SWAGGER_SETTINGS = {
     'LOGIN_URL': '/api/auth/login/',
     'LOGOUT_URL': '/api/auth/logout/',
 }
+
+# ==== KEYCLOAK (optionnel) ====
+KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL", "")
+KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "")
+KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "")
+KEYCLOAK_CLIENT_SECRET_KEY = os.getenv("KEYCLOAK_CLIENT_SECRET_KEY", "")
+KEYCLOAK_CLIENT_PUBLIC_KEY = os.getenv("KEYCLOAK_CLIENT_PUBLIC_KEY", "")

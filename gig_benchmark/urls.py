@@ -24,8 +24,8 @@ schema_view = get_schema_view(
         contact=openapi.Contact(email="contact@example.com"),
         license=openapi.License(name="MIT"),
     ),
-    public=False,  # ← Désactive l'accès public
-    permission_classes=(permissions.IsAuthenticated,),  # ← Seuls les utilisateurs authentifiés peuvent voir Swagger
+    public=True,
+    permission_classes=(permissions.AllowAny,),  # Swagger est public
 )
 
 # Configuration du router avec basename explicite
