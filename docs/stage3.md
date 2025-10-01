@@ -1,6 +1,12 @@
-# User stories
+# Technical documentation
+
+This document provides a comprehensive technical overview of the project, detailing its objectives, system architecture, user stories, APIs, and development workflow. It is intended as a reference for developers, analysts, and stakeholders to understand how the system is designed, how its components interact, and how the project will evolve from scraping betting odds to delivering a usable web application.
+
+## User stories
 
 ### Must Have
+
+These features are essential for the project to work end-to-end. They form the core of our data pipeline and application.
 
 Scraping:
 - As a system, I want to scrape betting odds from Coteur.com, so that I can collect real-time sports betting data.
@@ -16,6 +22,8 @@ Storage:
 
 ### Should Have
 
+These features are important but not critical for the first MVP. They improve robustness and data quality.
+
 Data Cleaning:
 - As a developer, I want to clean/normalize odds, so that the data is consistent.
 
@@ -23,6 +31,8 @@ Error Handling:
 - As a system, I want to handle scraping or network errors gracefully, so that the pipeline does not crash.
 
 ### Could Have
+
+These features would add strong value for the end user, but they are not required for the initial release.
 
 Dashboard:
 - As a user, I want to see scraped odds in a simple dashboard (table/chart), so that I can visualize betting trends.
@@ -35,30 +45,34 @@ Filtering:
 User Authentication:
 - Not needed for MVP.
 
-# Mock-up
+## Diagrams and Mock-up
+
+This section contains mockups and diagrams illustrating the planned architecture and design of the application.
+
+## Mock-up
 
 <img width="1031" height="698" alt="Mockup GIG" src="https://github.com/user-attachments/assets/dea0ebb6-f0c7-4c20-bd68-f24e2bb9ae15" />
 
 
-# Design System Architecture
+## Design System Architecture
 
 <p align=center>
 <img width="200" height="650" alt="Design System Architecture" src="https://github.com/user-attachments/assets/878899fc-e7e0-4ef2-a080-6be8acda76db" />
 </p>
 
-# Class Diagram
+## Class Diagram
 
 <p align=center>
 <img width="300" height="850" alt="Class diagram" src="https://github.com/user-attachments/assets/c03d76ce-a0b9-44c8-ae1c-1a607b358486" />
 </p>
 
-# Database Diagram
+## Database Diagram
 
 <p align=center>
 <img width="2206" height="1202" alt="Database Design" src="https://github.com/user-attachments/assets/6b23b31b-26d9-4a04-8051-8dc1d9fc4280" />
 </p>
 
-# High-Level Diagrams
+## High-Level Diagrams
 
 ## 1. Scraper fetches match odds and sends to message queue
 
@@ -72,7 +86,7 @@ User Authentication:
 
 <img width="3840" height="1449" alt="High-Level Sequence Diagram Scraper _ User applies filters to refine displayed odds" src="https://github.com/user-attachments/assets/70268623-a306-4cfa-91ea-38c19bf1bc30" />
 
-# Externals and Internals APIs
+## Externals and Internals APIs
 
 ## Externals API
 
