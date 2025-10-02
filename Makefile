@@ -77,3 +77,11 @@ check-services: ## Vérifie que tous les services sont up
 	@echo "Frontend: http://localhost:10014"
 	@echo "RabbitMQ: http://localhost:15672"
 	@docker compose ps
+
+scraping-logs:
+	@echo "Affichage des logs du scraping..."
+	${DOCKER_COMPOSE} logs -f scraping
+
+scraping-restart:
+	@echo "Redémarrage du scraping..."
+	${DOCKER_COMPOSE} restart scraping

@@ -190,7 +190,7 @@ services:
       
       # Backend API
       BACKEND_API_URL: http://backend:${BACKEND_PORT}
-    command: python scraper.py
+    command: python worker.py
     depends_on:
       db:
         condition: service_healthy
