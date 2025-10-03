@@ -47,17 +47,17 @@ def setup_chrome_driver():
     return webdriver.Chrome(options=options)
 
 def main():
-    print("🚀 Démarrage du scraper Ligue 1...")
+    print("Démarrage du scraper Ligue 1...")
     
     # Connexion à RabbitMQ
     connection = connect_rabbitmq()
     channel = connection.channel()
     channel.queue_declare(queue="cotes", durable=True)
-    print("✅ Connexion RabbitMQ établie")
+    print("Connexion RabbitMQ établie")
     
     # Configuration Selenium
     driver = setup_chrome_driver()
-    print("✅ Driver Chrome configuré")
+    print("Driver Chrome configuré")
     
     try:
         # URL Ligue 1
@@ -66,7 +66,7 @@ def main():
         
         # Attendre que la page se charge
         WebDriverWait(driver, 10).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, ".page-title"))
+            EC.presence_of_element_located((By.CSS_SELECTOR, ".col-12"))
         )
         
         # Récupérer tous les liens de matchs
@@ -80,7 +80,7 @@ def main():
                     href = "https://www.coteur.com" + href
                 match_links.append(href)
         
-        print(f"📌 Nombre de matchs trouvés : {len(match_links)}")
+        print(f"Nombre de matchs trouvés : {len(match_links)}")
         
         # Parcourir les matchs
         for match_url in match_links:
@@ -119,17 +119,44 @@ def main():
                         body=json.dumps(message),
                         properties=pika.BasicProperties(delivery_mode=2)  # Message persistant
                     )
-                    print(f"📤 Envoyé : {message}")
+                    print(f"Envoyé : {message}")
                     
             except Exception as e:
-                print(f"⚠️ Erreur scraping pour {match_url}: {e}")
+                print(f"Erreur scraping pour {match_url}: {e}")
                 
     except Exception as e:
-        print(f"⚠️ Erreur générale : {e}")
+        print(f"Erreur générale : {e}")
     finally:
         driver.quit()
         connection.close()
-        print("🏁 Scraper terminé")
+        print("Scraper terminé")
 
+# Point d'entrée pour le worker
+def scrape_ligue_1(**kwargs):
+    """
+    Fonction appelée par worker.py
+    """
+    print("Démarrage du scraping Ligue 1 depuis le worker")
+    try:
+        # Appeler votre fonction main() existante
+        main()
+        
+        return {
+            'success': True,
+            'league': 'Ligue 1',
+            'message': 'Scraping terminé avec succès'
+        }
+    except Exception as e:
+        print(f"Erreur: {e}")
+        return {
+            'success': False,
+            'league': 'Ligue 1',
+            'error': str(e)
+        }
+
+
+# Pour test standalone
 if __name__ == "__main__":
-    main()
+    print("Test du scraper Ligue 1")
+    result = scrape_ligue_1()
+    print(f"Résultat: {result}")

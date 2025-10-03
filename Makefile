@@ -85,3 +85,18 @@ scraping-logs:
 scraping-restart:
 	@echo "Redémarrage du scraping..."
 	${DOCKER_COMPOSE} restart scraping
+
+.PHONY: scraping-test scraping-logs scraping-shell scraping-send-task
+
+scraping-logs:
+	@docker compose logs -f scraping
+
+scraping-shell:
+	@docker exec -it gig-benchmark-scraping bash
+
+scraping-test:
+	@docker exec gig-benchmark-scraping python -c "from src.football.ligue_1 import scrape_ligue_1; print('✅ Import OK')"
+
+scraping-send-ligue1:
+	@docker exec gig-benchmark-rabbitmq rabbitmqadmin publish routing_key=scraping_tasks payload='{"scraper":"football.ligue_1"}'
+	@echo "📨 Tâche envoyée ! Voir les logs avec: make scraping-logs"
