@@ -1,0 +1,63 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Odds List{% endblock %}
+
+{% block body %}
+<h1>Betting Odds</h1>
+
+<form action="{{ path('odds_scrape') }}" method="post">
+    <button type="submit" class="btn btn-primary">Scrapping</button>
+</form>
+
+{% for label, messages in app.flashes %}
+    {% for message in messages %}
+        <div class="alert alert-{{ label }}">{{ message }}</div>
+    {% endfor %}
+{% endfor %}
+
+<!-- Filtre par bookmaker -->
+<form method="get" action="{{ path('odds_list') }}">
+    <label for="bookmaker">Filter by bookmaker:</label>
+    <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for bm in bookmakers %}
+            <option value="{{ bm }}" {% if bm == currentBookmaker %}selected{% endif %}>{{ bm }}</option>
+        {% endfor %}
+    </select>
+    <label name="match" id="match">Filter by match:</label>
+    <select name="match" id="match" onchange="this.form.submit()">
+        <option value="">All</option>
+        {% for match in matches %}
+            <option value="{{ match }}" {% if match == currentMatch %}selected{% endif %}>{{ match }}</option>
+        {% endfor %}
+    </select>
+</form>
+
+<!-- Tableau des cotes -->
+<table border="1" cellpadding="5" cellspacing="0">
+    <thead>
+        <tr>
+            <th>Match</th>
+            <th>Bookmaker</th>
+            <th>Cote 1</th>
+            <th>Cote N</th>
+            <th>Cote 2</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for odd in odds %}
+            <tr>
+                <td>{{ odd.matchName }}</td>
+                <td>{{ odd.bookmaker }}</td>
+                <td>{{ odd.cote1 }}</td>
+                <td>{{ odd.coteN }}</td>
+                <td>{{ odd.cote2 }}</td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">No odds available.</td>
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
