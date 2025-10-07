@@ -78,6 +78,10 @@ services:
       # Celery / RabbitMQ
       CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
       CELERY_RESULT_BACKEND: rpc://
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       
       # Backend config
       BACKEND_PORT: ${BACKEND_PORT}

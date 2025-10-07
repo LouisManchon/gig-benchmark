@@ -1,30 +1,22 @@
 from .base import *
-import os
 
-# Override settings for production
-DEBUG = False
-
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
-
-# Security settings for production
-SECURE_SSL_REDIRECT = False  # Set to True when using HTTPS
-SESSION_COOKIE_SECURE = False  # Set to True when using HTTPS
-CSRF_COOKIE_SECURE = False  # Set to True when using HTTPS
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
-X_FRAME_OPTIONS = 'DENY'
-
-# Logging
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+# Database depuis les variables d'environnement Docker
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': os.getenv('DB_NAME', 'gig_benchmark'),
+        'USER': os.getenv('DB_USER', 'gig_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'gig_password'),
+        'HOST': os.getenv('DB_HOST', 'db'),
+        'PORT': os.getenv('DB_PORT', '3306'),
+        'OPTIONS': {
+            'charset': 'utf8mb4',
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
         },
-    },
-    'root': {
-        'handlers': ['console'],
-        'level': 'INFO',
-    },
+    }
 }
+
+# Sécurité production
+SECURE_SSL_REDIRECT = False  # Nginx gère le SSL
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
