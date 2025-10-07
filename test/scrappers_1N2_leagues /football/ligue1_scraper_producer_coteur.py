@@ -92,7 +92,8 @@ def perform_scrapping():
                     "bookmaker": bookmaker,
                     "cotes": cote_dict,
                     "trj": round((1 / (1/cote_dict["cote_1"] + 1/cote_dict["cote_N"] + 1/cote_dict["cote_2"])) * 100, 2),
-                    "league": "Ligue 1"
+                    "league": "Ligue 1",
+                    "sport": "football"
                 }
                 channel.basic_publish(exchange="", routing_key="odds", body=json.dumps(message))
                 print(f"📤 Envoyé : {message}")
