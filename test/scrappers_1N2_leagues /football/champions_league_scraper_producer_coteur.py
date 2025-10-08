@@ -33,7 +33,7 @@ def perform_scrapping():
     driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
     # --- URL Champions League ---
-    url = url = "https://www.coteur.com/cotes/foot/europe/ligue-des-champions"
+    url = "https://www.coteur.com/cotes/foot/europe/ligue-des-champions"
     driver.get(url)
     try:
         # wait charging page
