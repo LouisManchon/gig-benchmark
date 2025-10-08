@@ -2,6 +2,7 @@ import json
 import pika
 import mysql.connector
 from datetime import datetime
+import dateparser
 
 # --- Connexion à RabbitMQ ---
 connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
@@ -20,21 +21,33 @@ cursor = db.cursor()
 def callback(ch, method, properties, body):
     data = json.loads(body)
     cote_dict = data["cotes"]
+
+    match_date_obj = None
+    if data.get("match_date"):
+        try:
+            parsed = dateparser.parse(data["match_date"])
+            if parsed:
+                match_date_obj = parsed.strftime('%Y-%m-%d %H:%M:%S')
+        except Exception as e:
+            print("Error parsing match_date :", e)
+            match_date_obj = None
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
     cursor.execute(
         """
-        INSERT INTO odds (match_name, bookmaker, cote_1, cote_N, cote_2, trj, league, created_at)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO odds (match_name, match_date, bookmaker, cote_1, cote_N, cote_2, trj, league, sport, created_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """,
         (
             data["match"],
+            match_date_obj,
             data["bookmaker"],
             cote_dict.get("cote_1"),
             cote_dict.get("cote_N"),
             cote_dict.get("cote_2"),
             data["trj"],
             data["league"],
+            data["sport"],
             now
         )
     )
