@@ -87,6 +87,6 @@ class KeycloakAuthentication(authentication.BaseAuthentication):
         return KeycloakAuthentication.has_role(request, 'admin')
 
     @staticmethod
-    def user_is_analyst(request):
+    def user_is_user(request):
         """Vérifie si l'utilisateur est analyst."""
-        return KeycloakAuthentication.has_role(request, 'analyst')
+        return KeycloakAuthentication.has_role(request, 'user')
