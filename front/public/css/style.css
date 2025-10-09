@@ -1,17 +1,45 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #f5f5f5;
-    margin: 20px;
+    margin: 0;
+    padding: 0;
 }
 
-table {
+header {
+    background-color: #036ad9;
+    padding: 20px;
+}
+
+h1 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.all_matchs, .avgtrj {
     border-collapse: collapse;
-    width: 100%;
     background-color: #fff;
+    border: 1px solid black;
+}
+
+.all_matchs {
+    width: 60%;
+}
+
+.avgtrj {
+    width: 30%;
+}
+.tables {
+    margin: 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
 }
 
 th, td {
-    padding: 10px;
+    border: 1px solid black;
+    padding: 5px;
     text-align: left;
 }
 

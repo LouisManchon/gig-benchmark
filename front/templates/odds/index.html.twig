@@ -3,61 +3,98 @@
 {% block title %}Odds List{% endblock %}
 
 {% block body %}
-<h1>Betting Odds</h1>
+<header>
+    <h1>Betting Odds</h1>
 
-<form action="{{ path('odds_scrape') }}" method="post">
-    <button type="submit" class="btn btn-primary">Scrapping</button>
-</form>
+    <form action="{{ path('odds_scrape') }}" method="post">
+        <button type="submit" class="btn btn-primary">Scrapping</button>
+    </form>
 
-{% for label, messages in app.flashes %}
-    {% for message in messages %}
-        <div class="alert alert-{{ label }}">{{ message }}</div>
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">{{ message }}</div>
+        {% endfor %}
     {% endfor %}
-{% endfor %}
 
-<!-- Filtre par bookmaker -->
-<form method="get" action="{{ path('odds_list') }}">
-    <label for="bookmaker">Filter by bookmaker:</label>
-    <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
-        <option value="">All</option>
-        {% for bm in bookmakers %}
-            <option value="{{ bm }}" {% if bm == currentBookmaker %}selected{% endif %}>{{ bm }}</option>
-        {% endfor %}
-    </select>
-    <label name="match" id="match">Filter by match:</label>
-    <select name="match" id="match" onchange="this.form.submit()">
-        <option value="">All</option>
-        {% for match in matches %}
-            <option value="{{ match }}" {% if match == currentMatch %}selected{% endif %}>{{ match }}</option>
-        {% endfor %}
-    </select>
-</form>
+    <!-- filter by bookmaker & match -->
+    <form method="get" action="{{ path('odds_list') }}">
+        <label for="bookmaker">Filter by bookmaker:</label>
+        <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for bm in bookmakers %}
+                <option value="{{ bm }}" {% if bm == currentBookmaker %}selected{% endif %}>{{ bm }}</option>
+            {% endfor %}
+        </select>
+        <label name="match" id="match">Filter by match:</label>
+        <select name="match" id="match" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for match in matches %}
+                <option value="{{ match }}" {% if match == currentMatch %}selected{% endif %}>{{ match }}</option>
+            {% endfor %}
+        </select>
+        <label name="league" id="match">Filter by league:</label>
+        <select name="league" id="league" onchange="this.form.submit()">
+            <option value="">All</option>
+            {% for league in leagues %}
+                <option value="{{ league }}" {% if league == currentLeague %}selected{% endif %}>{{ league }}</option>
+            {% endfor %}
+        </select>
+        <label for="date">Filter by date:</label>
+        <input type="date" id="date" name="date" value="{{ currentDate|default('') }}" onchange="this.form.submit()">
+    </form>
+</header>
 
-<!-- Tableau des cotes -->
-<table border="1" cellpadding="5" cellspacing="0">
-    <thead>
-        <tr>
-            <th>Match</th>
-            <th>Bookmaker</th>
-            <th>Cote 1</th>
-            <th>Cote N</th>
-            <th>Cote 2</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for odd in odds %}
+<!--table for trj by bookmakers-->
+<div class="tables">
+    <table class="avgtrj">
+        <thead>
             <tr>
-                <td>{{ odd.matchName }}</td>
-                <td>{{ odd.bookmaker }}</td>
-                <td>{{ odd.cote1 }}</td>
-                <td>{{ odd.coteN }}</td>
-                <td>{{ odd.cote2 }}</td>
+                <th>Bookmaker</th>
+                <th>Average TRJ</th>
             </tr>
-        {% else %}
+        </thead>
+        <tbody>
+            {% for row in avgTrj %}
+                <tr>
+                    <td>{{ row.bookmaker }}</td>
+                    <td>{{ row.avgTrj|number_format(2, '.', '') }}%</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="2">No data found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- table for all matchs -->
+    <table class="all_matchs">
+        <thead>
             <tr>
-                <td colspan="5">No odds available.</td>
+                <th>Match</th>
+                <th>Bookmaker</th>
+                <th>Cote 1</th>
+                <th>Cote N</th>
+                <th>Cote 2</th>
+                <th>TRJ</th>
             </tr>
-        {% endfor %}
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            {% for odd in odds %}
+                <tr>
+                    <td>{{ odd.matchName }}</td>
+                    <td>{{ odd.bookmaker }}</td>
+                    <td>{{ odd.cote1 }}</td>
+                    <td>{{ odd.coteN }}</td>
+                    <td>{{ odd.cote2 }}</td>
+                    <td>{{ odd.trj }}%</td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="5">No odds available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
 {% endblock %}

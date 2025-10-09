@@ -20,11 +20,13 @@ class OddsController extends AbstractController
     {
         $bookmakerFilter = $request->query->get('bookmaker');
         $matchFilter = $request->query->get('match');
+        $dateFilter = $request->query->get('date');
+        $leagueFilter = $request->query->get('league');
 
         $repo = $em->getRepository(Odd::class);
         $qb = $repo->createQueryBuilder('o');
 
-        // Appliquer les filtres si définis
+        // apply filters 
         if ($bookmakerFilter) {
             $qb->andWhere('o.bookmaker = :bookmaker')
                ->setParameter('bookmaker', $bookmakerFilter);
@@ -34,11 +36,21 @@ class OddsController extends AbstractController
                ->setParameter('match', $matchFilter);
         }
 
-        // Trier par date de création décroissante
+        if ($dateFilter) {
+            $dateStart = new \DateTime($dateFilter . ' 00:00:00');
+            $dateEnd = new \DateTime($dateFilter . ' 23:59:59');
+
+            $qb->andWhere('o.matchDate BETWEEN :start AND :end')
+            ->setParameter('start', $dateStart)
+            ->setParameter('end', $dateEnd);
+        }
+
+
+        // desc
         $qb->orderBy('o.createdAt', 'DESC');
         $allOdds = $qb->getQuery()->getResult();
 
-        // Garde uniquement la dernière cote par match + bookmaker
+        // latest odds
         $latestOdds = [];
         foreach ($allOdds as $odd) {
             $key = $odd->getMatchName() . '|' . $odd->getBookmaker();
@@ -48,7 +60,7 @@ class OddsController extends AbstractController
         }
 
 
-        // Récupérer tous les bookmakers et matchs pour les filtres
+        // all bookmakers and matchs
         $bookmakers = $repo->createQueryBuilder('o')
             ->select('DISTINCT o.bookmaker')
             ->getQuery()
@@ -59,12 +71,27 @@ class OddsController extends AbstractController
             ->getQuery()
             ->getResult();
 
+        $leagues = $repo->createQueryBuilder('o')
+            ->select('DISTINCT o.league')
+            ->getQuery()
+            ->getResult();
+        
+        $avgTrj = $repo->createQueryBuilder('o')
+            ->select('o.bookmaker, AVG(o.trj) AS avgTrj')
+            ->groupBy('o.bookmaker')
+            ->getQuery()
+            ->getResult();
+
         return $this->render('odds/index.html.twig', [
             'odds' => $latestOdds,
             'bookmakers' => array_map(fn($b) => $b['bookmaker'], $bookmakers),
             'matches' => array_map(fn($m) => $m['match_name'], $matches),
+            'leagues' => array_map(fn($l) => $l['league'], $leagues),
             'currentBookmaker' => $bookmakerFilter,
             'currentMatch' => $matchFilter,
+            'currentLeague' => $leagueFilter,
+            'currentDate' => $dateFilter,
+            'avgTrj' => $avgTrj
         ]);
     }
 

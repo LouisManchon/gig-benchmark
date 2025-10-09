@@ -5,7 +5,7 @@ namespace App\Entity;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity]
-#[ORM\Table(name: "cotes")]
+#[ORM\Table(name: "odds")]
 class Odd
 {
     #[ORM\Id]
@@ -28,8 +28,18 @@ class Odd
     #[ORM\Column(type: "float")]
     private float $cote_2;
 
+    #[ORM\Column(type:"string")]
+    private string $trj;
+
+    #[ORM\Column(type:"string")]
+    private string $league;
+
     #[ORM\Column(type: "datetime")]
     private \DateTimeInterface $createdAt;
+
+    #[ORM\Column(type: 'datetime', nullable: true)]
+    private ?\DateTimeInterface $matchDate = null;
+
 
     // Getters and setters
 
@@ -93,6 +103,17 @@ class Odd
         return $this;
     }
 
+    public function getLeague(): string
+    {
+        return $this->league;
+    }
+
+    public function setLeague(string $League)
+    {
+        $this->$league = $league;
+        return $this;
+    }
+
     public function getCreatedAt(): ?\DateTimeInterface
     {
         return $this->createdAt;
@@ -108,4 +129,27 @@ class Odd
     {
         $this->createdAt = new \DateTimeImmutable();
     }
+
+    public function getTrj(): string
+    {
+      return $this->trj;
+    }
+
+    public function setTrj()
+    {
+      $this->trj = $trj;
+      return $this;
+    }
+
+    public function getMatchDate(): ?\DateTimeInterface
+    {
+        return $this->matchDate;
+    }
+
+    public function setMatchDate(?\DateTimeInterface $matchDate): self
+    {
+        $this->matchDate = $matchDate;
+        return $this;
+    }
+
 }
