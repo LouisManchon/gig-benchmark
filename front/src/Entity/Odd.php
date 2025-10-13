@@ -19,17 +19,17 @@ class Odd
     #[ORM\Column(type: "string", length: 100)]
     private string $bookmaker;
 
-    #[ORM\Column(type: "float")]
-    private float $cote_1;
+    #[ORM\Column(type: "float", nullable: true)]
+    private ?float $cote_1 = null;
 
-    #[ORM\Column(type: "float")]
-    private float $cote_N;
+    #[ORM\Column(type: "float", nullable: true)]
+    private ?float $cote_N = null;
 
-    #[ORM\Column(type: "float")]
-    private float $cote_2;
+    #[ORM\Column(type: "float", nullable: true)]
+    private ?float $cote_2 = null;
 
-    #[ORM\Column(type:"string")]
-    private string $trj;
+    #[ORM\Column(type:"float", nullable: true)]
+    private ?float $trj = null;
 
     #[ORM\Column(type:"string")]
     private string $league;
@@ -70,7 +70,7 @@ class Odd
         return $this;
     }
 
-    public function getCote1(): float
+    public function getCote1(): ?float
     {
         return $this->cote_1;
     }
@@ -81,7 +81,7 @@ class Odd
         return $this;
     }
 
-    public function getCoteN(): float
+    public function getCoteN(): ?float
     {
         return $this->cote_N;
     }
@@ -92,7 +92,7 @@ class Odd
         return $this;
     }
 
-    public function getCote2(): float
+    public function getCote2(): ?float
     {
         return $this->cote_2;
     }
@@ -130,7 +130,7 @@ class Odd
         $this->createdAt = new \DateTimeImmutable();
     }
 
-    public function getTrj(): string
+    public function getTrj(): ?float
     {
       return $this->trj;
     }

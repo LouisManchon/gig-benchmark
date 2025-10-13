@@ -4,97 +4,121 @@
 
 {% block body %}
 <header>
-    <h1>Betting Odds</h1>
-
-    <form action="{{ path('odds_scrape') }}" method="post">
-        <button type="submit" class="btn btn-primary">Scrapping</button>
-    </form>
-
+    <div class="title-container">
+        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="site-logo">
+        <h1>Benchmark</h1>
+    </div>    
     {% for label, messages in app.flashes %}
         {% for message in messages %}
             <div class="alert alert-{{ label }}">{{ message }}</div>
         {% endfor %}
     {% endfor %}
-
-    <!-- filter by bookmaker & match -->
-    <form method="get" action="{{ path('odds_list') }}">
-        <label for="bookmaker">Filter by bookmaker:</label>
-        <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
-            <option value="">All</option>
-            {% for bm in bookmakers %}
-                <option value="{{ bm }}" {% if bm == currentBookmaker %}selected{% endif %}>{{ bm }}</option>
-            {% endfor %}
-        </select>
-        <label name="match" id="match">Filter by match:</label>
-        <select name="match" id="match" onchange="this.form.submit()">
-            <option value="">All</option>
-            {% for match in matches %}
-                <option value="{{ match }}" {% if match == currentMatch %}selected{% endif %}>{{ match }}</option>
-            {% endfor %}
-        </select>
-        <label name="league" id="match">Filter by league:</label>
-        <select name="league" id="league" onchange="this.form.submit()">
-            <option value="">All</option>
-            {% for league in leagues %}
-                <option value="{{ league }}" {% if league == currentLeague %}selected{% endif %}>{{ league }}</option>
-            {% endfor %}
-        </select>
-        <label for="date">Filter by date:</label>
-        <input type="date" id="date" name="date" value="{{ currentDate|default('') }}" onchange="this.form.submit()">
-    </form>
 </header>
 
-<!--table for trj by bookmakers-->
-<div class="tables">
-    <table class="avgtrj">
-        <thead>
-            <tr>
-                <th>Bookmaker</th>
-                <th>Average TRJ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in avgTrj %}
-                <tr>
-                    <td>{{ row.bookmaker }}</td>
-                    <td>{{ row.avgTrj|number_format(2, '.', '') }}%</td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="2">No data found.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 
-    <!-- table for all matchs -->
-    <table class="all_matchs">
-        <thead>
-            <tr>
-                <th>Match</th>
-                <th>Bookmaker</th>
-                <th>Cote 1</th>
-                <th>Cote N</th>
-                <th>Cote 2</th>
-                <th>TRJ</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for odd in odds %}
-                <tr>
-                    <td>{{ odd.matchName }}</td>
-                    <td>{{ odd.bookmaker }}</td>
-                    <td>{{ odd.cote1 }}</td>
-                    <td>{{ odd.coteN }}</td>
-                    <td>{{ odd.cote2 }}</td>
-                    <td>{{ odd.trj }}%</td>
-                </tr>
-            {% else %}
-                <tr>
-                    <td colspan="5">No odds available.</td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+<div class="container">
+    <!-- aside for scraping -->
+    <aside class="sidebar-closed" id="sidebar">
+        <h3>Filters</h3>
+        <form class="aside-form" method="get" action="{{ path('odds_list') }}">
+            <label name="sport" id="sport">Sports :</label>
+                <select name="sport" id="sport" onchange="this.form.submit()">
+                    <option value="">All</option>
+                </select>
+            <label for="bookmaker">Bookmaker:</label>
+                <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
+                    <option value="">All</option>
+                </select>
+            <label name="league" id="match">League :</label>
+                <select name="league" id="league" onchange="this.form.submit()">
+                    <option value="">All</option>
+                </select>
+        </form>
+            <button type="submit" class="scraping-btn">Start Scraping</button>
+    </aside>
+
+    <main>
+        <!-- filter by bookmaker, date & match -->
+        <h2>Filters</h2>
+        <form class="form-filters" method="get" action="{{ path('odds_list') }}">
+        <div class="filter-form">
+            {{ form_start(form, {'method': 'get', 'action': path('odds_list')}) }}
+                <div class="form-group">
+                    {{ form_label(form.bookmaker) }}
+                    {{ form_widget(form.bookmaker) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.league) }}
+                    {{ form_widget(form.league) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.match) }}
+                    {{ form_widget(form.match) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.dateRange) }}
+                    {{ form_widget(form.dateRange) }}
+                </div>
+                <button type="submit" id="filter-button">Filter</button>
+            {{ form_end(form) }}
+        </div>
+        </form>
+        <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
+        <div class="tables">
+            <!--table for trj by bookmakers-->
+            <table class="avgtrj">
+                <thead>
+                    <tr>
+                        <th>Bookmaker <span>⬍</span></th>
+                        <th>Average TRJ <span>⬍</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in avgTrj %}
+                        <tr>
+                            <td>{{ row.bookmaker }}</td>
+                            <td class="{% if row.avgTrj > 90 %}trj-high{% elseif row.avgTrj < 90 %}trj-low{% endif %}">
+                                {{ row.avgTrj|number_format(2, '.', '') }}%
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="2">No data found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- table for all matchs -->
+            <table class="all_matchs">
+                <thead>
+                    <tr>
+                        <th>Match <span>⬍</span></th>
+                        <th>Bookmaker <span>⬍</span></th>
+                        <th>Odd 1 <span>⬍</span></th>
+                        <th>Odd N <span>⬍</span></th>
+                        <th>Odd 2 <span>⬍</span></th>
+                        <th>TRJ <span>⬍</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for odd in odds %}
+                        <tr>
+                            <td>{{ odd.matchName }}</td>
+                            <td>{{ odd.bookmaker }}</td>
+                            <td>{{ odd.cote1 }}</td>
+                            <td>{{ odd.coteN }}</td>
+                            <td>{{ odd.cote2 }}</td>
+                            <td class="{% if odd.trj > 90 %}trj-high{% elseif odd.trj < 90 %}trj-low{% endif %}">{{ odd.trj }}%</td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="5">No odds available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
 </div>
 {% endblock %}
