@@ -99,7 +99,6 @@ CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "DELETE,GET,OPTIONS,PATCH,P
 # ==== REST FRAMEWORK + JWT ====
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
         'core.keycloak_auth.KeycloakAuthentication'
     ],
     'DEFAULT_PERMISSION_CLASSES': [

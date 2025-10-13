@@ -7,7 +7,11 @@ from .serializers import (
     SportSerializer, MarketNameSerializer, LeagueSerializer,
     TeamSerializer, PlayerSerializer, OddsSerializer
 )
-from core.keycloak_auth import KeycloakAuthentication
+from core.keycloak_auth import (
+    KeycloakAuthentication,
+    IsKeycloakAdmin,
+    IsKeycloakUser
+)
 
 class BaseViewSet(viewsets.ModelViewSet):
     """
@@ -15,27 +19,19 @@ class BaseViewSet(viewsets.ModelViewSet):
     - GET/HEAD/OPTIONS : Users + Admins
     - POST/PUT/PATCH/DELETE : Admins seulement
     """
+    authentication_classes = [KeycloakAuthentication]
     permission_classes = [permissions.IsAuthenticated]  # Base: authentification requise
 
-    def check_permissions(self, request):
-        """Surcharge pour vérifier les rôles Keycloak."""
-        super().check_permissions(request)
-
-        # Récupérer les rôles depuis le token JWT
-        roles = request.auth.get('resource_access', {}).get('gig-api', {}).get('roles', [])
-
-        # Autoriser GET/HEAD/OPTIONS pour les users et admins
-        if request.method in permissions.SAFE_METHODS:
-            if not ('user' in roles or 'admin' in roles):
-                raise PermissionDenied("Vous devez être un utilisateur ou admin pour accéder à cette ressource.")
-        # Limiter POST/PUT/PATCH/DELETE aux admins
-        else:
-            if 'admin' not in roles:
-                raise PermissionDenied("Seuls les admins peuvent modifier ou supprimer des données.")
-
     def get_permissions(self):
-        """Garantit que IsAuthenticated est toujours appliqué."""
-        return [permission() for permission in self.permission_classes]
+        """
+        Applique des permissions dynamiques :
+        - Lecture (GET) : IsKeycloakUser (user ou admin)
+        - Écriture (POST/PUT/DELETE) : IsKeycloakAdmin (admin seulement)
+        """
+        if self.action in ['list', 'retrieve']:  # SAFE_METHODS
+            return [IsKeycloakUser()]
+        else:  # Méthodes non-sûres
+            return [IsKeycloakAdmin()]
 
 class SportViewSet(BaseViewSet):
     queryset = Sport.objects.all().order_by('name')
