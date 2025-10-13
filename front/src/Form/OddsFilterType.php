@@ -14,11 +14,14 @@ class OddsFilterType extends AbstractType
     {
         $builder
             ->add('bookmaker', ChoiceType::class, [
-                'choices' => array_combine($options['bookmakers'], $options['bookmakers']),
-                'placeholder' => 'All',
+                'choices' => array_merge(
+                    ['All' => 'all'], 
+                    array_combine($options['bookmakers'], $options['bookmakers'])
+                ),
+                'data' => ['all'], // 🔧 Valeur par défaut
                 'required' => false,
                 'multiple' => true,
-                'expanded' => false, // menu déroulant
+                'expanded' => false,
                 'attr' => ['class' => 'js-bookmaker-select']
             ])
             ->add('league', ChoiceType::class, [

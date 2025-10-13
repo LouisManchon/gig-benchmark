@@ -69,30 +69,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // check box
 
-document.addEventListener('DOMContentLoaded', () => {
-    // Choices.js pour Bookmakers
-    const bookmakerSelect = document.querySelector('.js-bookmaker-select');
-    if (bookmakerSelect) {
-        const choices = new Choices(bookmakerSelect, {
-            removeItemButton: true,
-            placeholder: true,
-            placeholderValue: 'All',
-            searchEnabled: true
-        });
-    }
+// main.js
 
-    // Flatpickr pour dateRange
-    flatpickr('.js-date-range', {
-        mode: 'range',
-        dateFormat: 'Y-m-d',
-        onClose: function(selectedDates, dateStr, instance) {
-            instance.element.form.submit();
+// Fonction d'initialisation des plugins
+function initPlugins() {
+    // --- Choices.js pour multi-select ---
+    document.querySelectorAll('.js-bookmaker-select').forEach(select => {
+        if (!select.dataset.choicesInit) {
+            new Choices(select, {
+                removeItemButton: true,
+                placeholder: true,
+                placeholderValue: 'All',
+                searchEnabled: true
+            });
+            select.dataset.choicesInit = true; // marque comme initialisé
         }
     });
 
-    document.querySelector('#filter-button').addEventListener('click', function() {
-    this.form.submit();
+    // --- Flatpickr pour dateRange ---
+    document.querySelectorAll('.js-date-range').forEach(input => {
+        if (!input._flatpickr) {
+            flatpickr(input, {
+                mode: 'range',
+                dateFormat: 'Y-m-d',
+                // Retirer le submit automatique pour éviter les conflits
+                onClose: function(selectedDates, dateStr, instance) {
+                    // Optionnel : tu peux déclencher un submit ici si tu veux
+                    // instance.element.form.submit();
+                }
+            });
+        }
     });
+}
 
-});
+// Exécute l'initialisation après que la page est chargée
+document.addEventListener('DOMContentLoaded', initPlugins);
 

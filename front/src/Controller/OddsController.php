@@ -9,10 +9,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Process\Process;
-use PhpAmqpLib\Connection\AMQPStreamConnection;
-use PhpAmqpLib\Message\AMQPMessage;
-
 
 class OddsController extends AbstractController
 {
@@ -41,10 +37,10 @@ class OddsController extends AbstractController
             ->getResult();
         $leaguesArray = array_map(fn($l) => $l['league'], $leagues);
 
-
-        // 2️⃣ Créer le formulaire avec les choix récupérés
+        // 2️⃣ Créer le formulaire
         $form = $this->createForm(OddsFilterType::class, null, [
-            'bookmakers' => $bookmakersArray, // tableau simple ['Bookmaker1', 'Bookmaker2', ...]
+            'method' => 'GET',
+            'bookmakers' => $bookmakersArray,
             'matches' => $matchesArray,
             'leagues' => $leaguesArray,
         ]);
@@ -56,34 +52,35 @@ class OddsController extends AbstractController
         $leagueFilter = null;
         $dateRange = null;
 
-        // 3️⃣ Récupérer les valeurs filtrées
+        // 🔧 FIX ICI : utilise get() au lieu de getData()
         if ($form->isSubmitted() && $form->isValid()) {
-            $data = $form->getData();
-            $bookmakerFilter = $data['bookmaker'] ?? [];
-            $matchFilter = $data['match'] ?? null;
-            $leagueFilter = $data['league'] ?? null;
-            $dateRange = $data['dateRange'] ?? null;
+            $bookmakerFilter = $form->get('bookmaker')->getData() ?? [];
+            $matchFilter = $form->get('match')->getData();
+            $leagueFilter = $form->get('league')->getData();
+            $dateRange = $form->get('dateRange')->getData();
+
+            // Si "All" est sélectionné pour Bookmakers
+            if (is_array($bookmakerFilter) && in_array('all', $bookmakerFilter)) {
+                $bookmakerFilter = [];
+            }
         }
 
-        // Si "All" est sélectionné pour les bookmakers, on ignore le filtre
-        if (in_array('all', $bookmakerFilter)) {
-            $bookmakerFilter = [];
-        }
-
-        // 4️⃣ Construire le QueryBuilder principal
+        // 3️⃣ Construire QueryBuilder avec filtres
         $qb = $repo->createQueryBuilder('o');
 
         if (!empty($bookmakerFilter)) {
             $qb->andWhere('o.bookmaker IN (:bookmakers)')
                ->setParameter('bookmakers', $bookmakerFilter);
         }
-        if ($matchFilter && $matchFilter !== 'all') {
-            $qb->andWhere('o.match_name = :match')
-               ->setParameter('match', $matchFilter);
-        }
+
         if ($leagueFilter && $leagueFilter !== 'all') {
             $qb->andWhere('o.league = :league')
                ->setParameter('league', $leagueFilter);
+        }
+
+        if ($matchFilter && $matchFilter !== 'all') {
+            $qb->andWhere('o.match_name = :match')
+               ->setParameter('match', $matchFilter);
         }
 
         if ($dateRange) {
@@ -106,14 +103,14 @@ class OddsController extends AbstractController
                    ->setParameter('start', $start)
                    ->setParameter('end', $end);
             } catch (\Exception $e) {
-                // Ignore ou logger
+                // Ignorer ou logger
             }
         }
 
         $qb->orderBy('o.createdAt', 'DESC');
         $allOdds = $qb->getQuery()->getResult();
 
-        // 5️⃣ Latest odds par match + bookmaker
+        // 4️⃣ Latest odds par match + bookmaker
         $latestOdds = [];
         foreach ($allOdds as $odd) {
             $key = $odd->getMatchName() . '|' . $odd->getBookmaker();
@@ -122,7 +119,7 @@ class OddsController extends AbstractController
             }
         }
 
-        // 6️⃣ Avg TRJ avec filtres
+        // 5️⃣ Avg TRJ par bookmaker
         $avgQb = $repo->createQueryBuilder('o')
             ->select('o.bookmaker, AVG(o.trj) AS avgTrj')
             ->groupBy('o.bookmaker');
@@ -131,15 +128,15 @@ class OddsController extends AbstractController
             $avgQb->andWhere('o.bookmaker IN (:bookmakers)')
                    ->setParameter('bookmakers', $bookmakerFilter);
         }
-        if ($matchFilter && $matchFilter !== 'all') {
-            $avgQb->andWhere('o.match_name = :match')
-                   ->setParameter('match', $matchFilter);
-        }
         if ($leagueFilter && $leagueFilter !== 'all') {
             $avgQb->andWhere('o.league = :league')
                    ->setParameter('league', $leagueFilter);
         }
-        if ($dateRange ?? false) {
+        if ($matchFilter && $matchFilter !== 'all') {
+            $avgQb->andWhere('o.match_name = :match')
+                   ->setParameter('match', $matchFilter);
+        }
+        if (isset($start) && isset($end)) {
             $avgQb->andWhere('o.matchDate BETWEEN :start AND :end')
                    ->setParameter('start', $start)
                    ->setParameter('end', $end);
@@ -149,7 +146,7 @@ class OddsController extends AbstractController
         $chartLabels = array_map(fn($r) => $r['bookmaker'], $avgTrj);
         $chartData = array_map(fn($r) => (float) $r['avgTrj'], $avgTrj);
 
-        // 7️⃣ Rendu
+        // 6️⃣ Rendu
         return $this->render('odds/index.html.twig', [
             'form' => $form->createView(),
             'odds' => $latestOdds,
@@ -158,11 +155,4 @@ class OddsController extends AbstractController
             'chartData' => $chartData,
         ]);
     }
-
-    #[Route('/odds/scrape', name: 'odds_scrape')]
-    public function scrape(): Response
-    {
-        // ton code de scraping ici
-    }
-
 }

@@ -40,9 +40,8 @@
     <main>
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>
-        <form class="form-filters" method="get" action="{{ path('odds_list') }}">
         <div class="filter-form">
-            {{ form_start(form, {'method': 'get', 'action': path('odds_list')}) }}
+            {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters'}}) }}
                 <div class="form-group">
                     {{ form_label(form.bookmaker) }}
                     {{ form_widget(form.bookmaker) }}
@@ -62,7 +61,6 @@
                 <button type="submit" id="filter-button">Filter</button>
             {{ form_end(form) }}
         </div>
-        </form>
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
         <div class="tables">
             <!--table for trj by bookmakers-->
