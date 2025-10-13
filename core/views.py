@@ -1,4 +1,5 @@
 from rest_framework import viewsets, permissions
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
 from django.db.models import Prefetch
 from .models import Sport, MarketName, League, Team, Player, Odds
@@ -11,25 +12,30 @@ from core.keycloak_auth import KeycloakAuthentication
 class BaseViewSet(viewsets.ModelViewSet):
     """
     Classe de base avec permissions différenciées :
-    - GET : Users + Admins
-    - POST/PUT/DELETE : Admins seulement
+    - GET/HEAD/OPTIONS : Users + Admins
+    - POST/PUT/PATCH/DELETE : Admins seulement
     """
     permission_classes = [permissions.IsAuthenticated]  # Base: authentification requise
 
+    def check_permissions(self, request):
+        """Surcharge pour vérifier les rôles Keycloak."""
+        super().check_permissions(request)
+
+        # Récupérer les rôles depuis le token JWT
+        roles = request.auth.get('resource_access', {}).get('gig-api', {}).get('roles', [])
+
+        # Autoriser GET/HEAD/OPTIONS pour les users et admins
+        if request.method in permissions.SAFE_METHODS:
+            if not ('user' in roles or 'admin' in roles):
+                raise PermissionDenied("Vous devez être un utilisateur ou admin pour accéder à cette ressource.")
+        # Limiter POST/PUT/PATCH/DELETE aux admins
+        else:
+            if 'admin' not in roles:
+                raise PermissionDenied("Seuls les admins peuvent modifier ou supprimer des données.")
+
     def get_permissions(self):
-        # Autorise GET pour les users + admins
-        if self.action in ['list', 'retrieve']:
-            if (KeycloakAuthentication.user_is_admin(self.request) or
-                KeycloakAuthentication.user_is_user(self.request)):
-                return [permissions.AllowAny()]
-        # Seuls les admins pour POST/PUT/DELETE
-        if not KeycloakAuthentication.user_is_admin(self.request):
-            self.permission_denied(
-                self.request,
-                message="Seuls les admins peuvent effectuer cette action",
-                code=403
-            )
-        return super().get_permissions()
+        """Garantit que IsAuthenticated est toujours appliqué."""
+        return [permission() for permission in self.permission_classes]
 
 class SportViewSet(BaseViewSet):
     queryset = Sport.objects.all().order_by('name')
