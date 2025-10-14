@@ -1,8 +1,8 @@
 import os
 import logging
 from rest_framework.permissions import BasePermission
+from functools import lru_cache
 from rest_framework import authentication, exceptions
-from django.contrib.auth.models import AnonymousUser  # Remplace User pour éviter la base de données
 import jwt
 from django.conf import settings
 
@@ -26,6 +26,19 @@ class KeycloakUser:
     def __repr__(self):
         return f"<KeycloakUser: {self.username} (roles: {self.roles})>"
 
+def get_anonymous_user():
+    """Retourne un utilisateur non authentifié (remplace AnonymousUser).
+    """
+    user = KeycloakUser(
+    username="anonymous",
+    email=None,
+    roles=[],
+    )
+    user.is_authenticated = False  # ✅ Critique pour Django
+    user.is_active = False
+
+    return user
+
 class KeycloakAuthentication(authentication.BaseAuthentication):
     """
     Authentification Keycloak avec PyJWT et validation RS256.
@@ -36,6 +49,7 @@ class KeycloakAuthentication(authentication.BaseAuthentication):
     """
 
     @staticmethod
+    @lru_cache(maxsize=1)  # ← Cache la config pour éviter de recharger à chaque requête
     def _get_keycloak_config():
         """Charge la configuration depuis settings.py"""
         return {
@@ -78,7 +92,10 @@ class KeycloakAuthentication(authentication.BaseAuthentication):
             )
 
             # 3. Extraction des données utilisateur
-            roles = payload.get('resource_access', {}).get('gig-api', {}).get('roles', [])
+            resource_roles = payload.get('resource_access', {}).get('gig-api', {}).get('roles', [])
+            realm_roles = payload.get('realm_access', {}).get('roles', [])
+            roles = list(set(resource_roles + realm_roles))  # Fusionne et supprime les doublons
+
             email = payload.get('email')
             username = payload.get('preferred_username', email.split('@')[0])  # fallback sur email
 
@@ -94,9 +111,6 @@ class KeycloakAuthentication(authentication.BaseAuthentication):
                 roles=roles
             )
 
-            # 5. Attache les rôles à la requête (pour compatibilité ascendante)
-            request.keycloak_roles = roles
-
             return (user, token)  # DRF utilisera cet utilisateur pour les permissions
 
         except jwt.ExpiredSignatureError:
@@ -109,43 +123,14 @@ class KeycloakAuthentication(authentication.BaseAuthentication):
             raise exceptions.AuthenticationFailed("Authentication failed")
 
 class IsKeycloakAdmin(BasePermission):
-    """
-    Permission pour les endpoints réservés aux admins.
-    Exemple d'utilisation:
-    ```
-    @api_view(['GET'])
-    @permission_classes([IsKeycloakAdmin])
-    def admin_only_view(request):
-        ...
-    ```
-    """
     def has_permission(self, request, view):
-        # Vérifie que l'utilisateur est authentifié ET a le rôle 'admin'
-        return (
-            hasattr(request, 'user') and
-            hasattr(request.user, 'roles') and
-            'admin' in request.user.roles
-        )
+        # Vérifie d'abord que l'utilisateur est authentifié
+        if not request.user.is_authenticated:
+            return False
+        return 'admin' in request.user.roles
+
 
 class IsKeycloakUser(BasePermission):
-    """
-    Permission pour les endpoints accessibles aux users ET admins.
-    """
     def has_permission(self, request, view):
-        return (
-            hasattr(request, 'user') and
-            hasattr(request.user, 'roles') and
-            any(role in request.user.roles for role in ['user', 'admin'])
-        )
-
-class IsKeycloakAnalyst(BasePermission):
-    """
-    Permission pour un rôle spécifique (exemple pour 'analyst').
-    À adapter selon vos rôles Keycloak.
-    """
-    def has_permission(self, request, view):
-        return (
-            hasattr(request, 'user') and
-            hasattr(request.user, 'roles') and
-            'analyst' in request.user.roles
-        )
+        # Autorise si l'utilisateur a au moins un des rôles ['user', 'admin']
+        return any(role in request.user.roles for role in ['user', 'admin'])

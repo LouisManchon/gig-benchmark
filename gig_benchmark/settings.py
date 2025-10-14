@@ -1,149 +1,150 @@
-# settings.py
-from pathlib import Path
-from corsheaders.defaults import default_headers
-from datetime import timedelta
 import os
+import logging
+from rest_framework.permissions import BasePermission
+from rest_framework import authentication, exceptions
+import jwt
+from django.conf import settings
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+logger = logging.getLogger(__name__)
 
-# ==== DJANGO SECRETS ====
-SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
-DEBUG = os.getenv("DEBUG", "True") == "True"
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
+class KeycloakUser:
+    """
+    Utilisateur "fantôme" qui n'utilise PAS la base de données Django.
+    Stocke uniquement les infos nécessaires depuis le token Keycloak.
+    """
+    def __init__(self, username, email, roles):
+        self.username = username      # Nom d'utilisateur (ex: "john_doe")
+        self.email = email            # Email (ex: "john@example.com")
+        self.roles = roles            # Rôles Keycloak (ex: ["admin", "user"])
+        self.is_authenticated = True  # Obligatoire pour Django
+        self.is_active = True         # Indique que le compte est actif
 
-# ==== APPLICATIONS ====
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
+    def __str__(self):
+        return self.username
 
-    'core',
+    def __repr__(self):
+        return f"<KeycloakUser: {self.username} (roles: {self.roles})>"
 
-    'rest_framework',
-    'django_filters',
-    'corsheaders',
-    'drf_yasg',
-]
+class KeycloakAuthentication(authentication.BaseAuthentication):
+    """
+    Authentification Keycloak avec PyJWT et validation RS256.
+    - Valide le token via la clé publique Keycloak
+    - Extrait les rôles depuis `resource_access.gig-api.roles`
+    - Crée un utilisateur fantôme (sans base de données)
+    - Attache les rôles à la requête pour les permissions
+    """
 
-# ==== MIDDLEWARE ====
-MIDDLEWARE = [
-    'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware',
-]
-
-ROOT_URLCONF = 'gig_benchmark.urls'
-
-TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
-    },
-]
-
-WSGI_APPLICATION = 'gig_benchmark.wsgi.application'
-
-# ==== DATABASE ====
-DATABASES = {
-    'default': {
-        'ENGINE': os.getenv("DB_ENGINE", "django.db.backends.mysql"),
-        'NAME': os.getenv("DB_NAME", "GIG"),
-        'USER': os.getenv("DB_USER", "giguser"),
-        'PASSWORD': os.getenv("DB_PASSWORD", "1234"),
-        'HOST': os.getenv("DB_HOST", "localhost"),
-        'PORT': os.getenv("DB_PORT", "3306"),
-        'OPTIONS': eval(os.getenv("DB_OPTIONS", "{}")),
-    }
-}
-
-# ==== PASSWORD VALIDATORS ====
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'Europe/Paris'
-USE_I18N = True
-USE_TZ = True
-
-STATIC_URL = 'static/'
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# ==== CORS ====
-CORS_ALLOWED_ORIGINS = [
-    origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if origin
-]
-CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True") == "True"
-CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
-CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "DELETE,GET,OPTIONS,PATCH,POST,PUT").split(",")
-
-# ==== REST FRAMEWORK + JWT ====
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.keycloak_auth.KeycloakAuthentication'
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 50,
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
-        'rest_framework.filters.SearchFilter',
-        'rest_framework.filters.OrderingFilter',
-    ],
-}
-
-SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv("JWT_ACCESS_TOKEN_LIFETIME", 60))),
-    'REFRESH_TOKEN_LIFETIME': timedelta(minutes=int(os.getenv("JWT_REFRESH_TOKEN_LIFETIME", 1440))),
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'ALGORITHM': os.getenv("JWT_ALGORITHM", "HS256"),
-    'SIGNING_KEY': os.getenv("JWT_SECRET_KEY", SECRET_KEY),
-    'AUTH_HEADER_TYPES': ('Bearer',),
-    'USER_ID_FIELD': 'id',
-    'USER_ID_CLAIM': 'user_id',
-    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
-}
-
-# ==== SWAGGER ====
-SWAGGER_SETTINGS = {
-    'SECURITY_DEFINITIONS': {
-        'Bearer': {
-            'type': 'apiKey',
-            'name': 'Authorization',
-            'in': 'header'
+    @staticmethod
+    def _get_keycloak_config():
+        """Charge la configuration depuis settings.py"""
+        return {
+            'SERVER_URL': settings.KEYCLOAK_SERVER_URL,  # Ex: "http://localhost:8080"
+            'REALM': settings.KEYCLOAK_REALM,            # Ex: "GigBenchmarkRealm"
+            'CLIENT_ID': settings.KEYCLOAK_CLIENT_ID,    # Ex: "gig-api"
+            'PUBLIC_KEY': settings.KEYCLOAK_PUBLIC_KEY.replace('\\n', '\n'),  # Clé publique formatée
+            'ALGORITHM': 'RS256',  # Algorithme de signature (doit matcher Keycloak)
         }
-    },
-    'USE_SESSION_AUTH': False,
-    'JSON_EDITOR': True,
-    'LOGIN_URL': '/api/auth/login/',
-    'LOGOUT_URL': '/api/auth/logout/',
-}
 
-# ==== KEYCLOAK (optionnel) ====
-KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL", "")
-KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "")
-KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "")
-KEYCLOAK_CLIENT_SECRET_KEY = os.getenv("KEYCLOAK_CLIENT_SECRET_KEY", "")
-KEYCLOAK_CLIENT_PUBLIC_KEY = os.getenv("KEYCLOAK_CLIENT_PUBLIC_KEY", "")
+    def authenticate(self, request):
+        """
+        Méthode principale d'authentification.
+        1. Extrait le token du header Authorization
+        2. Valide le token avec la clé publique Keycloak
+        3. Crée un utilisateur fantôme avec les rôles
+        4. Retourne (user, token) pour les vues DRF
+        """
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
+            return None  # Pas de header = pas d'authentification (401 sera renvoyé par DRF)
+
+        try:
+            # 1. Vérification du format du header
+            if not auth_header.startswith('Bearer '):
+                raise exceptions.AuthenticationFailed(
+                    "Authorization header must start with 'Bearer '"
+                )
+
+            token = auth_header.split(' ')[1]  # Extrait "xxxx.yyyy.zzzz"
+            config = self._get_keycloak_config()
+
+            # 2. Décodage et validation du token JWT
+            payload = jwt.decode(
+                token,
+                config['PUBLIC_KEY'],
+                algorithms=[config['ALGORITHM']],
+                audience=config['CLIENT_ID'],  # Vérifie que le token est pour notre client
+                issuer=f"{config['SERVER_URL']}/realms/{config['REALM']}",  # Vérifie l'émetteur
+            )
+
+            # 3. Extraction des données utilisateur
+            roles = payload.get('resource_access', {}).get('gig-api', {}).get('roles', [])
+            email = payload.get('email')
+            username = payload.get('preferred_username', email.split('@')[0])  # fallback sur email
+
+            if not email:
+                raise exceptions.AuthenticationFailed("No email found in token payload")
+
+            logger.info(f"Authenticating user {username} with roles: {roles}")
+
+            # 4. Création de l'utilisateur fantôme (sans base de données)
+            user = KeycloakUser(
+                username=username,
+                email=email,
+                roles=roles
+            )
+
+            # 5. Attache les rôles à la requête (pour compatibilité ascendante)
+            request.keycloak_roles = roles
+
+            return (user, token)  # DRF utilisera cet utilisateur pour les permissions
+
+        except jwt.ExpiredSignatureError:
+            raise exceptions.AuthenticationFailed("Token expired - please login again")
+        except jwt.InvalidTokenError as e:
+            logger.error(f"Invalid JWT token: {str(e)}")
+            raise exceptions.AuthenticationFailed("Invalid token")
+        except Exception as e:
+            logger.error(f"Authentication failed: {str(e)}", exc_info=True)
+            raise exceptions.AuthenticationFailed("Authentication failed")
+
+class IsKeycloakAdmin(BasePermission):
+    """
+    Permission pour les endpoints réservés aux admins.
+    Exemple d'utilisation:
+    ```
+    @api_view(['GET'])
+    @permission_classes([IsKeycloakAdmin])
+    def admin_only_view(request):
+        ...
+    ```
+    """
+    def has_permission(self, request, view):
+        # Vérifie que l'utilisateur est authentifié ET a le rôle 'admin'
+        return (
+            hasattr(request, 'user') and
+            hasattr(request.user, 'roles') and
+            'admin' in request.user.roles
+        )
+
+class IsKeycloakUser(BasePermission):
+    """
+    Permission pour les endpoints accessibles aux users ET admins.
+    """
+    def has_permission(self, request, view):
+        return (
+            hasattr(request, 'user') and
+            hasattr(request.user, 'roles') and
+            any(role in request.user.roles for role in ['user', 'admin'])
+        )
+
+class IsKeycloakAnalyst(BasePermission):
+    """
+    Permission pour un rôle spécifique (exemple pour 'analyst').
+    À adapter selon vos rôles Keycloak.
+    """
+    def has_permission(self, request, view):
+        return (
+            hasattr(request, 'user') and
+            hasattr(request.user, 'roles') and
+            'analyst' in request.user.roles
+        )
