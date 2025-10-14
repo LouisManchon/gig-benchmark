@@ -1,25 +1,88 @@
-// side bar closed
-
 document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar toggle
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggleSidebar');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+    }
 
-    toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
-    });
-});
+    // init button for filters
 
+    document.getElementById('reset-btn').addEventListener('click', () => {
+            document.querySelector('.aside-form').reset();
+            window.location.href = window.location.pathname;
+        });
 
-/*/ init button for filters
+    // Choices.js pour Bookmakers
+    const bookmakerSelect = document.querySelector('.js-bookmaker-select');
+    let choicesInstance = null;
+    
+    if (bookmakerSelect) {
+        choicesInstance = new Choices(bookmakerSelect, {
+            removeItemButton: true,
+            placeholder: true,
+            placeholderValue: 'All',
+            searchEnabled: true
+        });
+    }
 
-document.getElementById('reset-btn').addEventListener('click', () => {
-    document.querySelector('.aside-form').reset();
-    window.location.href = window.location.pathname;
-}); /*/
+    // Flatpickr pour dateRange
+    const dateInput = document.querySelector('.js-date-range');
+    let flatpickrInstance = null;
+    
+    if (dateInput) {
+        flatpickrInstance = flatpickr(dateInput, {
+            mode: 'range',
+            dateFormat: 'Y-m-d'
+        });
+    }
 
-// toggle for table
+    // AJAX for filters
+    const filterForm = document.querySelector('form[name="odds_filter"]');
+    if (filterForm) {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // no refresh
+            
+            // Rdata from form
+            const formData = new FormData(this);
+            const params = new URLSearchParams(formData);
+            
+            //Send AJAX request
+            fetch('?' + params.toString(), {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Parse HTML
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                
+                // Update tables
+                const newAvgTable = doc.querySelector('.avgtrj tbody');
+                const newMatchTable = doc.querySelector('.all_matchs tbody');
+                
+                if (newAvgTable) {
+                    document.querySelector('.avgtrj tbody').innerHTML = newAvgTable.innerHTML;
+                }
+                if (newMatchTable) {
+                    document.querySelector('.all_matchs tbody').innerHTML = newMatchTable.innerHTML;
+                }
+                
+                // update URL
+                history.pushState({}, '', '?' + params.toString());
+            })
+            .catch(error => {
+                console.error('Erreur:', error);
+            });
+        });
+    }
 
-document.addEventListener('DOMContentLoaded', () => {
+    // Tables triables
     function makeTableSortable(tableSelector) {
         const table = document.querySelector(tableSelector);
         if (!table) return;
@@ -32,7 +95,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const isNumeric = !isNaN(parseFloat(rows[0].children[index].textContent));
 
-                // sort
                 rows.sort((a, b) => {
                     let aText = a.children[index].textContent.trim();
                     let bText = b.children[index].textContent.trim();
@@ -46,7 +108,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 });
 
-                // Toggle ordre
                 if (header.dataset.sorted === 'asc') {
                     rows.reverse();
                     header.dataset.sorted = 'desc';
@@ -54,54 +115,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     header.dataset.sorted = 'asc';
                 }
 
-                // reinject
                 tbody.innerHTML = '';
                 rows.forEach(r => tbody.appendChild(r));
             });
         });
     }
 
-    // Applique à tes tables
     makeTableSortable('.all_matchs');
-    makeTableSortable('.avgtrj'); // si tu veux garder le tri sur l'autre table
+    makeTableSortable('.avgtrj');
 });
-
-
-// check box
-
-// main.js
-
-// Fonction d'initialisation des plugins
-function initPlugins() {
-    // --- Choices.js pour multi-select ---
-    document.querySelectorAll('.js-bookmaker-select').forEach(select => {
-        if (!select.dataset.choicesInit) {
-            new Choices(select, {
-                removeItemButton: true,
-                placeholder: true,
-                placeholderValue: 'All',
-                searchEnabled: true
-            });
-            select.dataset.choicesInit = true; // marque comme initialisé
-        }
-    });
-
-    // --- Flatpickr pour dateRange ---
-    document.querySelectorAll('.js-date-range').forEach(input => {
-        if (!input._flatpickr) {
-            flatpickr(input, {
-                mode: 'range',
-                dateFormat: 'Y-m-d',
-                // Retirer le submit automatique pour éviter les conflits
-                onClose: function(selectedDates, dateStr, instance) {
-                    // Optionnel : tu peux déclencher un submit ici si tu veux
-                    // instance.element.form.submit();
-                }
-            });
-        }
-    });
-}
-
-// Exécute l'initialisation après que la page est chargée
-document.addEventListener('DOMContentLoaded', initPlugins);
-

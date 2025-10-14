@@ -18,7 +18,7 @@ class OddsFilterType extends AbstractType
                     ['All' => 'all'], 
                     array_combine($options['bookmakers'], $options['bookmakers'])
                 ),
-                'data' => ['all'], // 🔧 Valeur par défaut
+                'data' => ['all'],
                 'required' => false,
                 'multiple' => true,
                 'expanded' => false,

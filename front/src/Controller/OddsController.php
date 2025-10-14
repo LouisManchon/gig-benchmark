@@ -18,7 +18,7 @@ class OddsController extends AbstractController
     {
         $repo = $em->getRepository(Odd::class);
 
-        // 1️⃣ Récupérer tous les choix pour les filtres
+        // all input filters
         $bookmakers = $repo->createQueryBuilder('o')
             ->select('DISTINCT o.bookmaker')
             ->getQuery()
@@ -37,7 +37,7 @@ class OddsController extends AbstractController
             ->getResult();
         $leaguesArray = array_map(fn($l) => $l['league'], $leagues);
 
-        // 2️⃣ Créer le formulaire
+        // Create form
         $form = $this->createForm(OddsFilterType::class, null, [
             'method' => 'GET',
             'bookmakers' => $bookmakersArray,
@@ -52,20 +52,18 @@ class OddsController extends AbstractController
         $leagueFilter = null;
         $dateRange = null;
 
-        // 🔧 FIX ICI : utilise get() au lieu de getData()
         if ($form->isSubmitted() && $form->isValid()) {
             $bookmakerFilter = $form->get('bookmaker')->getData() ?? [];
             $matchFilter = $form->get('match')->getData();
             $leagueFilter = $form->get('league')->getData();
             $dateRange = $form->get('dateRange')->getData();
 
-            // Si "All" est sélectionné pour Bookmakers
             if (is_array($bookmakerFilter) && in_array('all', $bookmakerFilter)) {
                 $bookmakerFilter = [];
             }
         }
 
-        // 3️⃣ Construire QueryBuilder avec filtres
+        // QueryBuilder with filters
         $qb = $repo->createQueryBuilder('o');
 
         if (!empty($bookmakerFilter)) {
@@ -103,14 +101,14 @@ class OddsController extends AbstractController
                    ->setParameter('start', $start)
                    ->setParameter('end', $end);
             } catch (\Exception $e) {
-                // Ignorer ou logger
+                // ignore
             }
         }
 
         $qb->orderBy('o.createdAt', 'DESC');
         $allOdds = $qb->getQuery()->getResult();
 
-        // 4️⃣ Latest odds par match + bookmaker
+        // Latest odds par match + bookmaker
         $latestOdds = [];
         foreach ($allOdds as $odd) {
             $key = $odd->getMatchName() . '|' . $odd->getBookmaker();
@@ -119,7 +117,7 @@ class OddsController extends AbstractController
             }
         }
 
-        // 5️⃣ Avg TRJ par bookmaker
+        // Avg TRJ by bookmaker
         $avgQb = $repo->createQueryBuilder('o')
             ->select('o.bookmaker, AVG(o.trj) AS avgTrj')
             ->groupBy('o.bookmaker');
@@ -146,7 +144,7 @@ class OddsController extends AbstractController
         $chartLabels = array_map(fn($r) => $r['bookmaker'], $avgTrj);
         $chartData = array_map(fn($r) => (float) $r['avgTrj'], $avgTrj);
 
-        // 6️⃣ Rendu
+        // Render
         return $this->render('odds/index.html.twig', [
             'form' => $form->createView(),
             'odds' => $latestOdds,

@@ -41,7 +41,7 @@
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>
         <div class="filter-form">
-            {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters'}}) }}
+            {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters', 'name': 'odds_filter'}}) }}
                 <div class="form-group">
                     {{ form_label(form.bookmaker) }}
                     {{ form_widget(form.bookmaker) }}
@@ -59,6 +59,7 @@
                     {{ form_widget(form.dateRange) }}
                 </div>
                 <button type="submit" id="filter-button">Filter</button>
+                <button id="reset-btn">Init</button>
             {{ form_end(form) }}
         </div>
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
