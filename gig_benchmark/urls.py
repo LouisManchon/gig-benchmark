@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from core.views import public_endpoint
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
@@ -40,12 +41,9 @@ router.register(r'odds', OddsViewSet, basename='odds')  # ← Ajout de la route 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/v1/', include(router.urls)),  # ← Ajout de la version v1
-    path('api/v1/auth/', include([
-        path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-        path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-        path('verify/', TokenVerifyView.as_view(), name='token_verify'),  # ← Nouvelle route
-        # path('logout/', TokenBlacklistView.as_view(), name='token_blacklist'),  # ← À décommenter si tu utilises django-rest-framework-simplejwt[blacklist]
-    ])),
+
+    # Routes publiques (sans préfixe api/v1/ pour simplifier les tests)
+    path('api/public/', public_endpoint, name='public-endpoint'),
 
     # Routes pour Swagger (protégées)
     path('api/docs/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),

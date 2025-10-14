@@ -1,4 +1,7 @@
 from rest_framework import viewsets, permissions
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.decorators import action
 from django.db.models import Prefetch
@@ -12,6 +15,11 @@ from core.keycloak_auth import (
     IsKeycloakAdmin,
     IsKeycloakUser
 )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])  # ✅ Accessible sans token
+def public_endpoint(request):
+    return Response({"message": "Cette route est publique !"})
 
 class BaseViewSet(viewsets.ModelViewSet):
     """

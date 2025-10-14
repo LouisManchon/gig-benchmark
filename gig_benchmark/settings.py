@@ -140,7 +140,11 @@ LOGGING = {
     'disable_existing_loggers': False,
     'formatters': {
         'verbose': {
-            'format': '{levelname} {asctime} {module} {message}',
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
             'style': '{',
         },
     },
@@ -148,17 +152,45 @@ LOGGING = {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+            'level': 'DEBUG',
         },
-        'file': {
-            'class': 'logging.FileHandler',
-            'filename': 'keycloak_auth.log',
+        'keycloak_file': {
+            'class': 'logging.handlers.RotatingFileHandler',  # ✅ Rotation automatique
+            'filename': str(LOG_DIR / "keycloak_auth.log"),   # Chemin absolu
+            'maxBytes': 1024 * 1024 * 5,  # 5 Mo par fichier
+            'backupCount': 5,              # Garde 5 fichiers de backup
             'formatter': 'verbose',
+            'level': 'DEBUG',
+            'encoding': 'utf8',
+        },
+        'django_file': {
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / "django.log"),
+            'maxBytes': 1024 * 1024 * 5,
+            'backupCount': 5,
+            'formatter': 'verbose',
+            'level': 'INFO',
         },
     },
     'loggers': {
-        'core.keycloak_auth': {  # ✅ Logs spécifiques à ton module Keycloak
-            'handlers': ['console', 'file'],
+        'django': {  # ✅ Logs globaux de Django
+            'handlers': ['console', 'django_file'],
             'level': 'INFO',
+            'propagate': True,
+        },
+        'django.request': {  # ✅ Logs des requêtes (erreurs 4xx/5xx)
+            'handlers': ['console', 'django_file'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'keycloak_auth': {  # ✅ Logs de la librairie django-keycloak-auth
+            'handlers': ['console', 'keycloak_file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'core.keycloak_auth': {  # ✅ Tes logs custom
+            'handlers': ['console', 'keycloak_file'],
+            'level': 'DEBUG',
             'propagate': False,
         },
     },
