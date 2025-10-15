@@ -1,9 +1,14 @@
 from pathlib import Path
+import json
 from corsheaders.defaults import default_headers
 from datetime import timedelta
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# ==== LOGS DIRECTORY ====
+LOG_DIR = BASE_DIR / "logs"  # ✅ Définition de LOG_DIR
+LOG_DIR.mkdir(exist_ok=True)  # ✅ Création du dossier si inexistant
 
 # ==== DJANGO SECRETS ====
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-key")
@@ -18,9 +23,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
     'core',
-
+    'rest_framework_simplejwt.token_blacklist',
     'rest_framework',
     'django_filters',
     'corsheaders',
@@ -35,24 +39,28 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'core.middlewares.AnonymousUserMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 ROOT_URLCONF = 'gig_benchmark.urls'
-
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'templates'),  # Si tu as un dossier `templates/` à la racine
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
                 'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
+                'django.contrib.auth.context_processors.auth',  # ⚠️ CRUCIAL POUR KEYCLOAK
                 'django.contrib.messages.context_processors.messages',
             ],
+            # évite les erreurs de chargement de templates manquant
+            'string_if_invalid': 'INVALID_TEMPLATE_VAR: %s',  # ⬅️ Debugging facile
         },
     },
 ]
@@ -68,7 +76,7 @@ DATABASES = {
         'PASSWORD': os.getenv("DB_PASSWORD", "1234"),
         'HOST': os.getenv("DB_HOST", "localhost"),
         'PORT': os.getenv("DB_PORT", "3306"),
-        'OPTIONS': eval(os.getenv("DB_OPTIONS", "{}")),
+        'OPTIONS': json.loads(os.getenv("DB_OPTIONS", '{"charset": "utf8mb4"}')),  # ✅ Sécurisé
     }
 }
 
@@ -90,27 +98,53 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ==== CORS ====
 CORS_ALLOWED_ORIGINS = [
-    origin for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",") if origin
+    origin.strip()
+    for origin in os.getenv("CORS_ALLOWED_ORIGINS", "http://localhost:8001,http://127.0.0.1:8001").split(",")
+    if origin.strip()
 ]
+
 CORS_ALLOW_CREDENTIALS = os.getenv("CORS_ALLOW_CREDENTIALS", "True") == "True"
-CORS_ALLOW_HEADERS = list(default_headers) + ["authorization"]
+CORS_ALLOW_HEADERS = list(default_headers) + ["authorization", "x-csrftoken"]
 CORS_ALLOW_METHODS = os.getenv("CORS_ALLOW_METHODS", "DELETE,GET,OPTIONS,PATCH,POST,PUT").split(",")
+CORS_EXPOSE_HEADERS = ["Authorization"]  # ✅ Nouveau: expose le header au frontend
 
 # ==== KEYCLOAK CONFIGURATION ====
 KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://localhost:8080")
 KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "GigBenchmarkRealm")
 KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "gig-api")
 KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET_KEY", "")
-KEYCLOAK_PUBLIC_KEY = os.getenv("KEYCLOAK_CLIENT_PUBLIC_KEY", "").replace('\\n', '\n')
+
+
+# Chemin vers la clé PEM (fichier externe sécurisé)
+KEYCLOAK_PEM_PATH = Path(__file__).resolve().parent / 'keycloak_public_key.pem'
+
+# Charge la clé depuis le fichier (méthode infaillible)
+try:
+    with open(KEYCLOAK_PEM_PATH, 'r') as f:
+        KEYCLOAK_PUBLIC_KEY = f.read().strip()
+except FileNotFoundError:
+    raise FileNotFoundError(
+        f"❌ Fichier de clé Keycloak manquant : {KEYCLOAK_PEM_PATH}. "
+        "Créez le fichier 'keycloak_public_key.pem' dans le dossier 'gig_benchmark/'."
+    )
+
+# Vérifie que la clé est valide
+if not KEYCLOAK_PUBLIC_KEY.startswith("-----BEGIN PUBLIC KEY-----"):
+    raise ValueError(
+        f"❌ Format de clé invalide dans {KEYCLOAK_PEM_PATH}. "
+        "Assurez-vous que le fichier contient une clé PEM valide."
+    )
+
+
 KEYCLOAK_ISSUER = f"{KEYCLOAK_SERVER_URL}/realms/{KEYCLOAK_REALM}"
 
-# ==== REST FRAMEWORK + JWT (CONFIGURÉ POUR KEYCLOAK) ====
+# ==== REST FRAMEWORK ====
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.keycloak_auth.KeycloakAuthentication',  # classe personnalisée
+        'core.keycloak_auth.KeycloakAuthentication',  # ✅ Ton backend custom
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticated',  # ✅ Par défaut, tout est protégé
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 50,
@@ -127,11 +161,13 @@ SWAGGER_SETTINGS = {
         'Bearer': {
             'type': 'apiKey',
             'name': 'Authorization',
-            'in': 'header'
+            'in': 'header',
+            'description': 'Enter your Keycloak JWT in the format: **Bearer &lt;token&gt;**',
         }
     },
-    'USE_SESSION_AUTH': False,
-    'JSON_EDITOR': True,
+    'SECURITY_REQUIREMENTS': [
+        {'Bearer': []}  # ✅ Applique Bearer à toutes les routes par défaut
+    ],
 }
 
 # ==== LOGS ====
@@ -155,10 +191,10 @@ LOGGING = {
             'level': 'DEBUG',
         },
         'keycloak_file': {
-            'class': 'logging.handlers.RotatingFileHandler',  # ✅ Rotation automatique
-            'filename': str(LOG_DIR / "keycloak_auth.log"),   # Chemin absolu
-            'maxBytes': 1024 * 1024 * 5,  # 5 Mo par fichier
-            'backupCount': 5,              # Garde 5 fichiers de backup
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': str(LOG_DIR / "keycloak_auth.log"),  # ✅ LOG_DIR est maintenant défini
+            'maxBytes': 1024 * 1024 * 5,  # 5 Mo
+            'backupCount': 5,
             'formatter': 'verbose',
             'level': 'DEBUG',
             'encoding': 'utf8',
@@ -173,22 +209,17 @@ LOGGING = {
         },
     },
     'loggers': {
-        'django': {  # ✅ Logs globaux de Django
+        'django': {
             'handlers': ['console', 'django_file'],
             'level': 'INFO',
             'propagate': True,
         },
-        'django.request': {  # ✅ Logs des requêtes (erreurs 4xx/5xx)
+        'django.request': {
             'handlers': ['console', 'django_file'],
             'level': 'ERROR',
             'propagate': False,
         },
-        'keycloak_auth': {  # ✅ Logs de la librairie django-keycloak-auth
-            'handlers': ['console', 'keycloak_file'],
-            'level': 'DEBUG',
-            'propagate': False,
-        },
-        'core.keycloak_auth': {  # ✅ Tes logs custom
+        'core.keycloak_auth': {  # ✅ Tes logs custom pour Keycloak
             'handlers': ['console', 'keycloak_file'],
             'level': 'DEBUG',
             'propagate': False,

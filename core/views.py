@@ -1,3 +1,5 @@
+import logging
+logger = logging.getLogger("core.keycloak_auth")
 from rest_framework import viewsets, permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
@@ -15,6 +17,14 @@ from core.keycloak_auth import (
     IsKeycloakAdmin,
     IsKeycloakUser
 )
+
+
+def test_log(request):
+    logger.debug("✅ Test DEBUG: Ce message doit apparaître dans keycloak_auth.log")
+    logger.info("✅ Test INFO: Ce message aussi !")
+    logger.warning("⚠️ Test WARNING: Attention, ceci est un avertissement")
+    return HttpResponse("Log test envoyé !")
+
 
 @api_view(['GET'])
 @permission_classes([AllowAny])  # ✅ Accessible sans token

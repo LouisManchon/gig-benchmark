@@ -16,6 +16,7 @@ __pycache__/
 *$py.class
 venv/
 .venv/
+keycloak_public_key.pem
 
 # Base de données
 database/init/

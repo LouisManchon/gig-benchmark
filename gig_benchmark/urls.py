@@ -1,5 +1,10 @@
 from django.contrib import admin
+from django.http import JsonResponse
+from rest_framework.decorators import authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
 from django.urls import path, include
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 from core.views import public_endpoint
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import (
@@ -14,6 +19,16 @@ from core.views import (
     SportViewSet, MarketNameViewSet, LeagueViewSet,
     TeamViewSet, PlayerViewSet, OddsViewSet  # ← Ajout de OddsViewSet
 )
+
+def test_log(request):  # ✅ Doit être ici, avant urlpatterns
+    return JsonResponse({"status": "success", "message": "Test log endpoint"})
+
+@api_view(['GET'])
+@authentication_classes([])  # ← Désactive toute authentification
+@permission_classes([AllowAny])  # ← Autorise l'accès sans token
+def public_endpoint(request):
+    """Endpoint public accessible sans authentification."""
+    return Response({"message": "Public endpoint - No auth required"})
 
 # Configuration de Swagger (sécurisé avec IsAuthenticated)
 schema_view = get_schema_view(
@@ -44,6 +59,8 @@ urlpatterns = [
 
     # Routes publiques (sans préfixe api/v1/ pour simplifier les tests)
     path('api/public/', public_endpoint, name='public-endpoint'),
+
+    path('test-log/', test_log),
 
     # Routes pour Swagger (protégées)
     path('api/docs/swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
