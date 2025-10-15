@@ -161,6 +161,38 @@ services:
     restart: unless-stopped
 
   # ============================================
+  # CONSUMER ODDS - Écoute queue RabbitMQ
+  # ============================================
+  consumer_odds:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: gig-benchmark-consumer-odds
+    volumes:
+      - ./backend:/app
+    environment:
+      DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
+      DB_HOST: db
+      DB_NAME: ${DB_NAME}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PORT: 3306
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_USER: ${RABBITMQ_USER}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+    command: python /app/consumers/consumer_odds.py
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # ============================================
   # SELENIUM - Chrome standalone
   # ============================================
   selenium:
