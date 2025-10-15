@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 
-from core.services.scraping_service import scraping_service
+from services.management.scraping_service import scraping_service
 
 
 @api_view(['GET'])

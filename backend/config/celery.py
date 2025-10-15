@@ -1,5 +1,5 @@
 import os
-from backend.config.celery import Celery
+from celery import Celery
 
 # Définir le module de settings Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings.production')

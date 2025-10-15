@@ -34,8 +34,8 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     ports:
-      - "5672:5672"      # AMQP
-      - "15672:15672"    # Management UI
+      - "5672:5672"
+      - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
@@ -62,28 +62,21 @@ services:
     ports:
       - "${BACKEND_PORT}:${BACKEND_PORT}"
     environment:
-      # Django
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
       SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-change-me}
       DEBUG: ${DEBUG:-False}
       ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,backend,nginx}
-      
-      # Database
       DB_HOST: db
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_PORT: 3306
-      
-      # Celery / RabbitMQ
       CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
       CELERY_RESULT_BACKEND: rpc://
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
-      
-      # Backend config
       BACKEND_PORT: ${BACKEND_PORT}
     command: >
       sh -c "
@@ -106,7 +99,7 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # CELERY Worker (pour les tâches async)
+  # CELERY Worker
   # ============================================
   celery_worker:
     build:
@@ -137,7 +130,7 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # CELERY Beat (pour les tâches planifiées)
+  # CELERY Beat
   # ============================================
   celery_beat:
     build:
@@ -168,7 +161,21 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # SCRAPING Service (Workers RabbitMQ)
+  # SELENIUM - Chrome standalone
+  # ============================================
+  selenium:
+    image: selenium/standalone-chrome:latest
+    container_name: gig-benchmark-selenium
+    shm_size: '2gb'
+    ports:
+      - "4444:4444"
+      - "7900:7900"
+    networks:
+      - app_network
+    restart: unless-stopped
+
+  # ============================================
+  # SCRAPING Service
   # ============================================
   scraping:
     build:
@@ -178,21 +185,16 @@ services:
     volumes:
       - ./scraping:/app
     environment:
-      # Database
       DB_HOST: db
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_PORT: 3306
-      
-      # RabbitMQ
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_QUEUE: scraping_tasks
-      
-      # Backend API
       BACKEND_API_URL: http://backend:${BACKEND_PORT}
     command: python worker.py
     depends_on:
@@ -202,12 +204,14 @@ services:
         condition: service_healthy
       backend:
         condition: service_started
+      selenium:
+        condition: service_started
     networks:
       - app_network
     restart: unless-stopped
 
   # ============================================
-  # FRONTEND PHP-FPM (Symfony)
+  # FRONTEND PHP-FPM
   # ============================================
   php:
     build:
@@ -217,20 +221,13 @@ services:
     volumes:
       - ./frontend:/var/www/html
     environment:
-      # Database
       DB_HOST: db
       DB_DATABASE: ${DB_NAME}
       DB_USERNAME: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
-      
-      # Symfony
       SYMFONY_ENV: ${SYMFONY_ENV}
       APP_SECRET: ${SYMFONY_SECRET}
-      
-      # Backend API
       BACKEND_API_URL: http://backend:${BACKEND_PORT}
-      
-      # PHP Config
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
       PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME}
     depends_on:
@@ -264,9 +261,6 @@ services:
       - app_network
     restart: unless-stopped
 
-# ============================================
-# VOLUMES
-# ============================================
 volumes:
   db_data:
     name: gig-benchmark_db_data
@@ -277,9 +271,6 @@ volumes:
   media_volume:
     name: gig-benchmark_media
 
-# ============================================
-# NETWORKS
-# ============================================
 networks:
   app_network:
     driver: bridge
