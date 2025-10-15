@@ -20,6 +20,7 @@ INSERT INTO Bookmakers (code, name, website) VALUES
   ('FEELINGBET', 'FeelingBet', 'https://www.feelingbet.fr'),
   ('GENYBET', 'Genybet', 'https://www.genybet.fr'),
   ('VBET', 'Vbet', 'https://www.vbet.fr'),
+  ('POKERSTARS', 'Pokerstars Sport', 'https://www.pokerstars.fr')
   
   -- Additional international bookmakers
   ('BET365', 'Bet365', 'https://www.bet365.com'),
