@@ -103,9 +103,9 @@ def callback(ch, method, properties, body):
         league_code = get_league_code(league_name)
         league, created = League.objects.get_or_create(
             sport=sport,
-            name=league_name,
+            name=league_code,
             defaults={
-                'code': league_code,  # ✅ AJOUT DU CODE
+                'code': league_code,
                 'country': 'France'
             }
         )
