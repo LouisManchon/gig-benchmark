@@ -24,7 +24,8 @@ document.addEventListener('DOMContentLoaded', () => {
             removeItemButton: true,
             placeholder: true,
             placeholderValue: 'All',
-            searchEnabled: true
+            searchEnabled: true,
+            itemSelectText: '',
         });
     }
 

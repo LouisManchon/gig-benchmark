@@ -117,6 +117,39 @@ class OddsController extends AbstractController
             }
         }
 
+        // evolution TRJ
+
+        $oddsWithEvolution = [];
+        foreach ($latestOdds as $key => $currentOdd) {
+            // Récupérer le TRJ précédent (avant le dernier scraping)
+            $previousOdd = $repo->createQueryBuilder('o')
+                ->where('o.match_name = :match')
+                ->andWhere('o.bookmaker = :bookmaker')
+                ->andWhere('o.createdAt < :currentDate')
+                ->setParameter('match', $currentOdd->getMatchName())
+                ->setParameter('bookmaker', $currentOdd->getBookmaker())
+                ->setParameter('currentDate', $currentOdd->getCreatedAt())
+                ->orderBy('o.createdAt', 'DESC')
+                ->setMaxResults(1)
+                ->getQuery()
+                ->getOneOrNullResult();
+
+            $evolution = 0; // 0 = stable, 1 = hausse, -1 = baisse
+            if ($previousOdd) {
+                $diff = $currentOdd->getTrj() - $previousOdd->getTrj();
+                if ($diff > 0.1) {
+                    $evolution = 1; // hausse
+                } elseif ($diff < -0.1) {
+                    $evolution = -1; // baisse
+                }
+            }
+
+            $oddsWithEvolution[] = [
+                'odd' => $currentOdd,
+                'evolution' => $evolution
+            ];
+        }
+
         // Avg TRJ by bookmaker
         $avgQb = $repo->createQueryBuilder('o')
             ->select('o.bookmaker, AVG(o.trj) AS avgTrj')
@@ -141,16 +174,62 @@ class OddsController extends AbstractController
         }
 
         $avgTrj = $avgQb->getQuery()->getResult();
-        $chartLabels = array_map(fn($r) => $r['bookmaker'], $avgTrj);
-        $chartData = array_map(fn($r) => (float) $r['avgTrj'], $avgTrj);
+        
+
+        // add avgtrj with evolution
+
+       $avgTrjWithEvolution = [];
+        
+        // Récupérer la date du dernier scraping
+        $lastScrapingDate = $repo->createQueryBuilder('o')
+            ->select('MAX(o.createdAt)')
+            ->getQuery()
+            ->getSingleScalarResult();
+        
+        // Récupérer la date de l'avant-dernier scraping
+        $previousScrapingDate = $repo->createQueryBuilder('o')
+            ->select('MAX(o.createdAt)')
+            ->where('o.createdAt < :lastDate')
+            ->setParameter('lastDate', $lastScrapingDate)
+            ->getQuery()
+            ->getSingleScalarResult();
+        
+        foreach ($avgTrj as $row) {
+            $evolution = 0;
+            
+            if ($previousScrapingDate) {
+                // TRJ moyen de ce bookmaker lors du scraping précédent
+                $previousAvg = $repo->createQueryBuilder('o')
+                    ->select('AVG(o.trj) AS avgTrj')
+                    ->where('o.bookmaker = :bookmaker')
+                    ->andWhere('o.createdAt = :previousDate')
+                    ->setParameter('bookmaker', $row['bookmaker'])
+                    ->setParameter('previousDate', $previousScrapingDate)
+                    ->getQuery()
+                    ->getOneOrNullResult();
+
+                if ($previousAvg && $previousAvg['avgTrj']) {
+                    $diff = $row['avgTrj'] - $previousAvg['avgTrj'];
+                    if ($diff > 0.1) {
+                        $evolution = 1;
+                    } elseif ($diff < -0.1) {
+                        $evolution = -1;
+                    }
+                }
+            }
+
+            $avgTrjWithEvolution[] = [
+                'bookmaker' => $row['bookmaker'],
+                'avgTrj' => $row['avgTrj'],
+                'evolution' => $evolution
+            ];
+        }
 
         // Render
         return $this->render('odds/index.html.twig', [
             'form' => $form->createView(),
             'odds' => $latestOdds,
-            'avgTrj' => $avgTrj,
-            'chartLabels' => $chartLabels,
-            'chartData' => $chartData,
+            'avgTrj' => $avgTrj
         ]);
     }
 }

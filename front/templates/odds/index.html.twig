@@ -38,9 +38,10 @@
     </aside>
 
     <main>
+       
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>
-        <div class="filter-form">
+        <div class="filter-form-container">
             {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters', 'name': 'odds_filter'}}) }}
                 <div class="form-group">
                     {{ form_label(form.bookmaker) }}
@@ -58,8 +59,8 @@
                     {{ form_label(form.dateRange) }}
                     {{ form_widget(form.dateRange) }}
                 </div>
-                <button type="submit" id="filter-button">Filter</button>
-                <button id="reset-btn">Init</button>
+                <button type="submit" id="filter-button" class="form-btn">Filter</button>
+                <button id="reset-btn" class="form-btn">Init</button>
             {{ form_end(form) }}
         </div>
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
@@ -79,6 +80,7 @@
                             <td class="{% if row.avgTrj > 90 %}trj-high{% elseif row.avgTrj < 90 %}trj-low{% endif %}">
                                 {{ row.avgTrj|number_format(2, '.', '') }}%
                             </td>
+
                         </tr>
                     {% else %}
                         <tr>
@@ -101,14 +103,14 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for odd in odds %}
+                    {% for item in odds %}
                         <tr>
-                            <td>{{ odd.matchName }}</td>
-                            <td>{{ odd.bookmaker }}</td>
-                            <td>{{ odd.cote1 }}</td>
-                            <td>{{ odd.coteN }}</td>
-                            <td>{{ odd.cote2 }}</td>
-                            <td class="{% if odd.trj > 90 %}trj-high{% elseif odd.trj < 90 %}trj-low{% endif %}">{{ odd.trj }}%</td>
+                            <td>{{ item.matchName }}</td>
+                            <td>{{ item.bookmaker }}</td>
+                            <td>{{ item.cote1 }}</td>
+                            <td>{{ item.coteN }}</td>
+                            <td>{{ item.cote2 }}</td>
+                            <td class="{% if item.trj > 90 %}trj-high{% elseif item.trj < 90 %}trj-low{% endif %}">{{ item.trj }}%</td>
                         </tr>
                     {% else %}
                         <tr>
