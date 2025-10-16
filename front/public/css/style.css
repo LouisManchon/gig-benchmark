@@ -40,12 +40,6 @@ h2 {
     text-align: center;
 }
 
-.form-filters {
-    color: whitesmoke;
-    display: flex;
-    justify-content: center;
-    gap: 20px;
-}
 
 select, .date-input {
     border: none;
@@ -97,6 +91,9 @@ tr:nth-child(even) {
     background-color: #45b4a02c;
 }
 
+.trj-low { color: #2e8b57; font-weight: bold; }
+.trj-high { color: #b22222; font-weight: bold; }
+
 /* Container en flex pour sidebar + main */
 .container {
     display: flex;
@@ -141,10 +138,6 @@ tr:nth-child(even) {
     gap: 1rem;
 }
 
-h3 {
-    margin-top: 50px;
-}
-
 main {
     flex: 1;
     padding: 10px;
@@ -186,8 +179,6 @@ main {
     border-radius: 6px;
 }
 
-.trj-low { color: #2e8b57; font-weight: bold; }
-.trj-high { color: #b22222; font-weight: bold; }
 
 .flatpickr-calendar {
     border-radius: 10px;
@@ -206,37 +197,51 @@ main {
     color: white;
 }
 
+
 /* filters form */
-.filter-form {
+.filter-form-container {
     display: flex;
     flex-wrap: wrap;
     gap: 2rem;
     align-items: center;
+    justify-content: center;
     background: #fff;
     padding: 1rem 1.5rem;
     border-radius: 12px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-    margin-bottom: 1.5rem;
+    margin: 0 auto 1.5rem;
+    max-width: fit-content;
     font-family: "Host Grotesk", sans-serif;
 }
 
+.form-filters {
+    color: whitesmoke;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
 /* Chaque groupe label + input */
-.filter-form .form-group {
+.filter-form-container .form-group {
     display: flex;
     flex-direction: column;
-    min-width: 180px;
+    width: 200px;
 }
 
-.filter-form label {
+.filter-form-container label {
     font-weight: 600;
     font-size: 14px;
     color: #333;
     margin-bottom: 4px;
 }
 
-.filter-form select,
-.filter-form input[type="text"],
-.filter-form input[type="date"] {
+#odds_filter_dateRange {
+    height: 21px;
+}
+
+.filter-form-container select,
+.filter-form-container input[type="text"],
+.filter-form-container input[type="date"] {
     border: 1px solid #ddd;
     border-radius: 6px;
     padding: 8px 10px;
@@ -245,41 +250,49 @@ main {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
-.filter-form select:focus,
-.filter-form input:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 5px rgba(0, 123, 255, 0.25);
+.filter-form-container select:focus,
+.filter-form-container input:focus {
+    border-color: #7136c4;
     outline: none;
 }
 
-.filter-form button {
-    background-color: #007bff;
+.form-btn {
+    background-color: #080e2d;
     color: white;
     border: none;
     border-radius: 6px;
     padding: 8px 14px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    font-family: "Host Grotesk", sans-serif;
+    text-align: center;
+    margin-top: 24px;
+    height: 38px;
 }
 
-.filter-form button:hover {
-    background-color: #0056b3;
+.form-btn:hover {
+    background-color: #7136c4;
 }
 
 /* Pour mieux espacer les selects Choices.js */
-.filter-form .choices__inner {
+.filter-form-container .choices__inner {
     background: #fafafa;
     border-radius: 6px;
     border: 1px solid #ddd;
-    min-height: 38px;
+
 }
 
-.filter-form .choices__list--dropdown {
+.filter-form-container .choices__list--dropdown {
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-.filter-form .choices__list--dropdown .choices__item {
+.filter-form-container .choices__list--dropdown .choices__item {
     color: #333; /* options color bookmakers */
 }
 
+.filter-form-container .choices__list--multiple .choices__item {
+    background-color: #7136c4;
+    border: 1px solid #5a2b9d;
+    color: white;
+}

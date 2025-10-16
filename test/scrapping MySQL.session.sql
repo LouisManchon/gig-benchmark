@@ -1,0 +1,4 @@
+SHOW DATABASES;
+USE cotes_db;
+SHOW TABLES;
+SELECT * FROM odds;

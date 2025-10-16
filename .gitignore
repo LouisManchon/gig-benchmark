@@ -13,6 +13,5 @@ db.sqlite3
 *.sqlite3
 /media
 /staticfiles
-
-test/
+/front_copu
 google-chrome-stable_current_amd64.deb
