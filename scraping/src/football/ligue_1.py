@@ -47,7 +47,7 @@ def scrape_ligue_1():
         )
         channel = connection.channel()
         channel.queue_declare(queue='odds', durable=True)
-        print("✅ Connecté à RabbitMQ")
+        print("Connecté à RabbitMQ")
         
         # Connexion Selenium Remote
         driver = webdriver.Remote(
@@ -55,11 +55,11 @@ def scrape_ligue_1():
             options=options
         )
         driver.set_page_load_timeout(30)
-        print("✅ Connecté à Selenium")
+        print("Connecté à Selenium")
         
         # Aller sur la page Ligue 1
         url = "https://www.coteur.com/cotes/foot/france/ligue-1"
-        print(f"\n📍 {url}")
+        print(f"\n{url}")
         driver.get(url)
         time.sleep(3)
         
@@ -82,9 +82,9 @@ def scrape_ligue_1():
                 match_links.append(href)
         
         match_links = list(set(match_links))  # Dédupliquer
-        print(f"📋 {len(match_links)} matchs trouvés\n")
+        print(f"{len(match_links)} matchs trouvés\n")
         
-        # ✅ SCRAPER TOUS LES MATCHS (pas de limite)
+        # SCRAPER TOUS LES MATCHS
         matches_scraped = 0
         odds_sent = 0
         
@@ -101,9 +101,9 @@ def scrape_ligue_1():
                 try:
                     title_element = driver.find_element(By.CSS_SELECTOR, ".page-title")
                     title = title_element.text.strip()
-                    print(f"📌 {title}")
+                    print(f"{title}")
                 except:
-                    print("⚠️ Pas de titre, skip")
+                    print("Pas de titre, skip")
                     continue
                 
                 # Récupérer la date (optionnel)
@@ -124,7 +124,7 @@ def scrape_ligue_1():
                 
                 # Récupérer TOUS les bookmakers
                 rows = driver.find_elements(By.CSS_SELECTOR, ".d-flex[data-name]")
-                print(f"🔍 {len(rows)} bookmakers")
+                print(f"{len(rows)} bookmakers")
                 
                 for row in rows:
                     bookmaker = row.get_attribute("data-name")
@@ -162,17 +162,17 @@ def scrape_ligue_1():
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
                         
-                        print(f"📤 {bookmaker}: {cote_dict['cote_1']}/{cote_dict['cote_N']}/{cote_dict['cote_2']} (TRJ: {trj}%)")
+                        print(f"{bookmaker}: {cote_dict['cote_1']}/{cote_dict['cote_N']}/{cote_dict['cote_2']} (TRJ: {trj}%)")
                         odds_sent += 1
                 
                 matches_scraped += 1
                 
             except Exception as e:
-                print(f"❌ Erreur: {e}")
+                print(f"Erreur: {e}")
                 continue
         
         print(f"\n{'='*60}")
-        print(f"✅ SCRAPING TERMINÉ")
+        print(f"SCRAPING TERMINÉ")
         print(f"{'='*60}")
         print(f"Matchs scrapés: {matches_scraped}/{len(match_links)}")
         print(f"Cotes envoyées: {odds_sent}")
@@ -185,7 +185,7 @@ def scrape_ligue_1():
         }
         
     except Exception as e:
-        print(f"\n❌ ERREUR CRITIQUE: {e}")
+        print(f"\nERREUR CRITIQUE: {e}")
         import traceback
         traceback.print_exc()
         return None

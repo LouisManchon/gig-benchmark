@@ -12,7 +12,6 @@ import pika
 import traceback
 from typing import Dict, Callable
 
-# Ajouter le path
 sys.path.insert(0, '/app')
 
 print("Chargement des scrapers...")
@@ -189,7 +188,7 @@ def callback(ch, method, properties, body):
         "scraper": "football.ligue_1",
         "params": {
             "url": "...",
-            "options": {...}
+            "options": {...}²
         }
     }
     """

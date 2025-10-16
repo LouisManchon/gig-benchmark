@@ -43,12 +43,11 @@ def get_bookmaker_code(bookmaker_name):
 
 
 def get_league_code(league_name):
-    """Génère un code de league"""
     mapping = {
-        'Ligue 1': 'LIGUE1',
-        'Premier League': 'PREMIERLEAGUE',
-        'La Liga': 'LALIGA',
-        'Serie A': 'SERIEA',
+        'Ligue 1': 'LIGUE_1',
+        'Premier League': 'PREMIER_LEAGUE',
+        'La Liga': 'LA_LIGA',
+        'Serie A': 'SERIE_A',
         'Bundesliga': 'BUNDESLIGA',
     }
     return mapping.get(league_name, league_name.upper().replace(' ', ''))
@@ -77,7 +76,7 @@ def get_sport_code(sport_name):
 def callback(ch, method, properties, body):
     try:
         message = json.loads(body)
-        print(f"\n✅ {message.get('match')} - {message.get('bookmaker')}")
+        print(f"\n{message.get('match')} - {message.get('bookmaker')}")
         
         match_str = message.get('match')
         bookmaker_name = message.get('bookmaker')
@@ -85,6 +84,7 @@ def callback(ch, method, properties, body):
         trj = message.get('trj')
         league_name = message.get('league', 'Ligue 1')
         sport_name = message.get('sport', 'football')
+        match_date_str = message.get('match_date')
         
         if not match_str or not bookmaker_name or not cotes:
             ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -95,22 +95,22 @@ def callback(ch, method, properties, body):
         try:
             sport = Sport.objects.get(code=sport_code)
         except Sport.DoesNotExist:
-            print(f"❌ Sport {sport_code} introuvable")
+            print(f"Sport {sport_code} introuvable")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
-        # 2. League - AVEC CODE !
+        # 2. League
         league_code = get_league_code(league_name)
         league, created = League.objects.get_or_create(
             sport=sport,
-            name=league_code,
+            code=league_code,
             defaults={
-                'code': league_code,
+                'name': league_name,
                 'country': 'France'
             }
         )
         if created:
-            print(f"🆕 Ligue: {league.name} ({league_code})")
+            print(f"Ligue: {league.name} ({league_code})")
         
         # 3. Teams
         home_team_name, away_team_name = parse_team_names(match_str)
@@ -122,26 +122,37 @@ def callback(ch, method, properties, body):
         away_team, _ = Team.objects.get_or_create(league=league, name=away_team_name)
         
         # 4. Match
-        tomorrow = datetime.now() + timedelta(days=1)
-        match_date = tomorrow.replace(hour=20, minute=0, second=0, microsecond=0)
-        match_date = timezone.make_aware(match_date)
+        if match_date_str:
+            try:
+                match_date = datetime.strptime(match_date_str, "%Y-%m-%d %H:%M:%S")
+                match_date = timezone.make_aware(match_date)
+            except:
+                tomorrow = datetime.now() + timedelta(days=1)
+                match_date = tomorrow.replace(hour=20, minute=0, second=0, microsecond=0)
+                match_date = timezone.make_aware(match_date)
+        else:
+            tomorrow = datetime.now() + timedelta(days=1)
+            match_date = tomorrow.replace(hour=20, minute=0, second=0, microsecond=0)
+            match_date = timezone.make_aware(match_date)
         
         match, created = Match.objects.get_or_create(
             league=league,
             home_team=home_team,
             away_team=away_team,
-            match_date=match_date,
-            defaults={'status': 'scheduled'}
+            defaults={
+                'match_date': match_date,
+                'status': 'scheduled'
+            }
         )
         
         if created:
-            print(f"🆕 Match: {home_team.name} vs {away_team.name}")
+            print(f"Match: {home_team.name} vs {away_team.name} - {match_date.strftime('%d/%m %H:%M')}")
         
         # 5. Market
         try:
             market = MarketName.objects.get(sport=sport, code='1X2')
         except MarketName.DoesNotExist:
-            print(f"❌ Market 1X2 introuvable")
+            print(f"Market 1X2 introuvable")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
@@ -150,7 +161,7 @@ def callback(ch, method, properties, body):
         try:
             bookmaker = Bookmaker.objects.get(code=bookmaker_code)
         except Bookmaker.DoesNotExist:
-            print(f"❌ Bookmaker {bookmaker_code} introuvable")
+            print(f"Bookmaker {bookmaker_code} introuvable")
             ch.basic_ack(delivery_tag=method.delivery_tag)
             return
         
@@ -173,11 +184,11 @@ def callback(ch, method, properties, body):
                 )
                 odds_count += 1
         
-        print(f"💾 {odds_count} cotes (TRJ: {trj}%)")
+        print(f"{odds_count} cotes (TRJ: {trj}%)")
         ch.basic_ack(delivery_tag=method.delivery_tag)
         
     except Exception as e:
-        print(f"❌ {e}")
+        print(f"{e}")
         import traceback
         traceback.print_exc()
         ch.basic_ack(delivery_tag=method.delivery_tag)
@@ -196,7 +207,7 @@ def start_consumer():
     channel = connection.channel()
     channel.queue_declare(queue='odds', durable=True)
     
-    print("👂 En écoute...\n")
+    print("En écoute...\n")
     
     channel.basic_consume(queue='odds', on_message_callback=callback, auto_ack=False)
     

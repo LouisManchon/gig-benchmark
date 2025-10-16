@@ -17,6 +17,9 @@ help: ## Affiche l'aide
 build: ## Construit les images
 	docker compose build
 
+build-scrap: ## Construit image du scraping
+	docker compose build scraping
+
 up: ## Démarre tous les services
 	docker compose up -d
 
@@ -106,7 +109,7 @@ db-matches: ## 🎮 Liste tous les matchs
 	    m.id, \
 	    l.name as Ligue, \
 	    CONCAT(ht.name, ' - ', at.name) as Rencontre, \
-	    DATE_FORMAT(m.match_date, '%d/%m %H:%i') as Date, \
+	    DATE_FORMAT(m.match_date, '%Y-%m-%d %H:%i') as Date, \
 	    m.status as Statut, \
 	    COUNT(DISTINCT o.bookmaker_id) as Nb_Bookmakers \
 	FROM Matches m \
@@ -211,9 +214,21 @@ db-clean-odds: ## 🧹 Supprime toutes les cotes (garde les matchs)
 # ============================================
 # SCRAPING
 # ============================================
+
 scrape-ligue1: ## 🕷️ Lance scraping Ligue 1
 	docker compose exec scraping python send_task.py football.ligue_1
 
+scrape-serie_a: ## 🕷️ Lance scraping Serie A
+	docker compose exec scraping python send_task.py football.serie_a
+
+scrape-premier_league: ## 🕷️ Lance scraping Premier League
+	docker compose exec scraping python send_task.py football.premier_league
+
+scrape-liga: ## 🕷️ Lance scraping liga
+	docker compose exec scraping python send_task.py football.la_liga
+
+scrape-champions-league: ## 🕷️ Lance scraping champions League
+	docker compose exec scraping python send_task.py football.champions_league
 # ============================================
 # RABBITMQ
 # ============================================
@@ -238,16 +253,17 @@ health: ## 🏥 Health check complet
 # ============================================
 # WORKFLOW COMPLET
 # ============================================
-demo: ## 🎬 Démo complète (scrape + stats)
-	@echo "🎬 DÉMO COMPLÈTE"
+demo: ## Démo complète (scrape + stats)
+	@echo "DÉMO COMPLÈTE"
 	@echo "================"
 	@echo ""
-	@echo "1️⃣ Lancement du scraping..."
+	@echo "1️Lancement du scraping..."
 	$(MAKE) scrape-ligue1
+	$(MAKE) scrape-serie_a
 	@echo ""
 	@sleep 10
-	@echo "2️⃣ Statistiques:"
+	@echo "2 Statistiques:"
 	$(MAKE) db-stats
 	@echo ""
-	@echo "3️⃣ Meilleurs TRJ:"
+	@echo "3 Meilleurs TRJ:"
 	$(MAKE) db-best-trj
