@@ -110,7 +110,7 @@ class Odd
 
     public function setLeague(string $League)
     {
-        $this->$league = $league;
+        $this->league = $league;
         return $this;
     }
 
@@ -135,10 +135,10 @@ class Odd
       return $this->trj;
     }
 
-    public function setTrj()
+    public function setTrj(?float $trj): self
     {
-      $this->trj = $trj;
-      return $this;
+        $this->trj = $trj;
+        return $this;
     }
 
     public function getMatchDate(): ?\DateTimeInterface

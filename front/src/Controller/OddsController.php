@@ -2,9 +2,8 @@
 
 namespace App\Controller;
 
-use App\Entity\Odd;
 use App\Form\OddsFilterType;
-use Doctrine\ORM\EntityManagerInterface;
+use App\Repository\OddRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -14,43 +13,28 @@ class OddsController extends AbstractController
 {
     #[Route('/', name: 'home')]
     #[Route('/odds', name: 'odds_list')]
-    public function index(Request $request, EntityManagerInterface $em): Response
+    public function index(Request $request, OddRepository $oddRepository): Response
     {
-        $repo = $em->getRepository(Odd::class);
+        // --- Récupération des filtres distincts ---
+        $bookmakersArray = $oddRepository->findDistinctBookmakers();
+        $matchesArray = $oddRepository->findDistinctMatches();
+        $leaguesArray = $oddRepository->findDistinctLeagues();
 
-        // all input filters
-        $bookmakers = $repo->createQueryBuilder('o')
-            ->select('DISTINCT o.bookmaker')
-            ->getQuery()
-            ->getResult();
-        $bookmakersArray = array_map(fn($b) => $b['bookmaker'], $bookmakers);
-
-        $matches = $repo->createQueryBuilder('o')
-            ->select('DISTINCT o.match_name')
-            ->getQuery()
-            ->getResult();
-        $matchesArray = array_map(fn($m) => $m['match_name'], $matches);
-
-        $leagues = $repo->createQueryBuilder('o')
-            ->select('DISTINCT o.league')
-            ->getQuery()
-            ->getResult();
-        $leaguesArray = array_map(fn($l) => $l['league'], $leagues);
-
-        // Create form
+        // --- Création du formulaire ---
         $form = $this->createForm(OddsFilterType::class, null, [
             'method' => 'GET',
             'bookmakers' => $bookmakersArray,
             'matches' => $matchesArray,
             'leagues' => $leaguesArray,
         ]);
-
         $form->handleRequest($request);
 
+        // --- Récupération des valeurs filtrées ---
         $bookmakerFilter = [];
         $matchFilter = null;
         $leagueFilter = null;
-        $dateRange = null;
+        $start = null;
+        $end = null;
 
         if ($form->isSubmitted() && $form->isValid()) {
             $bookmakerFilter = $form->get('bookmaker')->getData() ?? [];
@@ -61,54 +45,23 @@ class OddsController extends AbstractController
             if (is_array($bookmakerFilter) && in_array('all', $bookmakerFilter)) {
                 $bookmakerFilter = [];
             }
-        }
 
-        // QueryBuilder with filters
-        $qb = $repo->createQueryBuilder('o');
-
-        if (!empty($bookmakerFilter)) {
-            $qb->andWhere('o.bookmaker IN (:bookmakers)')
-               ->setParameter('bookmakers', $bookmakerFilter);
-        }
-
-        if ($leagueFilter && $leagueFilter !== 'all') {
-            $qb->andWhere('o.league = :league')
-               ->setParameter('league', $leagueFilter);
-        }
-
-        if ($matchFilter && $matchFilter !== 'all') {
-            $qb->andWhere('o.match_name = :match')
-               ->setParameter('match', $matchFilter);
-        }
-
-        if ($dateRange) {
-            // Flatpickr renvoie "YYYY-MM-DD to YYYY-MM-DD"
-            if (str_contains($dateRange, ' to ')) {
-                $dates = explode(' to ', $dateRange);
-            } elseif (str_contains($dateRange, ' à ')) {
-                $dates = explode(' à ', $dateRange);
-            } else {
-                $dates = [$dateRange];
-            }
-
-            try {
-                $start = new \DateTime(trim($dates[0]) . ' 00:00:00');
-                $end = isset($dates[1])
-                    ? new \DateTime(trim($dates[1]) . ' 23:59:59')
-                    : new \DateTime(trim($dates[0]) . ' 23:59:59');
-
-                $qb->andWhere('o.matchDate BETWEEN :start AND :end')
-                   ->setParameter('start', $start)
-                   ->setParameter('end', $end);
-            } catch (\Exception $e) {
-                // ignore
+            if ($dateRange) {
+                $dates = str_contains($dateRange, ' to ') ? explode(' to ', $dateRange) : [$dateRange];
+                try {
+                    $start = new \DateTime(trim($dates[0]) . ' 00:00:00');
+                    $end = isset($dates[1]) ? new \DateTime(trim($dates[1]) . ' 23:59:59') : new \DateTime(trim($dates[0]) . ' 23:59:59');
+                } catch (\Exception $e) {
+                    $start = null;
+                    $end = null;
+                }
             }
         }
 
-        $qb->orderBy('o.createdAt', 'DESC');
-        $allOdds = $qb->getQuery()->getResult();
+        // --- Récupération des cotes filtrées ---
+        $allOdds = $oddRepository->findWithFilters($bookmakerFilter, $leagueFilter, $matchFilter, $start, $end);
 
-        // Latest odds par match + bookmaker
+        // --- Latest odds par match + bookmaker ---
         $latestOdds = [];
         foreach ($allOdds as $odd) {
             $key = $odd->getMatchName() . '|' . $odd->getBookmaker();
@@ -117,119 +70,73 @@ class OddsController extends AbstractController
             }
         }
 
-        // evolution TRJ
-
+        // --- Calcul de l'évolution TRJ pour chaque cote ---
         $oddsWithEvolution = [];
-        foreach ($latestOdds as $key => $currentOdd) {
-            // Récupérer le TRJ précédent (avant le dernier scraping)
-            $previousOdd = $repo->createQueryBuilder('o')
-                ->where('o.match_name = :match')
-                ->andWhere('o.bookmaker = :bookmaker')
-                ->andWhere('o.createdAt < :currentDate')
-                ->setParameter('match', $currentOdd->getMatchName())
-                ->setParameter('bookmaker', $currentOdd->getBookmaker())
-                ->setParameter('currentDate', $currentOdd->getCreatedAt())
-                ->orderBy('o.createdAt', 'DESC')
-                ->setMaxResults(1)
-                ->getQuery()
-                ->getOneOrNullResult();
+        foreach ($latestOdds as $currentOdd) {
+            $previousOdd = $oddRepository->findPreviousOdd(
+                $currentOdd->getMatchName(),
+                $currentOdd->getBookmaker(),
+                $currentOdd->getCreatedAt()
+            );
 
             $evolution = 0; // 0 = stable, 1 = hausse, -1 = baisse
+            $previousTrj = null;
+
             if ($previousOdd) {
-                $diff = $currentOdd->getTrj() - $previousOdd->getTrj();
-                if ($diff > 0.1) {
-                    $evolution = 1; // hausse
-                } elseif ($diff < -0.1) {
-                    $evolution = -1; // baisse
-                }
+                $previousTrj = $previousOdd->getTrj();
+                $diff = $currentOdd->getTrj() - $previousTrj;
+                if ($diff > 0.1) $evolution = 1;
+                elseif ($diff < -0.1) $evolution = -1;
             }
 
             $oddsWithEvolution[] = [
                 'odd' => $currentOdd,
+                'previousTrj' => $previousTrj,
                 'evolution' => $evolution
             ];
         }
 
-        // Avg TRJ by bookmaker
-        $avgQb = $repo->createQueryBuilder('o')
-            ->select('o.bookmaker, AVG(o.trj) AS avgTrj')
-            ->groupBy('o.bookmaker');
+        // --- Moyenne TRJ par bookmaker ---
+        $avgTrjRaw = $oddRepository->findAvgTrj($bookmakerFilter, $leagueFilter, $matchFilter, $start, $end);
 
-        if (!empty($bookmakerFilter)) {
-            $avgQb->andWhere('o.bookmaker IN (:bookmakers)')
-                   ->setParameter('bookmakers', $bookmakerFilter);
-        }
-        if ($leagueFilter && $leagueFilter !== 'all') {
-            $avgQb->andWhere('o.league = :league')
-                   ->setParameter('league', $leagueFilter);
-        }
-        if ($matchFilter && $matchFilter !== 'all') {
-            $avgQb->andWhere('o.match_name = :match')
-                   ->setParameter('match', $matchFilter);
-        }
-        if (isset($start) && isset($end)) {
-            $avgQb->andWhere('o.matchDate BETWEEN :start AND :end')
-                   ->setParameter('start', $start)
-                   ->setParameter('end', $end);
-        }
+        // --- Calcul évolution moyenne TRJ et ancien TRJ ---
+        $lastScrapingDate = $oddRepository->findLastScrapingDate();
+        $previousScrapingDate = $lastScrapingDate ? $oddRepository->findPreviousScrapingDate($lastScrapingDate) : null;
 
-        $avgTrj = $avgQb->getQuery()->getResult();
-        
+        // Dans le Controller, remplace toute la section avgTrj par :
 
-        // add avgtrj with evolution
+        // --- Moyenne TRJ par bookmaker ---
+        $avgTrjRaw = $oddRepository->findAvgTrj($bookmakerFilter, $leagueFilter, $matchFilter, $start, $end);
 
-       $avgTrjWithEvolution = [];
-        
-        // Récupérer la date du dernier scraping
-        $lastScrapingDate = $repo->createQueryBuilder('o')
-            ->select('MAX(o.createdAt)')
-            ->getQuery()
-            ->getSingleScalarResult();
-        
-        // Récupérer la date de l'avant-dernier scraping
-        $previousScrapingDate = $repo->createQueryBuilder('o')
-            ->select('MAX(o.createdAt)')
-            ->where('o.createdAt < :lastDate')
-            ->setParameter('lastDate', $lastScrapingDate)
-            ->getQuery()
-            ->getSingleScalarResult();
-        
-        foreach ($avgTrj as $row) {
+        $avgTrj = [];
+        foreach ($avgTrjRaw as $row) {
             $evolution = 0;
-            
-            if ($previousScrapingDate) {
-                // TRJ moyen de ce bookmaker lors du scraping précédent
-                $previousAvg = $repo->createQueryBuilder('o')
-                    ->select('AVG(o.trj) AS avgTrj')
-                    ->where('o.bookmaker = :bookmaker')
-                    ->andWhere('o.createdAt = :previousDate')
-                    ->setParameter('bookmaker', $row['bookmaker'])
-                    ->setParameter('previousDate', $previousScrapingDate)
-                    ->getQuery()
-                    ->getOneOrNullResult();
+            $previousAvgTrj = null;
 
-                if ($previousAvg && $previousAvg['avgTrj']) {
-                    $diff = $row['avgTrj'] - $previousAvg['avgTrj'];
-                    if ($diff > 0.1) {
-                        $evolution = 1;
-                    } elseif ($diff < -0.1) {
-                        $evolution = -1;
-                    }
-                }
+            // Récupérer le TRJ moyen du scraping précédent pour ce bookmaker
+            $previousOdds = $oddRepository->findPreviousAvgForBookmaker($row['bookmaker']);
+            
+            if ($previousOdds) {
+                $previousAvgTrj = $previousOdds;
+                $diff = $row['avgTrj'] - $previousAvgTrj;
+                if ($diff > 0.1) $evolution = 1;
+                elseif ($diff < -0.1) $evolution = -1;
             }
 
-            $avgTrjWithEvolution[] = [
+            $avgTrj[] = [
                 'bookmaker' => $row['bookmaker'],
                 'avgTrj' => $row['avgTrj'],
-                'evolution' => $evolution
+                'previousAvgTrj' => $previousAvgTrj,
+                'evolution' => $evolution,
             ];
         }
 
-        // Render
+        // --- Rendu du template ---
         return $this->render('odds/index.html.twig', [
             'form' => $form->createView(),
-            'odds' => $latestOdds,
-            'avgTrj' => $avgTrj
+            'odds' => $oddsWithEvolution,
+            'oddsWithEvolution' => $oddsWithEvolution,
+            'avgTrj' => $avgTrj,
         ]);
     }
 }

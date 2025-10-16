@@ -37,8 +37,7 @@
             <button type="submit" class="scraping-btn">Start Scraping</button>
     </aside>
 
-    <main>
-       
+    <main>       
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>
         <div class="filter-form-container">
@@ -71,20 +70,28 @@
                     <tr>
                         <th>Bookmaker <span>⬍</span></th>
                         <th>Average TRJ <span>⬍</span></th>
+                        <th>Previous TRJ</th>
+                        <th>Evolution</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in avgTrj %}
                         <tr>
+
+
                             <td>{{ row.bookmaker }}</td>
                             <td class="{% if row.avgTrj > 90 %}trj-high{% elseif row.avgTrj < 90 %}trj-low{% endif %}">
                                 {{ row.avgTrj|number_format(2, '.', '') }}%
                             </td>
+                            <td>{{ row.previousAvgTrj ? row.previousAvgTrj|number_format(2, '.', '') ~ '%' : 'test' }}</td>
 
+                            <td>
+                                {% if row.evolution == 1 %}↑{% elseif row.evolution == -1 %}↓{% else %}-{% endif %}
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
-                            <td colspan="2">No data found.</td>
+                            <td colspan="4">No data found.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -105,12 +112,21 @@
                 <tbody>
                     {% for item in odds %}
                         <tr>
-                            <td>{{ item.matchName }}</td>
-                            <td>{{ item.bookmaker }}</td>
-                            <td>{{ item.cote1 }}</td>
-                            <td>{{ item.coteN }}</td>
-                            <td>{{ item.cote2 }}</td>
-                            <td class="{% if item.trj > 90 %}trj-high{% elseif item.trj < 90 %}trj-low{% endif %}">{{ item.trj }}%</td>
+                            <td>{{ item.odd.matchName }}</td>
+                            <td>{{ item.odd.bookmaker }}</td>
+                            <td>{{ item.odd.cote1 }}</td>
+                            <td>{{ item.odd.coteN }}</td>
+                            <td>{{ item.odd.cote2 }}</td>
+                            <td class="{% if item.odd.trj > 90 %}trj-high{% elseif item.odd.trj < 90 %}trj-low{% endif %}">{{ item.odd.trj }}%</td>
+                            <td class="evolution-cell">
+                                {% if item.evolution == 1 %}
+                                    <span class="arrow-up">↑</span>
+                                {% elseif item.evolution == -1 %}
+                                    <span class="arrow-down">↓</span>
+                                {% else %}
+                                    <span class="arrow-stable">→</span>
+                                {% endif %}
+                            </td>
                         </tr>
                     {% else %}
                         <tr>
