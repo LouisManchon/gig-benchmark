@@ -36,14 +36,14 @@ def trigger_scraping(request):
     return Response(result, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def trigger_multiple_scraping(request):
-    scrapers = request.data.get('scrapers', [])
-    if not scrapers:
-        return Response({'error': 'scrapers field required'}, status=status.HTTP_400_BAD_REQUEST)
-    result = scraping_service.send_multiple_tasks(scrapers)
-    return Response(result)
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def trigger_multiple_scraping(request):
+#    scrapers = request.data.get('scrapers', [])
+#    if not scrapers:
+#        return Response({'error': 'scrapers field required'}, status=status.HTTP_400_BAD_REQUEST)
+#    result = scraping_service.send_multiple_tasks(scrapers)
+#    return Response(result) 
 
 
 @api_view(['POST'])
