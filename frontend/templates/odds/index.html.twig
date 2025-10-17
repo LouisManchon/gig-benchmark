@@ -111,12 +111,14 @@
                 <tbody>
                     {% for item in odds %}
                         <tr>
-                            <td>{{ item.odd.matchName }}</td>
-                            <td>{{ item.odd.bookmaker }}</td>
-                            <td>{{ item.odd.cote1 }}</td>
-                            <td>{{ item.odd.coteN }}</td>
-                            <td>{{ item.odd.cote2 }}</td>
-                            <td class="{% if item.odd.trj > 90 %}trj-high{% elseif item.odd.trj < 90 %}trj-low{% endif %}">{{ item.odd.trj }}%</td>
+                            <td>{{ item.odd.match.name }}</td>
+                            <td>{{ item.odd.bookmaker.name }}</td>
+                            <td>{{ item.odd.home_odd }}</td>
+                            <td>{{ item.odd.draw_odd }}</td>
+                            <td>{{ item.odd.away_odd }}</td>
+                            <td class="{% if item.odd.trj > 90 %}trj-high{% elseif item.odd.trj < 90 %}trj-low{% endif %}">
+                                {{ item.odd.trj|number_format(2, '.', '') }}%
+                            </td>
                             <td class="evolution-cell">
                                 {% if item.evolution == 1 %}
                                     <span class="arrow-up">↑</span>
@@ -126,10 +128,6 @@
                                     <span class="arrow-stable">→</span>
                                 {% endif %}
                             </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="5">No odds available.</td>
                         </tr>
                     {% endfor %}
                 </tbody>
