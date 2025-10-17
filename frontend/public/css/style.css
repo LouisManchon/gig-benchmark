@@ -1,0 +1,321 @@
+body {
+    font-family: "Host Grotesk", sans-serif;
+    font-weight: 430;
+    background: linear-gradient(90deg, #080e2d, #7136c4, #57e5ca);
+    margin: 0;
+    padding: 0;
+}
+
+/* title with logo + benchmark */
+.title-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.site-logo {
+    height: 60px;
+    width: auto;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1;
+    color: white;
+    position: relative;
+    top: -4px;
+}
+
+header {
+    color: #FFFFFF;
+    background-color: #080e2d;
+    padding: 20px;
+    box-shadow: 0px 30px 67px -40px black;
+    text-align: center;
+}
+
+h2 {
+    color: white;
+    text-align: center;
+}
+
+
+select, .date-input {
+    border: none;
+    border-radius: 3px;
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.date-input {
+    width: 190px;
+}
+
+
+.all_matchs, .avgtrj {
+    background-color: #f2f2f2;
+    box-shadow: 0px 23px 71px -40px black;
+    border-spacing: 0;
+    border-collapse: separate;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.all_matchs {
+    width: 60%;
+}
+.avgtrj {
+    width: 30%;
+}
+
+.tables {
+    margin: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+td {
+    padding: 6px 7px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    padding: 10px;
+    text-align: left;
+    background-color: #080e2d;
+    color: white;
+}
+
+tr:nth-child(even) {
+    background-color: #45b4a02c;
+}
+
+.evol-container {
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    padding: 0; /* on réduit le padding vertical pour ne pas agrandir la ligne */
+}
+
+.evol-container p:first-child {
+    
+    margin: 0; /* supprime marges par défaut */
+    font-weight: bold; /* flèche plus visible */
+    font-size: 1em;
+}
+
+.evol-container .previous-trj {
+    margin: 0; /* supprime marges par défaut */
+    font-size: 0.75em; /* plus petit texte */
+    color: #888888; /* gris clair */
+}
+
+.trj-low { color: #2e8b57; font-weight: bold; }
+.trj-high { color: #b22222; font-weight: bold; }
+
+/* Container en flex pour sidebar + main */
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+/* Sidebar */
+#sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 250px;
+    background-color: #FFFFFF;
+    padding: 1rem;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.3);
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transform: translateX(-100%);
+    z-index: 1000;
+}
+
+#sidebar.open {
+    transform: translateX(0);
+}
+
+#sidebar.sidebar-closed {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+#sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.aside-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+main {
+    flex: 1;
+    padding: 10px;
+}
+
+.toggle-btn {
+    font-family: "Host Grotesk", sans-serif;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+    background-color: #f2f2f2;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.scraping-btn, .init-btn {
+    font-family: "Host Grotesk", sans-serif;
+    background-color: #f2f2f2;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+.aside-form label {
+    font-weight: 600;
+    color: #333;
+}
+
+.aside-form select {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+
+.flatpickr-calendar {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.flatpickr-day.today {
+    background: #007bff;
+    color: white;
+    border-radius: 50%;
+}
+
+.flatpickr-day.selected {
+    background: #ff6600;
+    color: white;
+}
+
+
+/* filters form */
+.filter-form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    margin: 0 auto 1.5rem;
+    max-width: fit-content;
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.form-filters {
+    color: whitesmoke;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+/* Chaque groupe label + input */
+.filter-form-container .form-group {
+    display: flex;
+    flex-direction: column;
+    width: 200px;
+}
+
+.filter-form-container label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+}
+
+#odds_filter_dateRange {
+    height: 21px;
+}
+
+.filter-form-container select,
+.filter-form-container input[type="text"],
+.filter-form-container input[type="date"] {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fafafa;
+    font-size: 14px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-form-container select:focus,
+.filter-form-container input:focus {
+    border-color: #7136c4;
+    outline: none;
+}
+
+.form-btn {
+    background-color: #080e2d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: "Host Grotesk", sans-serif;
+    text-align: center;
+    margin-top: 24px;
+    height: 38px;
+}
+
+.form-btn:hover {
+    background-color: #7136c4;
+}
+
+/* Pour mieux espacer les selects Choices.js */
+.filter-form-container .choices__inner {
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+
+}
+
+.filter-form-container .choices__list--dropdown {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.filter-form-container .choices__list--dropdown .choices__item {
+    color: #333; /* options color bookmakers */
+}
+
+.filter-form-container .choices__list--multiple .choices__item {
+    background-color: #7136c4;
+    border: 1px solid #5a2b9d;
+    color: white;
+}
