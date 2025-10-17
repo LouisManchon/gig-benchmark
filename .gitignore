@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Virtual environment
 venv/
 
@@ -15,3 +16,31 @@ db.sqlite3
 /staticfiles
 /front_copu
 google-chrome-stable_current_amd64.deb
+=======
+# Environnement
+backend/.env
+database/.env
+scraping/.env
+frontend/.env
+.env
+
+# Docker
+*.log
+docker-compose.override.yml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+
+# DB
+database/init/
+database/db.sqlite3  # Si tu utilises SQLite
+
+# IDE/OS
+.DS_Store
+.idea/
+.vscode/
+>>>>>>> 0c970882da97718f173367570fd5e4309b9c825d

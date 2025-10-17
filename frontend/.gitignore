@@ -1,0 +1,9 @@
+# Composer
+vendor/
+composer.lock
+
+# Logs et cache
+/var/
+
+# Environnement
+.env
