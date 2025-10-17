@@ -1,39 +1,94 @@
 <?php
 
-// src/Service/OddsApiService.php
 namespace App\Service;
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class OddsApiService
 {
-    private $httpClient;
-    private $apiBaseUrl;
+    private HttpClientInterface $httpClient;
+    private string $apiBaseUrl;
 
-    public function __construct(HttpClientInterface $httpClient, string $apiBaseUrl = 'http://backend:8000/api/scraping/')
+    public function __construct(HttpClientInterface $httpClient, string $apiBaseUrl)
     {
         $this->httpClient = $httpClient;
-        $this->apiBaseUrl = $apiBaseUrl;
+        // ✅ S'assurer que l'URL se termine par /api
+        $this->apiBaseUrl = rtrim($apiBaseUrl, '/');
     }
 
-    public function healthCheck(): array
+    public function getDistinctBookmakers(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . 'health');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/bookmakers');
         return $response->toArray();
     }
 
-    public function listScrapers(): array
+    public function getDistinctLeagues(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . 'scrapers');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/leagues');
         return $response->toArray();
     }
 
-    public function triggerScraping(array $data): array
+    public function getDistinctMatches(): array
     {
-        $response = $this->httpClient->request('POST', $this->apiBaseUrl . 'trigger', [
-            'json' => $data,
-        ]);
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/matches');
+        return $response->toArray();
+    }
+
+    public function getOddsWithFilters(array $filters = []): array
+    {
+        $queryParams = [];
+        
+        if (!empty($filters['bookmaker'])) {
+            $queryParams['bookmaker'] = $filters['bookmaker'];
+        }
+        if (!empty($filters['league'])) {
+            $queryParams['league'] = $filters['league'];
+        }
+        if (!empty($filters['match'])) {
+            $queryParams['match'] = $filters['match'];
+        }
+        if (!empty($filters['start'])) {
+            $queryParams['start'] = $filters['start'];
+        }
+        if (!empty($filters['end'])) {
+            $queryParams['end'] = $filters['end'];
+        }
+
+        $url = $this->apiBaseUrl . '/odds';
+        if (!empty($queryParams)) {
+            $url .= '?' . http_build_query($queryParams);
+        }
+
+        $response = $this->httpClient->request('GET', $url);
+        return $response->toArray();
+    }
+
+    public function getAvgTrj(array $filters = []): array
+    {
+        $queryParams = [];
+        
+        if (!empty($filters['bookmaker'])) {
+            $queryParams['bookmaker'] = $filters['bookmaker'];
+        }
+        if (!empty($filters['league'])) {
+            $queryParams['league'] = $filters['league'];
+        }
+        if (!empty($filters['match'])) {
+            $queryParams['match'] = $filters['match'];
+        }
+        if (!empty($filters['start'])) {
+            $queryParams['start'] = $filters['start'];
+        }
+        if (!empty($filters['end'])) {
+            $queryParams['end'] = $filters['end'];
+        }
+
+        $url = $this->apiBaseUrl . '/avg-trj';
+        if (!empty($queryParams)) {
+            $url .= '?' . http_build_query($queryParams);
+        }
+
+        $response = $this->httpClient->request('GET', $url);
         return $response->toArray();
     }
 }
-
