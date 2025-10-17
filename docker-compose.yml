@@ -34,7 +34,7 @@ services:
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_DEFAULT_USER}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_DEFAULT_PASS}
     ports:
-      - "5672:5672"
+      - "5672:5673"
       - "15672:15672"
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
@@ -74,7 +74,7 @@ services:
       CELERY_BROKER_URL: amqp://${RABBITMQ_DEFAULT_USER}:${RABBITMQ_DEFAULT_PASS}@rabbitmq:5672//
       CELERY_RESULT_BACKEND: rpc://
       RABBITMQ_HOST: rabbitmq
-      RABBITMQ_PORT: 5672
+      RABBITMQ_PORT: 5673
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       BACKEND_PORT: ${BACKEND_PORT}
@@ -259,6 +259,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       SYMFONY_ENV: ${SYMFONY_ENV}
       APP_SECRET: ${SYMFONY_SECRET}
+      APP_ENV: dev
+      APP_DEBUG: 1
       BACKEND_API_URL: http://backend:${BACKEND_PORT}
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
       PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME}

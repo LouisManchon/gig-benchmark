@@ -64,10 +64,10 @@ select, .date-input {
 .all_matchs {
     width: 60%;
 }
-
 .avgtrj {
     width: 30%;
 }
+
 .tables {
     margin: 30px;
     display: flex;
@@ -77,18 +77,41 @@ select, .date-input {
     gap: 30px;
 }
 
-th, td {
-    padding: 7px;
+td {
+    padding: 6px 7px;
     text-align: left;
+    vertical-align: middle;
 }
 
 th {
+    padding: 10px;
+    text-align: left;
     background-color: #080e2d;
     color: white;
 }
 
 tr:nth-child(even) {
     background-color: #45b4a02c;
+}
+
+.evol-container {
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    padding: 0; /* on réduit le padding vertical pour ne pas agrandir la ligne */
+}
+
+.evol-container p:first-child {
+    
+    margin: 0; /* supprime marges par défaut */
+    font-weight: bold; /* flèche plus visible */
+    font-size: 1em;
+}
+
+.evol-container .previous-trj {
+    margin: 0; /* supprime marges par défaut */
+    font-size: 0.75em; /* plus petit texte */
+    color: #888888; /* gris clair */
 }
 
 .trj-low { color: #2e8b57; font-weight: bold; }
