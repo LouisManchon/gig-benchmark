@@ -35,6 +35,9 @@ clean: ## Nettoie volumes et containers
 	docker-compose down -v
 	docker system prune -f
 
+cache: # vide cache symfony
+	docker-compose exec php php bin/console cache:clear
+
 # ============================================
 # LOGS
 # ============================================
