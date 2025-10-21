@@ -18,25 +18,30 @@
 
 <div class="container">
     <!-- aside for scraping -->
-    <aside class="sidebar-closed" id="sidebar">
-        <h3>Filters</h3>
-        <form class="aside-form" method="get" action="{{ path('odds_list') }}">
-            <label name="sport" id="sport">Sports :</label>
-                <select name="sport" id="sport" onchange="this.form.submit()">
-                    <option value="">All</option>
-                </select>
-            <label for="bookmaker">Bookmaker:</label>
-                <select name="bookmaker" id="bookmaker" onchange="this.form.submit()">
-                    <option value="">All</option>
-                </select>
-            <label name="league" id="match">League :</label>
-                <select name="league" id="league" onchange="this.form.submit()">
-                    <option value="">All</option>
-                </select>
-        </form>
-            <button type="submit" class="scraping-btn">Start Scraping</button>
-    </aside>
-
+        <aside id="sidebar">
+            <h3 class="sidebar-title">Scraping Filters</h3>
+            {# TODO: Ajouter le formulaire de scraping ici si nécessaire #}
+            <form class="aside-form" method="post" action="#">
+                <div class="form-group">
+                    <label for="sport">Sport :</label>
+                    <select name="sport" id="sport" class="form-control">
+                        <option value="football">Football</option>
+                        <option value="basketball">Basketball</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="league-scraping">League :</label>
+                    <select name="league" id="league-scraping" class="form-control">
+                        <option value="ligue_1">Ligue 1</option>
+                        <option value="serie_a">Serie A</option>
+                        <option value="premier_league">Premier League</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="scraping-btn">Start Scraping</button>
+            </form>
+        </aside>
     <main>       
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>

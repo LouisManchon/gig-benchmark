@@ -1,11 +1,24 @@
 document.addEventListener('DOMContentLoaded', () => {
     // Sidebar toggle
-    const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggleSidebar');
-    if (toggleBtn) {
-        toggleBtn.addEventListener('click', () => {
+    const sidebar = document.getElementById('sidebar');
+    
+    console.log('Toggle button:', toggleBtn);
+    console.log('Sidebar:', sidebar);
+    
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('🎯 Toggle clicked');
+            console.log('Classes before:', sidebar.className);
+            
+            // Toggle la classe "open" au lieu de "sidebar-closed"
             sidebar.classList.toggle('open');
+            
+            console.log('Classes after:', sidebar.className);
         });
+    } else {
+        console.error('❌ Sidebar elements not found');
     }
 
     // init button for filters
@@ -40,11 +53,25 @@ document.addEventListener('DOMContentLoaded', () => {
             conjunction: ' to ',  // ✅ Important pour le format
             onClose: function(selectedDates, dateStr, instance) {
                 console.log('Date selected:', dateStr);  // ✅ DEBUG
+                console.log('Input value:', dateInput.value);
             }
         });
         console.log('Flatpickr initialized:', flatpickrInstance);
     } else {
         console.error('Date input with class .js-date-range not found!');
+    }
+
+    const form = document.querySelector('.form-filters');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            console.log('🚀 FORM SUBMITTING');
+            console.log('Date input value:', dateInput.value);
+            
+            const formData = new FormData(this);
+            for (let [key, value] of formData.entries()) {
+                console.log(`  ${key}: ${value}`);
+            }
+        });
     }
 
     // AJAX for filters
