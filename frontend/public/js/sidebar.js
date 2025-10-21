@@ -36,8 +36,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (dateInput) {
         flatpickrInstance = flatpickr(dateInput, {
             mode: 'range',
-            dateFormat: 'Y-m-d'
+            dateFormat: 'Y-m-d',
+            conjunction: ' to ',  // ✅ Important pour le format
+            onClose: function(selectedDates, dateStr, instance) {
+                console.log('Date selected:', dateStr);  // ✅ DEBUG
+            }
         });
+        console.log('Flatpickr initialized:', flatpickrInstance);
+    } else {
+        console.error('Date input with class .js-date-range not found!');
     }
 
     // AJAX for filters

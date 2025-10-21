@@ -14,10 +14,7 @@ class OddsFilterType extends AbstractType
     {
         $builder
             ->add('bookmaker', ChoiceType::class, [
-                'choices' => array_merge(
-                    ['All' => 'all'], 
-                    array_combine($options['bookmakers'], $options['bookmakers'])
-                ),
+                'choices' => $options['bookmakers'],
                 'data' => ['all'],
                 'required' => false,
                 'multiple' => true,
@@ -25,12 +22,12 @@ class OddsFilterType extends AbstractType
                 'attr' => ['class' => 'js-bookmaker-select']
             ])
             ->add('league', ChoiceType::class, [
-                'choices' => array_combine($options['leagues'], $options['leagues']),
+                'choices' => $options['leagues'],
                 'placeholder' => 'All',
                 'required' => false
             ])
             ->add('match', ChoiceType::class, [
-                'choices' => array_combine($options['matches'], $options['matches']),
+                'choices' => $options['matches'],
                 'placeholder' => 'All',
                 'required' => false
             ])
