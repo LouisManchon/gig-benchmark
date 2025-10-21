@@ -11,6 +11,7 @@ urlpatterns = [
     path('scraping/basketball/all', scraping_views.scrape_all_basketball, name='scrape-basketball'),
     path('scraping/rugby/all', scraping_views.scrape_all_rugby, name='scrape-rugby'),
     path('scraping/tennis/all', scraping_views.scrape_all_tennis, name='scrape-tennis'),
+    path('sports', data_views.get_distinct_sports),
     path('bookmakers', data_views.get_distinct_bookmakers),
     path('leagues', data_views.get_distinct_leagues),
     path('matches', data_views.get_distinct_matches),

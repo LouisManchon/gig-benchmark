@@ -16,6 +16,12 @@ class OddsApiService
         $this->apiBaseUrl = rtrim($apiBaseUrl, '/');
     }
 
+    public function getDistinctSports(): array
+    {
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/sports');
+        return $response->toArray();
+    }
+
     public function getDistinctBookmakers(): array
     {
         $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/bookmakers');
@@ -37,7 +43,10 @@ class OddsApiService
     public function getOddsWithFilters(array $filters = []): array
     {
         $queryParams = [];
-        
+
+        if (!empty($filters['sport'])) {
+            $queryParams['sport'] = $filters['sport'];
+        }
         if (!empty($filters['bookmaker'])) {
             $queryParams['bookmaker'] = $filters['bookmaker'];
         }
@@ -59,6 +68,9 @@ class OddsApiService
             $url .= '?' . http_build_query($queryParams);
         }
 
+        // ✅ Debug
+        error_log('🌐 Calling API: ' . $url);
+
         $response = $this->httpClient->request('GET', $url);
         return $response->toArray();
     }
@@ -66,7 +78,10 @@ class OddsApiService
     public function getAvgTrj(array $filters = []): array
     {
         $queryParams = [];
-        
+
+        if (!empty($filters['sport'])) {
+        $queryParams['sport'] = $filters['sport'];
+        }
         if (!empty($filters['bookmaker'])) {
             $queryParams['bookmaker'] = $filters['bookmaker'];
         }
@@ -87,6 +102,9 @@ class OddsApiService
         if (!empty($queryParams)) {
             $url .= '?' . http_build_query($queryParams);
         }
+
+            // ✅ Debug
+        error_log('🌐 Calling API: ' . $url);
 
         $response = $this->httpClient->request('GET', $url);
         return $response->toArray();

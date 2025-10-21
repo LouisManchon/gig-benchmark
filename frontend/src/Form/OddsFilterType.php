@@ -10,40 +10,70 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 
 class OddsFilterType extends AbstractType
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('bookmaker', ChoiceType::class, [
-                'choices' => $options['bookmakers'],
-                'data' => ['all'],
+            ->add('sport', ChoiceType::class, [
+                'choices' => $options['sports'],
                 'required' => false,
-                'multiple' => true,
-                'expanded' => false,
-                'attr' => ['class' => 'js-bookmaker-select']
+                'placeholder' => 'All sports',  // ✅ Placeholder
+                'attr' => [
+                    'class' => 'form-control',
+                    'data-filter' => 'sport'  // ✅ Pour JS
+                ],
+                'label' => 'Sport'
             ])
             ->add('league', ChoiceType::class, [
                 'choices' => $options['leagues'],
-                'placeholder' => 'All',
-                'required' => false
+                'multiple' => true,
+                'expanded' => false,
+                'required' => false,
+                'placeholder' => 'All leagues',
+                'attr' => [
+                    'class' => 'form-control',
+                    'data-filter' => 'league',
+                    'data-placeholder' => 'All leagues'
+                ],
+                'label' => 'League'
+            ])
+            ->add('bookmaker', ChoiceType::class, [
+                'choices' => $options['bookmakers'],
+                'multiple' => true,
+                'expanded' => false,
+                'required' => false,
+                'placeholder' => 'All bookmakers',
+                'attr' => [
+                    'class' => 'form-control',
+                    'data-placeholder' => 'All bookmakers'  // ✅ Pour Choices.js
+                ],
+                'label' => 'Bookmaker'
             ])
             ->add('match', ChoiceType::class, [
                 'choices' => $options['matches'],
-                'placeholder' => 'All',
-                'required' => false
+                'required' => false,
+                'placeholder' => 'All matches',
+                'attr' => ['class' => 'form-control'],
+                'label' => 'Match'
             ])
             ->add('dateRange', TextType::class, [
                 'required' => false,
-                'attr' => ['class' => 'js-date-range']
+                'attr' => [
+                    'class' => 'form-control js-date-range',
+                    'placeholder' => 'Select date range'
+                ],
+                'label' => 'Date Range'
             ]);
     }
 
-    public function configureOptions(OptionsResolver $resolver)
+    public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
+            'sports' => [],
             'bookmakers' => [],
-            'matches' => [],
             'leagues' => [],
-            'data_class' => null,
+            'matches' => [],
+            'method' => 'GET',
+            'csrf_protection' => false,
         ]);
     }
 }

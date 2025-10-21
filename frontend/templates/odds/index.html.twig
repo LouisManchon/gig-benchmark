@@ -48,6 +48,10 @@
         <div class="filter-form-container">
             {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters', 'name': 'odds_filter'}}) }}
                 <div class="form-group">
+                    {{ form_label(form.sport) }}
+                    {{ form_widget(form.sport) }}
+                </div>
+                <div class="form-group">
                     {{ form_label(form.bookmaker) }}
                     {{ form_widget(form.bookmaker) }}
                 </div>
@@ -144,4 +148,7 @@
         </div>
     </main>
 </div>
+<script id="leagues-data" type="application/json">
+    {{ leaguesData|raw }}
+</script>
 {% endblock %}

@@ -4,9 +4,17 @@ from rest_framework.response import Response
 from django.db.models import Avg, Q
 from django.utils import timezone
 from datetime import datetime
-from ..models import Odd, Bookmaker, League, Match
-from ..serializers import OddSerializer, BookmakerSerializer, LeagueSerializer, MatchSerializer
+from ..models import Odd, Bookmaker, League, Match, Sport
+from ..serializers import OddSerializer, BookmakerSerializer, LeagueSerializer, MatchSerializer, SportSerializer
 import traceback
+
+
+
+@api_view(['GET'])
+def get_distinct_sports(request):
+    sports = Sport.objects.all()
+    serializer = SportSerializer(sports, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def get_distinct_bookmakers(request):
@@ -31,6 +39,7 @@ def get_distinct_matches(request):
 @api_view(['GET'])
 def get_odds_with_filters(request):
     try:
+        sport_id = request.query_params.get('sport')
         bookmaker_id = request.query_params.get('bookmaker')
         league_id = request.query_params.get('league')
         match_id = request.query_params.get('match')
@@ -46,10 +55,14 @@ def get_odds_with_filters(request):
         ).all()
         
         # Applique les filtres
+        if sport_id and sport_id != 'all':
+            odds = odds.filter(match__league__sport__id=int(sport_id))
         if bookmaker_id and bookmaker_id != 'all':
-            odds = odds.filter(bookmaker__id=bookmaker_id)
+            bookmaker_ids = [int(bid) for bid in bookmaker_id.split(',')]  # ✅ Convertir en int
+            odds = odds.filter(bookmaker__id__in=bookmaker_ids)
         if league_id and league_id != 'all':
-            odds = odds.filter(match__league__id=league_id)
+            league_ids = [int(lid) for lid in league_id.split(',')]  # ✅ Convertir en int
+            odds = odds.filter(match__league__id__in=league_ids)
         if match_id and match_id != 'all':
             odds = odds.filter(match__id=match_id)
         if start_date and end_date:
@@ -71,18 +84,23 @@ def get_odds_with_filters(request):
 @api_view(['GET'])
 def get_avg_trj(request):
     try:
+        sport_id = request.query_params.get('sport')
         bookmaker_id = request.query_params.get('bookmaker')
         league_id = request.query_params.get('league')
         match_id = request.query_params.get('match')
         start_date = request.query_params.get('start')
         end_date = request.query_params.get('end')
 
-        odds = Odd.objects.select_related('bookmaker', 'match').all()
+        odds = Odd.objects.select_related('bookmaker', 'match__league__sport').all()
         
+        if sport_id and sport_id != 'all':
+            odds = odds.filter(match__league__sport__id=int(sport_id))
         if bookmaker_id and bookmaker_id != 'all':
-            odds = odds.filter(bookmaker__id=bookmaker_id)
+            bookmaker_ids = [int(bid) for bid in bookmaker_id.split(',')]
+            odds = odds.filter(bookmaker__id__in=bookmaker_ids)
         if league_id and league_id != 'all':
-            odds = odds.filter(match__league__id=league_id)
+            league_ids = [int(lid) for lid in league_id.split(',')]
+            odds = odds.filter(match__league__id__in=league_ids)
         if match_id and match_id != 'all':
             odds = odds.filter(match__id=match_id)
         if start_date and end_date:
