@@ -69,7 +69,7 @@ class OddAdmin(admin.ModelAdmin):
     search_fields = ['match__home_team__name', 'match__away_team__name']
     date_hierarchy = 'scraped_at'
     ordering = ['-scraped_at']
-    readonly_fields = ['created_at']
+    # readonly_fields = ['created_at']
     
     def get_match(self, obj):
         return f"{obj.match.home_team.name} vs {obj.match.away_team.name}"

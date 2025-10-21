@@ -131,7 +131,7 @@ class Odd(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE, related_name='odds')
     market = models.ForeignKey(MarketName, on_delete=models.CASCADE, related_name='odds')
     bookmaker = models.ForeignKey(Bookmaker, on_delete=models.CASCADE, related_name='odds')
-    outcome = models.CharField(max_length=50)  # '1', 'X', '2', 'Over', 'Under', etc.
+    outcome = models.CharField(max_length=50)
     odd_value = models.DecimalField(max_digits=6, decimal_places=2)
     trj = models.DecimalField(
         max_digits=5, 
@@ -140,8 +140,7 @@ class Odd(models.Model):
         blank=True,
         help_text="Player Return Rate (%) for this specific match/bookmaker"
     )
-    scraped_at = models.DateTimeField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    scraped_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         db_table = 'Odds'
@@ -151,6 +150,8 @@ class Odd(models.Model):
             models.Index(fields=['scraped_at'], name='idx_odds_scraped'),
             models.Index(fields=['bookmaker'], name='idx_odds_bookmaker'),
         ]
+        # ✅ Ajoute ça pour dire à Django de ne pas gérer ces champs
+        managed = False  # Django ne créera pas/modifiera pas cette table
 
     def __str__(self):
         trj_str = f" (TRJ: {self.trj}%)" if self.trj else ""
