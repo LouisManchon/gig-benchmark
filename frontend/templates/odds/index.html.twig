@@ -129,14 +129,15 @@
                             <td class="{% if item.odd.trj > 90 %}trj-high{% elseif item.odd.trj < 90 %}trj-low{% endif %}">
                                 {{ item.odd.trj|number_format(2, '.', '') }}%
                             </td>
-                            <td class="evolution-cell">
-                                {% if item.evolution == 1 %}
+                            <td class="evol-container">
+                                <span>{% if item.evolution == 1 %}
                                     <span class="arrow-up">↑</span>
                                 {% elseif item.evolution == -1 %}
                                     <span class="arrow-down">↓</span>
                                 {% else %}
                                     <span class="arrow-stable">→</span>
-                                {% endif %}
+                                {% endif %}</span>
+                                <span class="previous-trj">{{ item.previousTrj ? item.previousTrj|number_format(2, '.', '') ~ '%' : '-' }}</span>
                             </td>
                         </tr>
                     {% else %}
