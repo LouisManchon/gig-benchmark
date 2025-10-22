@@ -1,10 +1,28 @@
+<<<<<<< HEAD
+# Virtual environment
+venv/
+
+# Python cache files
+__pycache__/
+*.pyc
+
+# Django files
+db.sqlite3
+*.log
+*.pot
+*.py[cod]
+*.sqlite3
+/media
+/staticfiles
+/front_copu
+google-chrome-stable_current_amd64.deb
+=======
 # Environnement
 backend/.env
 database/.env
 scraping/.env
 frontend/.env
 .env
-keycloak-21.1.1
 
 # Docker
 *.log
@@ -16,9 +34,8 @@ __pycache__/
 *$py.class
 venv/
 .venv/
-keycloak_public_key.pem
 
-# Base de données
+# DB
 database/init/
 database/db.sqlite3  # Si tu utilises SQLite
 
@@ -26,6 +43,4 @@ database/db.sqlite3  # Si tu utilises SQLite
 .DS_Store
 .idea/
 .vscode/
-
-vendor
-composer.lock
+>>>>>>> 0c970882da97718f173367570fd5e4309b9c825d

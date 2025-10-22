@@ -21,16 +21,6 @@
     {% endblock %}
 </head>
 <body>
-    <!-- Header avec login/logout -->
-    <header>
-        {% if app.session.get('user') %}
-            <p>Bienvenue, {{ app.session.get('user').username }} !</p>
-            <a href="{{ path('app_logout') }}">Logout</a>
-        {% else %}
-            <a href="{{ path('app_login') }}">Login via Keycloak</a>
-        {% endif %}
-    </header>
-
     <!-- Contenu principal -->
     {% block body %}{% endblock %}
 

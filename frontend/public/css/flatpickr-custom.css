@@ -1,0 +1,39 @@
+/* Jour aujourd'hui */
+.flatpickr-day.today {
+    background: #7136c4 !important;
+    color: white !important;
+    border-color: #7136c4 !important;
+}
+
+.flatpickr-day.today:hover {
+    background: #5a2b9d !important;
+}
+
+/* Jours sélectionnés */
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange,
+.flatpickr-day.selected:focus,
+.flatpickr-day.startRange:focus,
+.flatpickr-day.endRange:focus,
+.flatpickr-day.selected:hover,
+.flatpickr-day.startRange:hover,
+.flatpickr-day.endRange:hover,
+.flatpickr-day.selected.prevMonthDay,
+.flatpickr-day.startRange.prevMonthDay,
+.flatpickr-day.endRange.prevMonthDay,
+.flatpickr-day.selected.nextMonthDay,
+.flatpickr-day.startRange.nextMonthDay,
+.flatpickr-day.endRange.nextMonthDay {
+    background: #7136c4 !important;
+    color: white !important;
+}
+
+/* Jours dans la plage */
+.flatpickr-day.inRange {
+    background: rgba(113, 54, 196, 0.15) !important;
+    box-shadow: -5px 0 0 rgba(113, 54, 196, 0.15), 5px 0 0 rgba(113, 54, 196, 0.15) !important;
+}

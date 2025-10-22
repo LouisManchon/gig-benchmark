@@ -1,5 +1,5 @@
 {
     "require": {
-        "knpuniversity/oauth2-client-bundle": "^2.19"
+        "symfony/http-client": "^7.3"
     }
 }

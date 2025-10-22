@@ -1,0 +1,163 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Odds List{% endblock %}
+
+{% block body %}
+<header>
+    <div class="title-container">
+        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="site-logo">
+        <h1>Benchmark</h1>
+    </div>    
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">{{ message }}</div>
+        {% endfor %}
+    {% endfor %}
+</header>
+
+
+<div class="container">
+    <!-- aside for scraping -->
+        {# Dans odds/index.html.twig, modifie la sidebar #}
+        <aside id="sidebar">
+            <h3 class="sidebar-title">Scraping Filters</h3>
+            <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
+                <div class="form-group">
+                    <label for="sport-scraping">Sport :</label>
+                    <select name="sport" id="sport-scraping" class="form-control" required>
+                        <option value="">Sélectionner</option>
+                        <option value="football">Football</option>
+                        <option value="basketball">Basketball</option>
+                        <option value="rugby">Rugby</option>
+                        <option value="tennis">Tennis</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="league-scraping">League :</label>
+                    <select name="league" id="league-scraping" class="form-control" required>
+                        <option value="">Sélectionner...</option>
+                        <!-- Les options seront remplies dynamiquement selon le sport -->
+                    </select>
+                </div>
+                
+                <button type="submit" class="scraping-btn" id="start-scraping-btn">
+                    <span class="btn-text">Start Scraping</span>
+                    <span class="btn-loader" style="display: none;">⏳ En cours...</span>
+                </button>
+                
+                <div id="scraping-status" style="display: none; margin-top: 10px;"></div>
+            </form>
+        </aside>
+    <main>       
+        <!-- filter by bookmaker, date & match -->
+        <h2>Filters</h2>
+        <div class="filter-form-container">
+            {{ form_start(form, {'method': 'get', 'action': path('odds_list'), 'attr': {'class': 'form-filters', 'name': 'odds_filter'}}) }}
+                <div class="form-group">
+                    {{ form_label(form.sport) }}
+                    {{ form_widget(form.sport) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.bookmaker) }}
+                    {{ form_widget(form.bookmaker) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.league) }}
+                    {{ form_widget(form.league) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.match) }}
+                    {{ form_widget(form.match) }}
+                </div>
+                <div class="form-group">
+                    {{ form_label(form.dateRange) }}
+                    {{ form_widget(form.dateRange) }}
+                </div>
+                <button type="submit" id="filter-button" class="form-btn">Filter</button>
+                <button id="reset-btn" class="form-btn">Init</button>
+                <button type="button" id="export-csv-btn" class="form-btn export-btn">📊 Export CSV</button>
+            {{ form_end(form) }}
+        </div>
+        <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
+        <div class="tables">
+            <!--table for trj by bookmakers-->
+            <table class="avgtrj">
+                <thead>
+                    <tr>
+                        <th>Bookmaker <span>⬍</span></th>
+                        <th>Average RTP <span>⬍</span></th>
+                        <th>Evolution</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in avgTrj %}
+                        <tr>
+
+
+                            <td>{{ row.bookmaker }}</td>
+                            <td class="{% if row.avgTrj > 90 %}trj-high{% elseif row.avgTrj < 90 %}trj-low{% endif %}">
+                                {{ row.avgTrj|number_format(2, '.', '') }}%
+                            </td>
+                            <td class="evol-container">
+                                <span>{% if row.evolution == 1 %}↑{% elseif row.evolution == -1 %}↓{% else %}-{% endif %}</span>
+                                <span class="previous-trj">{{ row.previousAvgTrj ? row.previousAvgTrj|number_format(2, '.', '') ~ '%' : '-' }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="4">No data found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <!-- table for all matchs -->
+            <table class="all_matchs">
+                <thead>
+                    <tr>
+                        <th>Match <span>⬍</span></th>
+                        <th>Bookmaker <span>⬍</span></th>
+                        <th>Home<span>⬍</span></th>
+                        <th>Draw<span>⬍</span></th>
+                        <th>Away<span>⬍</span></th>
+                        <th>TRJ <span>⬍</span></th>
+                        <th>Evol</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in odds %}
+                        <tr>
+                            <td>{{ item.odd.match.home_team.name }} - {{ item.odd.match.away_team.name }}</td>
+                            <td>{{ item.odd.bookmaker.name }}</td>
+                            <td>{{ item.odd.cote1|default('-') }}</td>
+                            <td>{{ item.odd.coteN|default('-') }}</td>
+                            <td>{{ item.odd.cote2|default('-') }}</td>
+                            <td class="{% if item.odd.trj > 90 %}trj-high{% elseif item.odd.trj < 90 %}trj-low{% endif %}">
+                                {{ item.odd.trj|number_format(2, '.', '') }}%
+                            </td>
+                            <td class="evol-container">
+                                <span>{% if item.evolution == 1 %}
+                                    <span class="arrow-up">↑</span>
+                                {% elseif item.evolution == -1 %}
+                                    <span class="arrow-down">↓</span>
+                                {% else %}
+                                    <span class="arrow-stable">→</span>
+                                {% endif %}</span>
+                                <span class="previous-trj">{{ item.previousTrj ? item.previousTrj|number_format(2, '.', '') ~ '%' : '-' }}</span>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="7">No odds available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+<script id="leagues-data" type="application/json">
+    {{ leaguesData|raw }}
+</script>
+{% endblock %}

@@ -1,274 +1,241 @@
-## 📘 Development Journal – Gig Benchmark Project`
+<<<<<<< HEAD
+# 🎨 Frontend Symfony
 
-### Step 1 – Environment setup
-
-✅ Installed Python 3 and pip.
-✅ Created a virtual environment (venv):
-
-````
-python3 -m venv venv
-source venv/bin/activate   # (Ubuntu WSL)
-````
-
-✅ Core Dependencies Installed:
-
-- Django 5.2.5
-- Django REST Framework 3.16.1
-- mysqlclient (for Django ↔ MySQL connection)
+Ce dépôt contient la partie **frontend** du projet, développée avec le framework **Symfony**.  
+Il gère l’affichage, les routes publiques, et la communication avec l’API backend.
 
 ---
 
-### Step 2 – MySQL configuration
+## 🚀 Prérequis
 
-🚨 Initial issue: root access blocked.
+Avant de lancer le projet, assure-toi d’avoir installé :
 
-🔧 Fix: started MySQL in --skip-grant-tables mode + created /var/run/mysqld directory.
+- [PHP >= 8.3](https://www.php.net/downloads.php)
 
-✅ Reset root password:
-
+```bash
+sudo apt update
+sudo apt install php php-cli php-xml php-mbstring php-intl php-curl php-zip unzip git -y
+sudo apt install composer -y
 ````
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'root';
-````
+- [Symfony CLI](https://symfony.com/download)
 
-✅ Created dedicated Django user:
+```bash
+wget https://get.symfony.com/cli/installer -O - | bash
+sudo mv ~/.symfony*/bin/symfony /usr/local/bin/symfony
+```
 
-````
-CREATE USER 'giguser'@'localhost' IDENTIFIED BY '1234';
-GRANT ALL PRIVILEGES ON GIG.* TO 'giguser'@'localhost';
-FLUSH PRIVILEGES;
-````
+- Doctrine (si on veut lier la base de données directement dans Symfony)
+```bash
+composer require symfony/orm-pack
+composer require symfony/doctrine-fixtures --dev
+=======
+# Lancer le consumer
 
-✅ Verified connection with:
+sudo docker compose up -d consumer_odds
 
-````
-mysql -u giguser -p
-````
+# Attendre 5 secondes
+
+sleep 5
+
+# Vérifier qu'il tourne
+
+sudo docker compose ps
+
+# Voir les logs
+
+sudo docker compose logs consumer_odds -f
+
+>>>>>>> 0c970882da97718f173367570fd5e4309b9c825d
+```
 
 ---
 
-### Step 3 – Database prepared by teammate
+<<<<<<< HEAD
+## ⚙️ Installation du projet
 
-✅ Tables Created by Teammate (GIG database):
+Clone le dépôt et installe les dépendances PHP et JS :
 
-- Sports (reference)
+```bash
+git clone [https://github.com/gig-benchmark.git](https://github.com/LouisManchon/gig-benchmark/tree/dorine/front)
 
-- MarketNames (with code UNIQUE)
+# Installation des dépendances PHP
+composer install
 
-- Leagues (FK → Sports)
+# Installation des dépendances frontend
+npm install
 
-- Teams (FK → Leagues)
+```
 
-- Players (FK → Teams)
+## 🧑‍💻 Lancer le serveur de développement
 
-✅ Constraints: Foreign Keys + UNIQUE fields.
+Démarre le serveur Symfony :
 
----
+``` bash
+symfony serve
+```
 
-### Step 4 – Django initialization
+Par défaut, le site est accessible sur http://localhost:8000
 
-✅ Project created:
+## Structure du projet 
 
-````
-django-admin startproject gig_benchmark .
-````
-
-✅ Main app created:
-
-````
-python manage.py startapp core
-````
-
-✅ Models Synchronized with MySQL:
-
-- Sport (code, name)
-
-- MarketName (code UNIQUE, name, sport FK)
-
-- League, Team, Player (with FK constraints)
-
-````
-class Sport(models.Model):
-    code = models.CharField(max_length=20, unique=True)
-    name = models.CharField(max_length=100, unique=True)
-
-    class Meta:
-        db_table = 'Sports'
-
-    def __str__(self):
-        return self.name
-
-class MarketName(models.Model):
-    sport = models.ForeignKey(Sport, on_delete=models.CASCADE, related_name="markets")
-    code = models.CharField(max_length=50)
-    name = models.CharField(max_length=150)
-
-    class Meta:
-        unique_together = ('sport', 'code')
-        db_table = 'MarketNames'
-
-    def __str__(self):
-        return f"{self.sport.name} - {self.name}"
-
-
-class League(models.Model):
-    sport = models.ForeignKey(Sport, on_delete=models.CASCADE, related_name="leagues")
-    code = models.CharField(max_length=50, null=True, blank=True)
-    name = models.CharField(max_length=150)
-    country = models.CharField(max_length=100, null=True, blank=True)
-
-    class Meta:
-        unique_together = ('sport', 'name')
-        db_table = 'Leagues'
-
-    def __str__(self):
-        return self.name
-````
-
-✅ Migrations Applied:
-
-````
-python manage.py makemigrations
-python manage.py migrate
-````
-
-→ 3 migrations (0001_initial, 0002_alter_tables, 0003_rename_player_field).
-
----
-
-### Step 5 – API Setup & Keycloak Integration (Not finish)
-
-📦 Dependencies Added:
-````
-pip install djangorestframework-simplejwt django-cors-headers mozilla-django-oidc
-````
-
-⚙️ Configuration in settings.py:
-````
-# DRF
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'oidc_auth.authentication.JSONWebTokenAuthentication',  # Keycloak
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # All endpoints protected
-    ],
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
-}
-
-# CORS (for Symfony frontend)
-CORS_ALLOWED_ORIGINS = ["http://localhost:8001"]
-CORS_ALLOW_HEADERS = ["authorization", "content-type"]
-
-# Keycloak (TO CONFIGURE)
-OIDC_AUTH = {
-    'OIDC_ENDPOINT': 'https://keycloak.example.com/realms/mon-realm',  # ⚠ Replace with real URL
-    'OIDC_CLAIMS_OPTIONS': {
-        'aud': {'values': ['gig-django-api']},  # ⚠ Must match Keycloak client_id
-    },
-}
-````
-
----
-
-### Step 6 – Serializers & ViewSets
-
-🔄 serializers.py (No Nesting for Simplicity):
-
-````
-from rest_framework import serializers
-from .models import Sport, MarketName, League, Team, Player
-
-class SportSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Sport
-        fields = ['id', 'code', 'name']  # Flat structure (no nested objects)
-
-class MarketNameSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = MarketName
-        fields = ['id', 'code', 'name']  # 'code' is required (UNIQUE in DB)
-````
-
-Note: No nesting means we only return IDs for relationships (e.g., sport_id instead of embedding the full Sport object). This keeps responses lightweight.
-
-🖥 views.py (CRUD Endpoints):
-
-````
-from rest_framework import viewsets
-from .models import Sport, MarketName
-from .serializers import SportSerializer, MarketNameSerializer
-
-class SportViewSet(viewsets.ModelViewSet):
-    queryset = Sport.objects.all()
-    serializer_class = SportSerializer
-
-class MarketNameViewSet(viewsets.ModelViewSet):
-    queryset = MarketName.objects.all()
-    serializer_class = MarketNameSerializer
-````
-
----
-
-### Step 7 – URL Routing
-
-🌐 urls.py (Auto-generated API Routes):
-
-````
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from core.views import SportViewSet, MarketNameViewSet
-
-router = DefaultRouter()
-router.register(r'sports', SportViewSet)        # → `/api/sports/`
-router.register(r'market-names', MarketNameViewSet)  # → `/api/market-names/`
-
-urlpatterns = [
-    path('api/', include(router.urls)),  # All endpoints under `/api/`
-]
-````
-
-### Step 8 - Current Project Tree (Updated)
-
-````
+```bash
 .
-├── README.md
-├── core/
-│   ├── admin.py          # ✅ MarketName registered
-│   ├── apps.py           # ✅ App config
-│   ├── migrations/       # ✅ 3 migrations applied
-│   ├── models.py         # ✅ All models synced with MySQL
-│   ├── serializers.py    # ✅ Flat serializers (no nesting)
-│   ├── tests.py          # ❌ TODO: Add unit tests
-│   ├── views.py          # ✅ ViewSets for all models
-│   └── ...
-├── gig_benchmark/
-│   ├── settings.py       # ✅ DRF + Keycloak config (pending final OIDC_ENDPOINT)
-│   ├── urls.py           # ✅ API routes under `/api/`
-│   └── wsgi.py
-└── manage.py
-````
+├── assets/              # Code JS/CSS source
+├── config/              # Configuration Symfony
+├── public/              # Fichiers publics (build, index.php, images, etc.)
+├── src/                 # Code PHP (contrôleurs, services, etc.)
+├── templates/           # Vues Twig
+├── translations/        # Fichiers de traduction
+├── .env                 # Configuration d'environnement
+└── webpack.config.js    # Configuration Webpack Encore
+
+```
+
+=======
+# 📚 RÉSUMÉ COMPLET DE L'ARCHITECTURE
+
+## 🏗️ **STRUCTURE DU PROJET**
+```
+
+gig-benchmark/
+├── backend/ → API Django + Base de données
+├── frontend/ → Interface PHP/Symfony
+├── scraping/ → Worker de scraping
+├── database/ → Schéma SQL
+├── docker-compose.yml → Configuration Docker
+└── .env → Variables d'environnement
+
+```
 
 ---
 
-### Next Steps
+## 🔄 **LES 9 SERVICES DOCKER**
 
-Finalize Keycloak:
-- Replace OIDC_ENDPOINT and aud.values in settings.py.
-- Test authentication with Symfony frontend.
+### **1️⃣ MySQL (`db`)**
+- **Rôle** : Base de données
+- **Port** : `3307:3306`
+- **Données** : Matchs, cotes, bookmakers
 
-Add Tests:
-- Write unit tests for MarketNameSerializer and MarketNameViewSet.
+### **2️⃣ RabbitMQ (`rabbitmq`)**
+- **Rôle** : File de messages (broker)
+- **Ports** :
+  - `5672` : Connexion AMQP
+  - `15672` : Interface web
+- **Queues** :
+  - `scraping_tasks` : Demandes de scraping
+  - `odds` : Cotes scrapées
 
-Optimize Queries (if needed):
-- Use .select_related() in ViewSets to avoid N+1 queries.
+### **3️⃣ Backend Django (`backend`)**
+- **Rôle** : API REST + Admin
+- **Port** : `8000`
+- **Fichiers** : `backend/`
 
-Document API:
-- Add Swagger/Redoc for interactive docs (e.g., drf-yasg).
+### **4️⃣ Celery Worker (`celery_worker`)**
+- **Rôle** : Tâches asynchrones
+- **Fichiers** : `backend/`
 
-### Key Decisions
+### **5️⃣ Celery Beat (`celery_beat`)**
+- **Rôle** : Planificateur de tâches
+- **Fichiers** : `backend/`
 
+### **6️⃣ 🆕 Consumer Odds (`consumer_odds`)**
+- **Rôle** : **Écoute queue `odds` → Stocke en BDD**
+- **Fichier** : `backend/consumers/consumer_odds.py`
+- **Queue écoutée** : `odds`
 
-- No Nesting in Serializers: Chosen for simplicity and performance. Can be added later if needed.
-- Keycloak Integration: Centralized auth for Django + Symfony.
-- Flat Structure: Easy to maintain and extend.
+### **7️⃣ Selenium (`selenium`)**
+- **Rôle** : Navigateur Chrome headless
+- **Port** : `4444` (WebDriver)
+
+### **8️⃣ Scraping Worker (`scraping`)**
+- **Rôle** : **Scrape les sites → Envoie à RabbitMQ**
+- **Fichiers** : `scraping/src/football/ligue_1.py`
+- **Queue écoutée** : `scraping_tasks`
+- **Queue d'envoi** : `odds`
+
+### **9️⃣ Nginx + PHP (`nginx` + `php`)**
+- **Rôle** : Frontend Symfony
+- **Port** : `10014`
+
+---
+
+## 🔄 **FLUX DE DONNÉES COMPLET**
+```
+
+┌─────────────────────────────────────────────────────┐
+│ 1. DÉCLENCHEMENT │
+│ python send_task.py football.ligue_1 │
+└──────────────────┬──────────────────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────────────┐
+│ 2. RABBITMQ - Queue "scraping_tasks" │
+│ Message: {"scraper": "football.ligue_1"} │
+└──────────────────┬──────────────────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────────────┐
+│ 3. SCRAPING WORKER │
+│ - Lit queue "scraping_tasks" │
+│ - Lance scraping/src/football/ligue_1.py │
+│ - Se connecte à Selenium (port 4444) │
+│ - Scrape coteur.com │
+│ - Pour chaque match/bookmaker: │
+│ Envoie message à queue "odds" │
+└──────────────────┬──────────────────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────────────┐
+│ 4. RABBITMQ - Queue "odds" │
+│ 63 messages: {match, bookmaker, cotes, trj} │
+└──────────────────┬──────────────────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────────────┐
+│ 5. CONSUMER ODDS ⚠️ (À LANCER) │
+│ - Lit queue "odds" │
+│ - Parse les données │
+│ - Stocke en MySQL │
+│ • Table: Match │
+│ • Table: Odd │
+│ • Table: Bookmaker │
+└──────────────────┬──────────────────────────────────┘
+│
+▼
+┌─────────────────────────────────────────────────────┐
+│ 6. MYSQL (db) │
+│ Données stockées et prêtes à afficher │
+└─────────────────────────────────────────────────────┘
+
+```
+
+---
+
+## 📂 **FICHIERS CLÉS**
+
+| Fichier | Rôle |
+|---------|------|
+| `scraping/worker.py` | Worker principal qui écoute `scraping_tasks` |
+| `scraping/src/football/ligue_1.py` | Scraper Ligue 1 |
+| `scraping/send_task.py` | Envoie une demande de scraping |
+| `backend/consumers/consumer_odds.py` | ⚠️ Consomme queue `odds` → BDD |
+| `backend/core/models.py` | Modèles Django (Match, Odd, etc.) |
+| `docker-compose.yml` | Configuration de tous les services |
+
+---
+
+## ✅ **CE QUI FONCTIONNE**
+```
+
+✅ Scraping → RabbitMQ
+✅ 63 messages dans queue "odds"
+✅ TRJ calculé (83-92%)
+
+```
+
+## ❌ **CE QUI MANQUE**
+```
+
+❌ Consumer odds PAS lancé
+❌ Données PAS en BDD
+>>>>>>> 0c970882da97718f173367570fd5e4309b9c825d
