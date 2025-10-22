@@ -1,0 +1,13 @@
+knpu_oauth2_client:
+    clients:
+        keycloak:
+            type: generic
+            client_id: 'gig-front'
+            client_secret: '%env(KEYCLOAK_CLIENT_SECRET)%'
+            redirect_route: 'connect_keycloak_check'
+            provider_class: \League\OAuth2\Client\Provider\GenericProvider
+            base_url: 'http://localhost:8080/realms/GigBenchmarkRealm'
+            authorize_url: '/protocol/openid-connect/auth'
+            access_token_url: '/protocol/openid-connect/token'
+            resource_owner_details_url: '/protocol/openid-connect/userinfo'
+            scopes: ['openid', 'profile', 'email']
