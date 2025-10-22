@@ -12,7 +12,6 @@ class OddsApiService
     public function __construct(HttpClientInterface $httpClient, string $apiBaseUrl)
     {
         $this->httpClient = $httpClient;
-        // ✅ S'assurer que l'URL se termine par /api
         $this->apiBaseUrl = rtrim($apiBaseUrl, '/');
     }
 
@@ -68,7 +67,6 @@ class OddsApiService
             $url .= '?' . http_build_query($queryParams);
         }
 
-        // ✅ Debug
         error_log('🌐 Calling API: ' . $url);
 
         $response = $this->httpClient->request('GET', $url);
@@ -80,7 +78,7 @@ class OddsApiService
         $queryParams = [];
 
         if (!empty($filters['sport'])) {
-        $queryParams['sport'] = $filters['sport'];
+            $queryParams['sport'] = $filters['sport'];
         }
         if (!empty($filters['bookmaker'])) {
             $queryParams['bookmaker'] = $filters['bookmaker'];
@@ -103,10 +101,87 @@ class OddsApiService
             $url .= '?' . http_build_query($queryParams);
         }
 
-            // ✅ Debug
         error_log('🌐 Calling API: ' . $url);
 
         $response = $this->httpClient->request('GET', $url);
         return $response->toArray();
+    }
+
+    public function getOddsWithEvolution(array $filters = []): array
+    {
+        try {
+            $queryParams = [];
+
+            if (!empty($filters['sport'])) {
+                $queryParams['sport'] = $filters['sport'];
+            }
+            if (!empty($filters['bookmaker'])) {
+                $queryParams['bookmaker'] = $filters['bookmaker'];
+            }
+            if (!empty($filters['league'])) {
+                $queryParams['league'] = $filters['league'];
+            }
+            if (!empty($filters['match'])) {
+                $queryParams['match'] = $filters['match'];
+            }
+            if (!empty($filters['start'])) {
+                $queryParams['start'] = $filters['start'];
+            }
+            if (!empty($filters['end'])) {
+                $queryParams['end'] = $filters['end'];
+            }
+
+            $url = $this->apiBaseUrl . '/odds-with-evolution';
+            if (!empty($queryParams)) {
+                $url .= '?' . http_build_query($queryParams);
+            }
+
+            error_log('🌐 Calling API (with evolution): ' . $url);
+
+            $response = $this->httpClient->request('GET', $url);
+            return $response->toArray();
+        } catch (\Exception $e) {
+            error_log('❌ API Error (getOddsWithEvolution): ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    public function getAvgTrjWithEvolution(array $filters = []): array
+    {
+        try {
+            $queryParams = [];
+
+            if (!empty($filters['sport'])) {
+                $queryParams['sport'] = $filters['sport'];
+            }
+            if (!empty($filters['bookmaker'])) {
+                $queryParams['bookmaker'] = $filters['bookmaker'];
+            }
+            if (!empty($filters['league'])) {
+                $queryParams['league'] = $filters['league'];
+            }
+            if (!empty($filters['match'])) {
+                $queryParams['match'] = $filters['match'];
+            }
+            if (!empty($filters['start'])) {
+                $queryParams['start'] = $filters['start'];
+            }
+            if (!empty($filters['end'])) {
+                $queryParams['end'] = $filters['end'];
+            }
+
+            $url = $this->apiBaseUrl . '/avg-trj-with-evolution';
+            if (!empty($queryParams)) {
+                $url .= '?' . http_build_query($queryParams);
+            }
+
+            error_log('🌐 Calling API (avg trj with evolution): ' . $url);
+
+            $response = $this->httpClient->request('GET', $url);
+            return $response->toArray();
+        } catch (\Exception $e) {
+            error_log('❌ API Error (getAvgTrjWithEvolution): ' . $e->getMessage());
+            return [];
+        }
     }
 }

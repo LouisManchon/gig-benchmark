@@ -7,8 +7,8 @@ use App\Service\OddsApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\Routing\Annotation\Route;
 
 class OddsController extends AbstractController
 {
@@ -32,7 +32,7 @@ class OddsController extends AbstractController
             $matchesArray = $apiService->getDistinctMatches();
             $leaguesArray = $apiService->getDistinctLeagues();
             
-            // Transform match
+            // Transform sports
             if (is_array($sportsArray)) {
                 foreach ($sportsArray as $sport) {
                     if (isset($sport['name']) && isset($sport['id'])) {
@@ -40,6 +40,7 @@ class OddsController extends AbstractController
                     }
                 }
             }
+            
             // Transformer les bookmakers
             if (is_array($bookmakersArray)) {
                 foreach ($bookmakersArray as $bookmaker) {
@@ -72,50 +73,7 @@ class OddsController extends AbstractController
         }
 
         try {
-            // --- Récupération des données ---
-            $sportsArray = [$apiService->getDistinctSports()];  // ✅ Nouveau
-            error_log('Sports received: ' . json_encode($sportsArray));
-            $bookmakersArray = $apiService->getDistinctBookmakers();
-            $matchesArray = $apiService->getDistinctMatches();
-            $leaguesArray = $apiService->getDistinctLeagues();
-
-            // Sports (sans "Tous")
-            if (is_array($sportsArray)) {
-                foreach ($sportsArray as $sport) {
-                    if (isset($sport['name']) && isset($sport['id'])) {
-                        $sportChoices[$sport['name']] = (string)$sport['id'];
-                    }
-                }
-            }
-
-            // Bookmakers (sans "Tous")
-            if (is_array($bookmakersArray)) {
-                foreach ($bookmakersArray as $bookmaker) {
-                    if (isset($bookmaker['name']) && isset($bookmaker['id'])) {
-                        $bookmakerChoices[$bookmaker['name']] = (string)$bookmaker['id'];
-                    }
-                }
-            }
-
-            // Matches (sans "Tous")
-            if (is_array($matchesArray)) {
-                foreach ($matchesArray as $match) {
-                    $matchName = ($match['home_team']['name'] ?? 'Unknown') . ' - ' . ($match['away_team']['name'] ?? 'Unknown');
-                    $matchChoices[$matchName] = (string)$match['id'];
-                }
-            }
-
-            // Leagues avec sport_id pour le filtrage JS
-            if (is_array($leaguesArray)) {
-                foreach ($leaguesArray as $league) {
-                    if (isset($league['name']) && isset($league['id'])) {
-                        // ✅ Stocke l'ID du sport dans l'attribut data
-                        $leagueChoices[$league['name']] = (string)$league['id'];
-                    }
-                }
-            }
-
-            // --- Création du formulaire (toujours, même si erreur API) ---
+            // --- Création du formulaire ---
             $form = $this->createForm(OddsFilterType::class, null, [
                 'method' => 'GET',
                 'sports' => $sportChoices,
@@ -129,93 +87,75 @@ class OddsController extends AbstractController
             // --- Préparation des filtres ---
             $filters = [];
             
-            if ($form->isSubmitted()) {
-                error_log('Form is submitted');
+            if ($form->isSubmitted() && $form->isValid()) {
+                $sportFilter = $form->get('sport')->getData();
+                $bookmakerFilter = $form->get('bookmaker')->getData();
+                $matchFilter = $form->get('match')->getData();
+                $leagueFilter = $form->get('league')->getData();
+                $dateRange = $form->get('dateRange')->getData();
+
+                // Sport
+                if ($sportFilter) {
+                    $filters['sport'] = $sportFilter;
+                }
                 
-                if ($form->isValid()) {
-                    error_log('Form is valid');
-                    
-                    $sportFilter = $form->get('sport')->getData();
-                    $bookmakerFilter = $form->get('bookmaker')->getData();
-                    $matchFilter = $form->get('match')->getData();
-                    $leagueFilter = $form->get('league')->getData();
-                    $dateRange = $form->get('dateRange')->getData();
+                // Bookmaker (multiple)
+                if ($bookmakerFilter && is_array($bookmakerFilter)) {
+                    $bookmakerFilter = array_filter($bookmakerFilter, fn($v) => $v !== 'all');
+                    if (!empty($bookmakerFilter)) {
+                        $filters['bookmaker'] = implode(',', $bookmakerFilter);
+                    }
+                }
+                
+                // Match (simple)
+                if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
+                    $filters['match'] = $matchFilter;
+                }
+                
+                // League (multiple)
+                if ($leagueFilter && is_array($leagueFilter)) {
+                    $leagueFilter = array_filter($leagueFilter, fn($v) => $v !== 'all');
+                    if (!empty($leagueFilter)) {
+                        $filters['league'] = implode(',', $leagueFilter);
+                    }
+                }
 
-                    error_log('Bookmaker filter: ' . json_encode($bookmakerFilter));
-                    error_log('Match filter: ' . json_encode($matchFilter));
-                    error_log('League filter: ' . json_encode($leagueFilter));
-                    error_log('Date range: ' . $dateRange);
-                    
-                    //Sport
-
-                    if ($sportFilter) {
-                        $filters['sport'] = $sportFilter;
-                    }
-                    // Bookmaker (multiple)
-                    if ($bookmakerFilter && is_array($bookmakerFilter)) {
-                        // Enlève 'all' du tableau
-                        $bookmakerFilter = array_filter($bookmakerFilter, fn($v) => $v !== 'all');
-                        if (!empty($bookmakerFilter)) {
-                            $filters['bookmaker'] = implode(',', $bookmakerFilter);
-                        }
+                // Date range
+                if ($dateRange && trim($dateRange) !== '') {
+                    if (str_contains($dateRange, ' to ')) {
+                        $dates = explode(' to ', $dateRange);
+                    } else {
+                        $dates = [$dateRange];
                     }
                     
-                    // Match (simple)
-                    if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
-                        $filters['match'] = $matchFilter;
-                    }
-                    
-                    // League (multiple)
-                    if ($leagueFilter && is_array($leagueFilter)) {
-                        $leagueFilter = array_filter($leagueFilter, fn($v) => $v !== 'all');
-                        if (!empty($leagueFilter)) {
-                            $filters['league'] = implode(',', $leagueFilter);
-                        }
-                    }
-
-                    // Date range
-                    if ($dateRange && trim($dateRange) !== '') {
-                        if (str_contains($dateRange, ' to ')) {
-                            $dates = explode(' to ', $dateRange);
+                    try {
+                        $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
+                        $start->setTime(0, 0, 0);
+                        
+                        if (isset($dates[1])) {
+                            $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
+                            $end->setTime(23, 59, 59);
                         } else {
-                            $dates = [$dateRange];
+                            $end = clone $start;
+                            $end->setTime(23, 59, 59);
                         }
                         
-                        try {
-                            $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
-                            $start->setTime(0, 0, 0);
-                            
-                            if (isset($dates[1])) {
-                                $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
-                                $end->setTime(23, 59, 59);
-                            } else {
-                                $end = clone $start;
-                                $end->setTime(23, 59, 59);
-                            }
-                            
-                            $filters['start'] = $start->format('Y-m-d H:i:s');
-                            $filters['end'] = $end->format('Y-m-d H:i:s');
-                        } catch (\Exception $e) {
-                            error_log('Date error: ' . $e->getMessage());
-                        }
+                        $filters['start'] = $start->format('Y-m-d H:i:s');
+                        $filters['end'] = $end->format('Y-m-d H:i:s');
+                    } catch (\Exception $e) {
+                        error_log('Date error: ' . $e->getMessage());
                     }
-      
-                    error_log('Final filters: ' . json_encode($filters));
-                } else {
-                    error_log('Form is NOT valid');
-                    $errors = [];
-                    foreach ($form->getErrors(true) as $error) {
-                        $errors[] = $error->getMessage();
-                    }
-                    error_log('Form errors: ' . json_encode($errors));
                 }
-            } else {
-                error_log('Form is NOT submitted');
             }
 
-            // --- Récupération des données ---
-            $allOdds = $apiService->getOddsWithFilters($filters);
-            $avgTrjRaw = $apiService->getAvgTrj($filters);
+            error_log('🔍 Filtres appliqués: ' . json_encode($filters));
+
+            // --- Récupération des données AVEC évolution ---
+            $allOdds = $apiService->getOddsWithEvolution($filters);
+            $avgTrjRaw = $apiService->getAvgTrjWithEvolution($filters);
+
+            error_log('📊 AvgTrjRaw reçu: ' . json_encode($avgTrjRaw));
+            error_log('📊 Nombre de bookmakers: ' . count($avgTrjRaw));
 
             // --- Regroupement des cotes par match + bookmaker ---
             $groupedOdds = [];
@@ -230,8 +170,14 @@ class OddsController extends AbstractController
                             'match' => $odd['match'],
                             'bookmaker' => $odd['bookmaker'],
                             'trj' => $odd['trj'] ?? 0,
+                            'previous_trj' => $odd['previous_trj'] ?? null,
                             'cotes' => ['1' => null, 'X' => null, '2' => null]
                         ];
+                    } else {
+                        // Mise à jour du previous_trj si on en trouve un
+                        if (isset($odd['previous_trj'])) {
+                            $groupedOdds[$key]['previous_trj'] = $odd['previous_trj'];
+                        }
                     }
                     
                     $outcome = $odd['outcome'] ?? '';
@@ -241,8 +187,21 @@ class OddsController extends AbstractController
                 }
             }
 
-            // --- Prépare pour l'affichage ---
+            // --- Prépare pour l'affichage avec calcul de l'évolution ---
             foreach ($groupedOdds as $grouped) {
+                $currentTrj = $grouped['trj'];
+                $previousTrj = $grouped['previous_trj'];
+                
+                // Calcul de l'évolution : 1 = hausse, -1 = baisse, 0 = stable/pas de donnée
+                $evolution = 0;
+                if ($previousTrj !== null && $previousTrj > 0) {
+                    if ($currentTrj > $previousTrj) {
+                        $evolution = 1;
+                    } elseif ($currentTrj < $previousTrj) {
+                        $evolution = -1;
+                    }
+                }
+                
                 $oddsWithEvolution[] = [
                     'odd' => [
                         'match' => $grouped['match'],
@@ -250,32 +209,49 @@ class OddsController extends AbstractController
                         'cote1' => $grouped['cotes']['1'],
                         'coteN' => $grouped['cotes']['X'],
                         'cote2' => $grouped['cotes']['2'],
-                        'trj' => $grouped['trj']
+                        'trj' => $currentTrj
                     ],
-                    'previousTrj' => null,
-                    'evolution' => 0
+                    'previousTrj' => $previousTrj,
+                    'evolution' => $evolution
                 ];
             }
 
-            // --- Formatage des moyennes TRJ ---
+            // --- Formatage des moyennes TRJ avec évolution ---
             if (is_array($avgTrjRaw)) {
                 foreach ($avgTrjRaw as $row) {
+                    $currentAvgTrj = isset($row['avg_trj']) ? round((float)$row['avg_trj'], 2) : 0;
+                    $previousAvgTrj = isset($row['previous_avg_trj']) && $row['previous_avg_trj'] !== null 
+                        ? round((float)$row['previous_avg_trj'], 2) 
+                        : null;
+                    
+                    // Calcul de l'évolution
+                    $evolution = 0;
+                    if ($previousAvgTrj !== null && $previousAvgTrj > 0) {
+                        if ($currentAvgTrj > $previousAvgTrj) {
+                            $evolution = 1;
+                        } elseif ($currentAvgTrj < $previousAvgTrj) {
+                            $evolution = -1;
+                        }
+                    }
+                    
                     $avgTrj[] = [
                         'bookmaker' => $row['bookmaker__name'] ?? 'Unknown',
-                        'avgTrj' => isset($row['avg_trj']) ? round((float)$row['avg_trj'], 2) : 0,
-                        'previousAvgTrj' => null,
-                        'evolution' => 0,
+                        'avgTrj' => $currentAvgTrj,
+                        'previousAvgTrj' => $previousAvgTrj,
+                        'evolution' => $evolution,
                     ];
                 }
             }
 
+            error_log('✅ Données préparées - OddsWithEvolution: ' . count($oddsWithEvolution) . ', AvgTrj: ' . count($avgTrj));
+
         } catch (\Exception $e) {
             $this->addFlash('error', 'Erreur : ' . $e->getMessage());
-            error_log('Controller error: ' . $e->getMessage());
+            error_log('❌ Controller error: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
-        // --- Rendu (toujours avec $form, même si null) ---
+        // --- Rendu ---
         return $this->render('odds/index.html.twig', [
             'form' => $form ? $form->createView() : null,
             'odds' => $oddsWithEvolution,
@@ -289,15 +265,13 @@ class OddsController extends AbstractController
     public function exportCsv(Request $request, OddsApiService $apiService): Response
     {
         try {
-            // Récupération des mêmes filtres que pour l'affichage
             $filters = [];
             
             $sportFilter = $request->query->get('sport');
             $bookmakerFilter = $request->query->get('bookmaker');
             $matchFilter = $request->query->get('match');
             $leagueFilter = $request->query->get('league');
-            $dateRange = $request->query->get('dateRange');
-            error_log('📅 DateRange reçu: ' . ($dateRange ?? 'NULL'));
+            $dateRange = $request->query->get('odds_filter')['dateRange'] ?? $request->query->get('dateRange');
 
             if ($sportFilter && $sportFilter !== 'all') {
                 $filters['sport'] = $sportFilter;
@@ -315,7 +289,6 @@ class OddsController extends AbstractController
                 $filters['league'] = $leagueFilter;
             }
 
-            // Gestion de la plage de dates
             if ($dateRange && trim($dateRange) !== '') {
                 if (str_contains($dateRange, ' to ')) {
                     $dates = explode(' to ', $dateRange);
@@ -342,10 +315,9 @@ class OddsController extends AbstractController
                 }
             }
 
-            // Récupération des données filtrées
+            // Utilise la méthode normale pour l'export (pas besoin de l'évolution dans le CSV)
             $allOdds = $apiService->getOddsWithFilters($filters);
 
-            // Regroupement des cotes (même logique que index)
             $groupedOdds = [];
             if (is_array($allOdds)) {
                 foreach ($allOdds as $odd) {
@@ -370,33 +342,29 @@ class OddsController extends AbstractController
                 }
             }
 
-            // Création du CSV avec StreamedResponse
             $response = new StreamedResponse(function() use ($groupedOdds) {
                 $handle = fopen('php://output', 'w');
                 
                 // BOM UTF-8 pour Excel
                 fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
                 
-                // En-têtes CSV
                 fputcsv($handle, [
                     'Date',
                     'Match',
-                    'Home team',
-                    'Away team',
+                    'Equipe Domicile',
+                    'Equipe Exterieur',
                     'Bookmaker',
-                    'Home',
-                    'Draw',
-                    'Away',
-                    'RTP'
+                    'Cote 1',
+                    'Cote X',
+                    'Cote 2',
+                    'TRJ (%)'
                 ], ';');
 
-                // Données
                 foreach ($groupedOdds as $grouped) {
                     $matchDate = '';
                     if (!empty($grouped['date'])) {
                         try {
                             $dateObj = new \DateTime($grouped['date']);
-                            // Format date adapté pour Excel
                             $matchDate = "\t" . $dateObj->format('d/m/Y H:i');
                         } catch (\Exception $e) {
                             $matchDate = '';
@@ -412,13 +380,13 @@ class OddsController extends AbstractController
                         $grouped['cotes']['1'] ?? '-',
                         $grouped['cotes']['X'] ?? '-',
                         $grouped['cotes']['2'] ?? '-',
-                        number_format($grouped['trj'], 2, ',', '') // Virgule pour Excel français
+                        number_format($grouped['trj'], 2, ',', '')
                     ], ';');
                 }
 
                 fclose($handle);
             });
-            // Configuration de la réponse
+
             $filename = 'odds_export_' . date('Y-m-d_His') . '.csv';
             $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
             $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
@@ -430,5 +398,4 @@ class OddsController extends AbstractController
             return $this->redirectToRoute('odds_list');
         }
     }
-
 }
