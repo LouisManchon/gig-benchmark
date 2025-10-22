@@ -180,7 +180,7 @@ main {
     cursor: pointer;
 }
 
-.scraping-btn, .init-btn {
+.scraping-btn, .init-btn, .export-csv-btn {
     font-family: "Host Grotesk", sans-serif;
     background-color: #f2f2f2;
     color: black;

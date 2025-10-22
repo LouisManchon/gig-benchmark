@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OddsController extends AbstractController
 {
@@ -283,4 +284,151 @@ class OddsController extends AbstractController
             'leaguesData' => json_encode($leaguesArray ?? []),
         ]);
     }
+
+    #[Route('/odds/export-csv', name: 'odds_export_csv', methods: ['GET'])]
+    public function exportCsv(Request $request, OddsApiService $apiService): Response
+    {
+        try {
+            // Récupération des mêmes filtres que pour l'affichage
+            $filters = [];
+            
+            $sportFilter = $request->query->get('sport');
+            $bookmakerFilter = $request->query->get('bookmaker');
+            $matchFilter = $request->query->get('match');
+            $leagueFilter = $request->query->get('league');
+            $dateRange = $request->query->get('dateRange');
+            error_log('📅 DateRange reçu: ' . ($dateRange ?? 'NULL'));
+
+            if ($sportFilter && $sportFilter !== 'all') {
+                $filters['sport'] = $sportFilter;
+            }
+            
+            if ($bookmakerFilter && $bookmakerFilter !== 'all') {
+                $filters['bookmaker'] = $bookmakerFilter;
+            }
+            
+            if ($matchFilter && $matchFilter !== 'all') {
+                $filters['match'] = $matchFilter;
+            }
+            
+            if ($leagueFilter && $leagueFilter !== 'all') {
+                $filters['league'] = $leagueFilter;
+            }
+
+            // Gestion de la plage de dates
+            if ($dateRange && trim($dateRange) !== '') {
+                if (str_contains($dateRange, ' to ')) {
+                    $dates = explode(' to ', $dateRange);
+                } else {
+                    $dates = [$dateRange];
+                }
+                
+                try {
+                    $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
+                    $start->setTime(0, 0, 0);
+                    
+                    if (isset($dates[1])) {
+                        $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
+                        $end->setTime(23, 59, 59);
+                    } else {
+                        $end = clone $start;
+                        $end->setTime(23, 59, 59);
+                    }
+                    
+                    $filters['start'] = $start->format('Y-m-d H:i:s');
+                    $filters['end'] = $end->format('Y-m-d H:i:s');
+                } catch (\Exception $e) {
+                    error_log('Date error: ' . $e->getMessage());
+                }
+            }
+
+            // Récupération des données filtrées
+            $allOdds = $apiService->getOddsWithFilters($filters);
+
+            // Regroupement des cotes (même logique que index)
+            $groupedOdds = [];
+            if (is_array($allOdds)) {
+                foreach ($allOdds as $odd) {
+                    $matchId = $odd['match']['id'] ?? 0;
+                    $bookmakerId = $odd['bookmaker']['id'] ?? 0;
+                    $key = $matchId . '_' . $bookmakerId;
+                    
+                    if (!isset($groupedOdds[$key])) {
+                        $groupedOdds[$key] = [
+                            'match' => $odd['match'],
+                            'bookmaker' => $odd['bookmaker'],
+                            'trj' => $odd['trj'] ?? 0,
+                            'cotes' => ['1' => null, 'X' => null, '2' => null],
+                            'date' => $odd['match']['match_date'] ?? ''
+                        ];
+                    }
+                    
+                    $outcome = $odd['outcome'] ?? '';
+                    if (in_array($outcome, ['1', 'X', '2'])) {
+                        $groupedOdds[$key]['cotes'][$outcome] = $odd['odd_value'] ?? 0;
+                    }
+                }
+            }
+
+            // Création du CSV avec StreamedResponse
+            $response = new StreamedResponse(function() use ($groupedOdds) {
+                $handle = fopen('php://output', 'w');
+                
+                // BOM UTF-8 pour Excel
+                fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
+                
+                // En-têtes CSV
+                fputcsv($handle, [
+                    'Date',
+                    'Match',
+                    'Home team',
+                    'Away team',
+                    'Bookmaker',
+                    'Home',
+                    'Draw',
+                    'Away',
+                    'RTP'
+                ], ';');
+
+                // Données
+                foreach ($groupedOdds as $grouped) {
+                    $matchDate = '';
+                    if (!empty($grouped['date'])) {
+                        try {
+                            $dateObj = new \DateTime($grouped['date']);
+                            // Format date adapté pour Excel
+                            $matchDate = "\t" . $dateObj->format('d/m/Y H:i');
+                        } catch (\Exception $e) {
+                            $matchDate = '';
+                        }
+                    }
+
+                    fputcsv($handle, [
+                        $matchDate,
+                        ($grouped['match']['home_team']['name'] ?? '') . ' - ' . ($grouped['match']['away_team']['name'] ?? ''),
+                        $grouped['match']['home_team']['name'] ?? '',
+                        $grouped['match']['away_team']['name'] ?? '',
+                        $grouped['bookmaker']['name'] ?? '',
+                        $grouped['cotes']['1'] ?? '-',
+                        $grouped['cotes']['X'] ?? '-',
+                        $grouped['cotes']['2'] ?? '-',
+                        number_format($grouped['trj'], 2, ',', '') // Virgule pour Excel français
+                    ], ';');
+                }
+
+                fclose($handle);
+            });
+            // Configuration de la réponse
+            $filename = 'odds_export_' . date('Y-m-d_His') . '.csv';
+            $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
+            $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
+            
+            return $response;
+
+        } catch (\Exception $e) {
+            $this->addFlash('error', 'Erreur lors de l\'export CSV : ' . $e->getMessage());
+            return $this->redirectToRoute('odds_list');
+        }
+    }
+
 }

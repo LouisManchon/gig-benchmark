@@ -286,4 +286,73 @@ document.addEventListener('DOMContentLoaded', function() {
 
     makeTableSortable('.all_matchs');
     makeTableSortable('.avgtrj');
+
+
+    // ============================================
+    // EXPORT CSV AVEC FILTRES
+    // ============================================
+
+    const exportBtn = document.getElementById('export-csv-btn');
+    const formu = document.querySelector('form[name="odds_filter"]');
+    
+    if (exportBtn && formu) {
+        exportBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Récupère les valeurs du formulaire
+            const params = new URLSearchParams();
+            
+            // Sport
+            const sport = form.querySelector('[name="odds_filter[sport]"]');
+            if (sport && sport.value && sport.value !== 'all') {
+                params.append('sport', sport.value);
+            }
+            
+            // Match
+            const match = form.querySelector('[name="odds_filter[match]"]');
+            if (match && match.value && match.value !== 'all') {
+                params.append('match', match.value);
+            }
+            
+            // Bookmakers (checkboxes multiples)
+            const bookmakerCheckboxes = form.querySelectorAll('input[name="odds_filter[bookmaker][]"]:checked');
+            const bookmakerValues = Array.from(bookmakerCheckboxes)
+                .map(cb => cb.value)
+                .filter(v => v !== 'all');
+            if (bookmakerValues.length > 0) {
+                params.append('bookmaker', bookmakerValues.join(','));
+            }
+            
+            // Leagues (checkboxes multiples)
+            const leagueCheckboxes = form.querySelectorAll('input[name="odds_filter[league][]"]:checked');
+            const leagueValues = Array.from(leagueCheckboxes)
+                .map(cb => cb.value)
+                .filter(v => v !== 'all');
+            if (leagueValues.length > 0) {
+                params.append('league', leagueValues.join(','));
+            }
+            
+            // Date Range - IMPORTANT !
+            const dateRange = form.querySelector('[name="odds_filter[dateRange]"]');
+            console.log('DateRange input:', dateRange);
+            console.log('DateRange value:', dateRange ? dateRange.value : 'non trouvé');
+            
+            if (dateRange && dateRange.value && dateRange.value.trim() !== '') {
+                params.append('dateRange', dateRange.value);
+                console.log('✅ Date ajoutée aux params:', dateRange.value);
+            } else {
+                alert('⚠️ Veuillez sélectionner une période de dates pour l\'export');
+                return;
+            }
+            
+            // Construction de l'URL
+            const exportUrl = '/odds/export-csv?' + params.toString();
+            console.log('URL finale:', exportUrl);
+            console.log('Paramètres:', params.toString());
+            
+            // Téléchargement
+            window.location.href = exportUrl;
+        });
+    }
 });
