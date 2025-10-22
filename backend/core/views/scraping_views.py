@@ -1,14 +1,61 @@
-"""
-API endpoints pour déclencher le scraping
+# backend/core/views/scraping_views.py
 
-KEYLOCK A CONFIGURER ICI (on vera a la fin)
-"""
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+import pika
+import json
+import os
 
-from services.management.scraping_service import scraping_service
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'rabbitmq')
+RABBITMQ_PORT = int(os.environ.get('RABBITMQ_PORT', '5672'))
+RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'gig_user')
+RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'gig_password_2025')
+
+
+def send_scraping_task(scraper_name):
+    """
+    Envoie une tâche de scraping dans la queue RabbitMQ
+    """
+    try:
+        print(f"🔌 Connexion à RabbitMQ: {RABBITMQ_HOST}:{RABBITMQ_PORT}")
+        
+        credentials = pika.PlainCredentials(RABBITMQ_USER, RABBITMQ_PASSWORD)
+        connection = pika.BlockingConnection(
+            pika.ConnectionParameters(
+                host=RABBITMQ_HOST,
+                port=RABBITMQ_PORT,
+                credentials=credentials,
+                connection_attempts=3,
+                retry_delay=2
+            )
+        )
+        
+        print("✅ Connecté à RabbitMQ")
+        
+        channel = connection.channel()
+        channel.queue_declare(queue='scraping_tasks', durable=True)
+        
+        print(f"📦 Queue 'scraping_tasks' déclarée")
+
+        message = json.dumps({'scraper': scraper_name, 'params': {}})
+        channel.basic_publish(
+            exchange='',
+            routing_key='scraping_tasks',
+            body=message,
+            properties=pika.BasicProperties(delivery_mode=2)
+        )
+        
+        print(f"✅ Tâche envoyée: {scraper_name}")
+        connection.close()
+        return True
+        
+    except Exception as e:
+        print(f"❌ Erreur envoi task: {type(e).__name__}: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return False
 
 
 @api_view(['GET'])
@@ -17,65 +64,108 @@ def health_check(request):
     return Response({'status': 'healthy', 'service': 'scraping-api'})
 
 
-@api_view(['GET'])
-@permission_classes([AllowAny])
-def list_scrapers(request):
-    result = scraping_service.get_available_scrapers()
-    return Response(result)
-
-
 @api_view(['POST'])
-@permission_classes([AllowAny])  # Temporairement sans auth pour tester
+@permission_classes([AllowAny])
 def trigger_scraping(request):
+    """
+    Déclenche un scraping
+    Body: {"scraper": "football.ligue_1"}
+    """
     scraper = request.data.get('scraper')
+    
     if not scraper:
-        return Response({'error': 'scraper field required'}, status=status.HTTP_400_BAD_REQUEST)
-    result = scraping_service.send_task(scraper)
-    if result['success']:
-        return Response(result)
-    return Response(result, status=status.HTTP_400_BAD_REQUEST)
-
-
-# @api_view(['POST'])
-# @permission_classes([AllowAny])
-# def trigger_multiple_scraping(request):
-#    scrapers = request.data.get('scrapers', [])
-#    if not scrapers:
-#        return Response({'error': 'scrapers field required'}, status=status.HTTP_400_BAD_REQUEST)
-#    result = scraping_service.send_multiple_tasks(scrapers)
-#    return Response(result) 
+        return Response(
+            {'success': False, 'error': 'scraper field required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Envoie la tâche dans RabbitMQ
+    success = send_scraping_task(scraper)
+    
+    if success:
+        return Response({
+            'success': True,
+            'message': f'Scraping {scraper} lancé avec succès'
+        })
+    else:
+        return Response(
+            {'success': False, 'error': 'Erreur lors de l\'envoi de la tâche'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def scrape_all_football(request):
-    result = scraping_service.scrape_all_football()
-    return Response(result)
+    """Lance tous les scrapers de football"""
+    scrapers = [
+        'football.ligue_1',
+        'football.premier_league',
+        'football.la_liga',
+        'football.serie_a',
+        'football.bundesliga'
+    ]
+    
+    tasks_sent = []
+    errors = []
+    
+    for scraper in scrapers:
+        if send_scraping_task(scraper):
+            tasks_sent.append(scraper)
+        else:
+            errors.append(scraper)
+    
+    return Response({
+        'success': len(errors) == 0,
+        'message': f'{len(tasks_sent)} scrapers lancés',
+        'tasks_sent': tasks_sent,
+        'errors': errors
+    })
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def scrape_all_basketball(request):
-    result = scraping_service.scrape_all_basketball()
-    return Response(result)
+    scrapers = ['basketball.nba', 'basketball.euroleague']
+    tasks_sent = []
+    for scraper in scrapers:
+        if send_scraping_task(scraper):
+            tasks_sent.append(scraper)
+    
+    return Response({
+        'success': True,
+        'message': f'{len(tasks_sent)} scrapers basketball lancés',
+        'tasks_sent': tasks_sent
+    })
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def scrape_all_rugby(request):
-    result = scraping_service.scrape_all_rugby()
-    return Response(result)
+    scrapers = ['rugby.top_14']
+    tasks_sent = []
+    for scraper in scrapers:
+        if send_scraping_task(scraper):
+            tasks_sent.append(scraper)
+    
+    return Response({
+        'success': True,
+        'message': f'{len(tasks_sent)} scrapers rugby lancés',
+        'tasks_sent': tasks_sent
+    })
 
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def scrape_all_tennis(request):
-    result = scraping_service.scrape_all_tennis()
-    return Response(result)
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def scrape_all(request):
-    result = scraping_service.scrape_all()
-    return Response(result)
+    scrapers = ['tennis.atp']
+    tasks_sent = []
+    for scraper in scrapers:
+        if send_scraping_task(scraper):
+            tasks_sent.append(scraper)
+    
+    return Response({
+        'success': True,
+        'message': f'{len(tasks_sent)} scrapers tennis lancés',
+        'tasks_sent': tasks_sent
+    })

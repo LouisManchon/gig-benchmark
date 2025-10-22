@@ -3,10 +3,8 @@ from .views import data_views, scraping_views
 
 urlpatterns = [
     path('scraping/health', scraping_views.health_check, name='scraping-health'),
-    path('scraping/scrapers', scraping_views.list_scrapers, name='list-scrapers'),
+    # path('scraping/scrapers', scraping_views.list_scrapers, name='list-scrapers'),  # ← COMMENTÉ car n'existe pas
     path('scraping/trigger', scraping_views.trigger_scraping, name='trigger-scraping'),
-    # path('scraping/trigger-multiple', data_views.trigger_multiple_scraping, name='trigger-multiple'),
-    # path('scraping/all', scraping_views.datascrape_all, name='scrape-all'),
     path('scraping/football/all', scraping_views.scrape_all_football, name='scrape-football'),
     path('scraping/basketball/all', scraping_views.scrape_all_basketball, name='scrape-basketball'),
     path('scraping/rugby/all', scraping_views.scrape_all_rugby, name='scrape-rugby'),
