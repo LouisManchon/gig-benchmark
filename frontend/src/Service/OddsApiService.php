@@ -184,4 +184,37 @@ class OddsApiService
             return [];
         }
     }
+
+    // src/Service/OddsApiService.php
+
+    public function triggerScraping(string $scraper): array
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/scraping/trigger', [
+                'json' => ['scraper' => $scraper]
+            ]);
+
+            return $response->toArray();
+        } catch (\Exception $e) {
+            error_log('❌ API Error (triggerScraping): ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    public function scrapeAllFootball(): array
+    {
+        try {
+            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/scraping/football/all');
+            return $response->toArray();
+        } catch (\Exception $e) {
+            error_log('❌ API Error (scrapeAllFootball): ' . $e->getMessage());
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
 }

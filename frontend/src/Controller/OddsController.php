@@ -398,4 +398,49 @@ class OddsController extends AbstractController
             return $this->redirectToRoute('odds_list');
         }
     }
+
+    #[Route('/odds/scraping/trigger', name: 'scraping_trigger', methods: ['POST'])]
+    public function triggerScraping(Request $request, OddsApiService $apiService): Response
+    {
+        try {
+            $sport = $request->request->get('sport');
+            $league = $request->request->get('league');
+            
+            if (!$sport || !$league) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'Sport et league requis'
+                ], 400);
+            }
+            
+            // Construire le nom du scraper (ex: football.ligue_1)
+            $scraper = $sport . '.' . str_replace(' ', '_', strtolower($league));
+            
+            error_log("🚀 Déclenchement du scraping: $scraper");
+            
+            // Appeler l'API Django
+            $result = $apiService->triggerScraping($scraper);
+            
+            if ($result['success'] ?? false) {
+                $this->addFlash('success', 'Scraping lancé avec succès !');
+                return $this->json([
+                    'success' => true,
+                    'message' => 'Scraping en cours...'
+                ]);
+            } else {
+                $this->addFlash('error', 'Erreur lors du lancement du scraping');
+                return $this->json([
+                    'success' => false,
+                    'error' => $result['error'] ?? 'Erreur inconnue'
+                ], 500);
+            }
+            
+        } catch (\Exception $e) {
+            error_log('❌ Erreur scraping: ' . $e->getMessage());
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
