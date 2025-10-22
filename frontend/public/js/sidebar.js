@@ -355,4 +355,118 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = exportUrl;
         });
     }
+
+// ============================================
+// GESTION DU SCRAPING
+// ============================================
+
+    const scrapingForm = document.getElementById('scraping-form');
+    const sportSelec = document.getElementById('sport-scraping');
+    const leagueSelect = document.getElementById('league-scraping');
+    const submitBtn = document.getElementById('start-scraping-btn');
+    const btnText = submitBtn.querySelector('.btn-text');
+    const btnLoader = submitBtn.querySelector('.btn-loader');
+    const statusDiv = document.getElementById('scraping-status');
+
+    // Mapping des leagues par sport
+    const leaguesBySport = {
+        'football': [
+            { value: 'ligue_1', label: 'Ligue 1' },
+            { value: 'premier_league', label: 'Premier League' },
+            { value: 'la_liga', label: 'La Liga' },
+            { value: 'serie_a', label: 'Serie A' },
+            { value: 'bundesliga', label: 'Bundesliga' }
+        ],
+        'basketball': [
+            { value: 'nba', label: 'NBA' },
+            { value: 'euroleague', label: 'Euroleague' }
+        ],
+        'rugby': [
+            { value: 'top_14', label: 'Top 14' }
+        ],
+        'tennis': [
+            { value: 'atp', label: 'ATP' }
+        ]
+    };
+
+    // Remplir les leagues selon le sport sélectionné
+    sportSelec.addEventListener('change', function() {
+        const sport = this.value;
+        leagueSelect.innerHTML = '<option value="">Sélectionner...</option>';
+        
+        if (sport && leaguesBySport[sport]) {
+            leaguesBySport[sport].forEach(league => {
+                const option = document.createElement('option');
+                option.value = league.value;
+                option.textContent = league.label;
+                leagueSelect.appendChild(option);
+            });
+        }
+    });
+
+    // Gérer la soumission du formulaire
+    if (scrapingForm) {
+        scrapingForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const sport = sportSelec.value;
+            const league = leagueSelect.value;
+            
+            if (!sport || !league) {
+                showStatus('❌ Veuillez sélectionner un sport et une league', 'error');
+                return;
+            }
+            
+            // Désactiver le bouton et afficher le loader
+            submitBtn.disabled = true;
+            btnText.style.display = 'none';
+            btnLoader.style.display = 'inline';
+            
+            try {
+                const formData = new FormData();
+                formData.append('sport', sport);
+                formData.append('league', league);
+                
+                console.log('🚀 Lancement du scraping:', sport, league);
+                
+                const response = await fetch(scrapingForm.action, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showStatus('✅ Scraping lancé avec succès ! Les données seront bientôt disponibles.', 'success');
+                    
+                    // Rafraîchir les données après 10 secondes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 10000);
+                } else {
+                    showStatus('❌ Erreur: ' + (result.error || 'Erreur inconnue'), 'error');
+                }
+                
+            } catch (error) {
+                console.error('Erreur:', error);
+                showStatus('❌ Erreur de connexion au serveur', 'error');
+            } finally {
+                // Réactiver le bouton
+                submitBtn.disabled = false;
+                btnText.style.display = 'inline';
+                btnLoader.style.display = 'none';
+            }
+        });
+    }
+    
+    function showStatus(message, type) {
+        statusDiv.textContent = message;
+        statusDiv.className = 'scraping-status ' + type;
+        statusDiv.style.display = 'block';
+        
+        // Cacher après 5 secondes
+        setTimeout(() => {
+            statusDiv.style.display = 'none';
+        }, 5000);
+    }
 });

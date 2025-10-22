@@ -18,28 +18,35 @@
 
 <div class="container">
     <!-- aside for scraping -->
+        {# Dans odds/index.html.twig, modifie la sidebar #}
         <aside id="sidebar">
             <h3 class="sidebar-title">Scraping Filters</h3>
-            {# TODO: Ajouter le formulaire de scraping ici si nécessaire #}
-            <form class="aside-form" method="post" action="#">
+            <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
-                    <label for="sport">Sport :</label>
-                    <select name="sport" id="sport" class="form-control">
+                    <label for="sport-scraping">Sport :</label>
+                    <select name="sport" id="sport-scraping" class="form-control" required>
+                        <option value="">Sélectionner</option>
                         <option value="football">Football</option>
                         <option value="basketball">Basketball</option>
+                        <option value="rugby">Rugby</option>
+                        <option value="tennis">Tennis</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
                     <label for="league-scraping">League :</label>
-                    <select name="league" id="league-scraping" class="form-control">
-                        <option value="ligue_1">Ligue 1</option>
-                        <option value="serie_a">Serie A</option>
-                        <option value="premier_league">Premier League</option>
+                    <select name="league" id="league-scraping" class="form-control" required>
+                        <option value="">Sélectionner...</option>
+                        <!-- Les options seront remplies dynamiquement selon le sport -->
                     </select>
                 </div>
                 
-                <button type="submit" class="scraping-btn">Start Scraping</button>
+                <button type="submit" class="scraping-btn" id="start-scraping-btn">
+                    <span class="btn-text">Start Scraping</span>
+                    <span class="btn-loader" style="display: none;">⏳ En cours...</span>
+                </button>
+                
+                <div id="scraping-status" style="display: none; margin-top: 10px;"></div>
             </form>
         </aside>
     <main>       
