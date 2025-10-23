@@ -24,6 +24,8 @@ class OddsController extends AbstractController
         $bookmakerChoices = [];
         $matchChoices = [];
         $leagueChoices = [];
+        $startTime = microtime(true);
+        error_log("⏱️ START - index()");
 
         try {
             // --- Récupération des données pour les filtres ---
@@ -83,6 +85,7 @@ class OddsController extends AbstractController
             ]);
             
             $form->handleRequest($request);
+            error_log("⏱️ Form created: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
 
             // --- Préparation des filtres ---
             $filters = [];
@@ -147,15 +150,25 @@ class OddsController extends AbstractController
                     }
                 }
             }
+            error_log("⏱️ Filters prepared: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
 
             error_log('🔍 Filtres appliqués: ' . json_encode($filters));
 
             // --- Récupération des données AVEC évolution ---
             $allOdds = $apiService->getOddsWithEvolution($filters);
+
+            error_log("⏱️ API called (odds): " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
+            error_log("   → Found " . count($allOdds) . " odds");
+
             $avgTrjRaw = $apiService->getAvgTrjWithEvolution($filters);
+
+            error_log("⏱️ API called (avgTrj): " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
+            error_log("   → Found " . count($avgTrj) . " bookmakers");
 
             error_log('📊 AvgTrjRaw reçu: ' . json_encode($avgTrjRaw));
             error_log('📊 Nombre de bookmakers: ' . count($avgTrjRaw));
+
+
 
             // --- Regroupement des cotes par match + bookmaker ---
             $groupedOdds = [];
@@ -250,6 +263,9 @@ class OddsController extends AbstractController
             error_log('❌ Controller error: ' . $e->getMessage());
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
+
+        $totalTime = round((microtime(true) - $startTime) * 1000, 2);
+        error_log("⏱️ TOTAL TIME: {$totalTime}ms");
 
         // --- Rendu ---
         return $this->render('odds/index.html.twig', [

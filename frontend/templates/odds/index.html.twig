@@ -18,7 +18,6 @@
 
 <div class="container">
     <!-- aside for scraping -->
-        {# Dans odds/index.html.twig, modifie la sidebar #}
         <aside id="sidebar">
             <h3 class="sidebar-title">Scraping Filters</h3>
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
@@ -45,7 +44,7 @@
                     <span class="btn-loader" style="display: none;">⏳ En cours...</span>
                 </button>
                 
-                <!-- Barre de progression -->
+                <!-- Progress bar -->
                 <div id="scraping-progress" style="display: none;">
                     <div class="progress-header">
                         <h4>Scraping en cours...</h4>
