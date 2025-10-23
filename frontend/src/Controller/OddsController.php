@@ -403,8 +403,8 @@ class OddsController extends AbstractController
     public function triggerScraping(Request $request, OddsApiService $apiService): Response
     {
         try {
-            $sport = $request->request->get('sport');
-            $league = $request->request->get('league');
+        $sport = $request->request->get('sport') ?? $request->request->get('scraping_sport');
+        $league = $request->request->get('league') ?? $request->request->get('scraping_league');
             
             if (!$sport || !$league) {
                 return $this->json([
@@ -441,6 +441,56 @@ class OddsController extends AbstractController
                 'success' => false,
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    #[Route('/api/scraping/status', name: 'scraping_status_proxy', methods: ['GET'])]
+    public function getScrapingStatus(Request $request, OddsApiService $apiService): Response
+    {
+        $scraper = $request->query->get('scraper');
+        
+        if (!$scraper) {
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0,
+                'message' => 'Pas de scraping en cours'
+            ]);
+        }
+        
+        try {
+            // Appelle le backend Django via le service
+            $backendUrl = $_ENV['BACKEND_API_URL'] ?? 'http://backend:8000/api';
+            $url = $backendUrl . '/scraping/status?scraper=' . urlencode($scraper);
+            
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'timeout' => 3,
+                    'ignore_errors' => true
+                ]
+            ]);
+            
+            $response = @file_get_contents($url, false, $context);
+            
+            if ($response) {
+                $data = json_decode($response, true);
+                return $this->json($data);
+            }
+            
+            // Si pas de réponse, retourne idle
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0
+            ]);
         }
     }
 }

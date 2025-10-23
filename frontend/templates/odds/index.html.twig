@@ -24,8 +24,8 @@
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
                     <label for="sport-scraping">Sport :</label>
-                    <select name="sport" id="sport-scraping" class="form-control" required>
-                        <option value="">Sélectionner</option>
+                    <select name="scraping_sport" id="sport-scraping" class="form-control" required>
+                        <option value="">Choose</option>
                         <option value="football">Football</option>
                         <option value="basketball">Basketball</option>
                         <option value="rugby">Rugby</option>
@@ -35,18 +35,43 @@
                 
                 <div class="form-group">
                     <label for="league-scraping">League :</label>
-                    <select name="league" id="league-scraping" class="form-control" required>
-                        <option value="">Sélectionner...</option>
-                        <!-- Les options seront remplies dynamiquement selon le sport -->
+                    <select name="scraping_league" id="league-scraping" class="form-control" required>
+                        <option value="">Choose a sport first</option>
                     </select>
                 </div>
                 
                 <button type="submit" class="scraping-btn" id="start-scraping-btn">
-                    <span class="btn-text">Start Scraping</span>
+                    <span class="btn-text">🚀 Start Scraping</span>
                     <span class="btn-loader" style="display: none;">⏳ En cours...</span>
                 </button>
                 
-                <div id="scraping-status" style="display: none; margin-top: 10px;"></div>
+                <!-- Barre de progression -->
+                <div id="scraping-progress" style="display: none;">
+                    <div class="progress-header">
+                        <h4>Scraping en cours...</h4>
+                        <span class="progress-count" id="progress-count">0 / 0</span>
+                    </div>
+                    
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar-fill">
+                            <span class="progress-percentage" id="progress-percentage">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-info">
+                        <div class="current-match">
+                            <strong>Match actuel:</strong>
+                            <span id="current-match-name">-</span>
+                        </div>
+                        <div class="bookmakers-info">
+                            <strong>Bookmakers:</strong>
+                            <span id="bookmakers-count">-</span>
+                        </div>
+                        <div class="progress-message" id="progress-message">
+                            Initialisation...
+                        </div>
+                    </div>
+                </div>
             </form>
         </aside>
     <main>       

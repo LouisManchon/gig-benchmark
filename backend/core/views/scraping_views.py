@@ -1,18 +1,23 @@
 # backend/core/views/scraping_views.py
 
+from django.utils import timezone
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
+from django.http import JsonResponse
 import pika
 import json
 import os
+import threading
 
 RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', 'rabbitmq')
 RABBITMQ_PORT = int(os.environ.get('RABBITMQ_PORT', '5672'))
 RABBITMQ_USER = os.environ.get('RABBITMQ_USER', 'gig_user')
 RABBITMQ_PASSWORD = os.environ.get('RABBITMQ_PASSWORD', 'gig_password_2025')
 
+scraping_progress = {}
+progress_lock = threading.Lock()
 
 def send_scraping_task(scraper_name):
     """
@@ -84,8 +89,7 @@ def trigger_scraping(request):
     
     if success:
         return Response({
-            'success': True,
-            'message': f'Scraping {scraper} lancé avec succès'
+            'success': True
         })
     else:
         return Response(
@@ -169,3 +173,58 @@ def scrape_all_tennis(request):
         'message': f'{len(tasks_sent)} scrapers tennis lancés',
         'tasks_sent': tasks_sent
     })
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def update_scraping_progress(request):
+    try:
+        data = request.data
+        scraper = data.get('scraper')
+        
+        print(f"📊 Réception progression pour {scraper}")
+        
+        if scraper:
+            # ✅ Verrou pour éviter les conflits
+            with progress_lock:
+                scraping_progress[scraper] = {
+                    'status': data.get('status', 'running'),
+                    'current': data.get('current', 0),
+                    'total': data.get('total', 0),
+                    'message': data.get('message', ''),
+                    'current_match': data.get('current_match'),
+                    'bookmakers_count': data.get('bookmakers_count', 0),
+                    'matches_scraped': data.get('matches_scraped', 0),
+                    'odds_sent': data.get('odds_sent', 0),
+                }
+                print(f"✅ Sauvegardé: current={scraping_progress[scraper]['current']}/{scraping_progress[scraper]['total']}")
+        
+        return Response({'success': True})
+        
+    except Exception as e:
+        print(f"❌ ERREUR: {e}")
+        return Response({'success': False}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_scraping_progress(request):
+    try:
+        scraper = request.query_params.get('scraper')
+        
+        if scraper:
+            # ✅ Lecture avec verrou
+            with progress_lock:
+                if scraper in scraping_progress:
+                    data = scraping_progress[scraper].copy()  # ← Copie pour éviter les modifications
+                    return Response(data)
+        
+        return Response({
+            'status': 'idle',
+            'current': 0,
+            'total': 0,
+            'message': 'Aucun scraping en cours'
+        })
+        
+    except Exception as e:
+        print(f"❌ ERREUR: {e}")
+        return Response({'status': 'idle', 'current': 0, 'total': 0})
