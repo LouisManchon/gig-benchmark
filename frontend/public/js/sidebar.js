@@ -302,48 +302,70 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('📊 Export CSV cliqué');
             
-            const formData = new FormData(oddsFilterForm);
             const params = new URLSearchParams();
             
-            for (let [key, value] of formData.entries()) {
-                if (value && value !== '' && value !== 'all') {
-                    params.append(key, value);
-                }
+            // ✅ Récupère les valeurs simples SANS le préfixe "odds_filter"
+            const sport = oddsFilterForm.querySelector('[name="odds_filter[sport]"]')?.value;
+            const match = oddsFilterForm.querySelector('[name="odds_filter[match]"]')?.value;
+            const dateRange = oddsFilterForm.querySelector('[name="odds_filter[dateRange]"]')?.value;
+            
+            // Ajoute sport
+            if (sport && sport !== '' && sport !== 'all') {
+                params.append('sport', sport);
             }
             
-            const bookmakerCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[bookmaker][]"]:checked');
-            const leagueCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[league][]"]:checked');
+            // Ajoute match
+            if (match && match !== '' && match !== 'all') {
+                params.append('match', match);
+            }
             
+            // Ajoute dateRange
+            if (dateRange && dateRange !== '') {
+                params.append('dateRange', dateRange);
+            } else {
+                alert('⚠️ Veuillez sélectionner une période de dates pour l\'export');
+                return;
+            }
+            
+            // ✅ Récupère les bookmakers cochés
+            const bookmakerCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[bookmaker][]"]:checked');
             if (bookmakerCheckboxes.length > 0) {
                 const bookmakerValues = Array.from(bookmakerCheckboxes)
                     .map(cb => cb.value)
                     .filter(v => v !== 'all')
                     .join(',');
+                
                 if (bookmakerValues) {
-                    params.set('bookmaker', bookmakerValues);
+                    params.append('bookmaker', bookmakerValues);
                 }
             }
             
+            // ✅ Récupère les leagues cochées
+            const leagueCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[league][]"]:checked');
             if (leagueCheckboxes.length > 0) {
                 const leagueValues = Array.from(leagueCheckboxes)
                     .map(cb => cb.value)
                     .filter(v => v !== 'all')
                     .join(',');
+                
                 if (leagueValues) {
-                    params.set('league', leagueValues);
+                    params.append('league', leagueValues);
                 }
             }
             
-            const dateRange = params.get('odds_filter[dateRange]');
-            if (!dateRange || dateRange === '') {
-                alert('⚠️ Veuillez sélectionner une période de dates pour l\'export');
-                return;
-            }
+            // Construit l'URL
+            const exportUrl = '/odds/export-csv?' + params.toString();
             
-            const baseUrl = oddsFilterForm.getAttribute('action').replace('/odds', '/odds/export-csv');
-            const exportUrl = baseUrl + '?' + params.toString();
+            console.log('📤 Export URL:', exportUrl);
+            console.log('📋 Params:', {
+                sport: sport,
+                match: match,
+                dateRange: dateRange,
+                bookmaker: params.get('bookmaker'),
+                league: params.get('league')
+            });
             
-            console.log('Export URL:', exportUrl);
+            // Lance le téléchargement
             window.location.href = exportUrl;
         });
     }

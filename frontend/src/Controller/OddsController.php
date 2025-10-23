@@ -271,7 +271,7 @@ class OddsController extends AbstractController
             $bookmakerFilter = $request->query->get('bookmaker');
             $matchFilter = $request->query->get('match');
             $leagueFilter = $request->query->get('league');
-            $dateRange = $request->query->get('odds_filter')['dateRange'] ?? $request->query->get('dateRange');
+            $dateRange = $request->query->get('dateRange');
 
             if ($sportFilter && $sportFilter !== 'all') {
                 $filters['sport'] = $sportFilter;
