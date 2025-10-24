@@ -22,6 +22,7 @@ backend/.env
 database/.env
 scraping/.env
 frontend/.env
+front/.env
 .env
 
 # Docker
