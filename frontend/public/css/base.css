@@ -1,0 +1,117 @@
+/* ========================================
+   🎨 BASE - Styles généraux et layout
+   ======================================== */
+
+body {
+    font-family: "Host Grotesk", sans-serif;
+    font-weight: 430;
+    background: linear-gradient(90deg, #080e2d, #7136c4, #57e5ca);
+    margin: 0;
+    padding: 0;
+}
+
+/* ========================================
+   📋 HEADER
+   ======================================== */
+
+header {
+    color: #FFFFFF;
+    background-color: #080e2d;
+    padding: 20px;
+    box-shadow: 0px 30px 67px -40px black;
+    text-align: center;
+}
+
+.title-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.site-logo {
+    height: 60px;
+    width: auto;
+}
+
+h1 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1;
+    color: white;
+    position: relative;
+    top: -4px;
+}
+
+h2 {
+    color: white;
+    text-align: center;
+}
+
+/* ========================================
+   📦 LAYOUT
+   ======================================== */
+
+.container {
+    display: flex;
+    flex-direction: row;
+    align-items: flex-start;
+}
+
+main {
+    flex: 1;
+    padding: 10px;
+}
+
+/* ========================================
+   🔘 BOUTONS GÉNÉRAUX
+   ======================================== */
+
+.toggle-btn {
+    font-family: "Host Grotesk", sans-serif;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+    background-color: #f2f2f2;
+    color: black;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 10px;
+    cursor: pointer;
+}
+
+/* ========================================
+   📅 FLATPICKR - Date picker
+   ======================================== */
+
+.flatpickr-calendar {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.flatpickr-day.today {
+    background: #7136c4;
+    color: white;
+    border-radius: 50%;
+}
+
+.flatpickr-day.selected {
+    background: #7136c4;
+    color: white;
+}
+
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange {
+    background: #7136c4;
+    border-color: #7136c4;
+    color: white;
+}
+
+.flatpickr-day.inRange {
+    background: rgba(113, 54, 196, 0.2);
+    border-color: rgba(113, 54, 196, 0.2);
+}

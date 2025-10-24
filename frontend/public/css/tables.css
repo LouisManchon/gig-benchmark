@@ -1,0 +1,129 @@
+/* ========================================
+   📊 TABLES - Tableaux de données
+   ======================================== */
+
+.tables {
+    margin: 30px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+}
+
+.all_matchs, .avgtrj {
+    background-color: #f2f2f2;
+    box-shadow: 0px 23px 71px -40px black;
+    border-spacing: 0;
+    border-collapse: separate;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.all_matchs {
+    width: 60%;
+}
+
+.avgtrj {
+    width: 30%;
+}
+
+/* ========================================
+   📋 HEADERS & CELLULES
+   ======================================== */
+
+th {
+    padding: 10px;
+    text-align: left;
+    background-color: #080e2d;
+    color: white;
+}
+
+th span {
+    opacity: 0.5;
+    font-size: 12px;
+    transition: opacity 0.2s ease;
+}
+
+th:hover span {
+    opacity: 1;
+}
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+th.sortable:hover {
+    background-color: #0a1035;
+}
+
+td {
+    padding: 6px 7px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+/* ========================================
+   🎨 LIGNES & HOVER
+   ======================================== */
+
+tr:nth-child(even) {
+    background-color: #45b4a02c;
+}
+
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(113, 54, 196, 0.15);
+}
+
+/* ========================================
+   📊 TRJ & ÉVOLUTION
+   ======================================== */
+
+.trj-low {
+    color: #2e8b57;
+    font-weight: bold;
+}
+
+.trj-high {
+    color: #b22222;
+    font-weight: bold;
+}
+
+.evol-container {
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+}
+
+.evol-container p:first-child {
+    margin: 0;
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.evol-container .previous-trj {
+    margin: 0;
+    font-size: 0.75em;
+    color: #888888;
+}
+
+/* Flèches d'évolution colorées */
+.arrow-up {
+    color: #2e8b57;
+    font-weight: bold;
+}
+
+.arrow-down {
+    color: #b22222;
+    font-weight: bold;
+}
+
+.arrow-stable {
+    color: #888888;
+}

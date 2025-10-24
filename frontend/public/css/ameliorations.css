@@ -1,0 +1,223 @@
+/* ========================================
+   ✨ AMÉLIORATIONS CSS - Filtres uniquement
+   ======================================== */
+
+/* 🎯 FILTRES - Même hauteur partout (38px) */
+.filter-form-container .form-group {
+    min-width: 200px;
+}
+
+.filter-form-container select,
+.filter-form-container input[type="text"] {
+    height: 38px;
+    font-family: "Host Grotesk", sans-serif;
+}
+
+/* 🎨 Choices.js - HAUTEUR FIXE */
+.filter-form-container .choices {
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.filter-form-container .choices__inner {
+    padding-top: 2px;
+    padding-bottom: 0;
+    overflow-y: hidden;
+    font-family: "Host Grotesk", sans-serif !important;
+    min-height: 37px !important;
+    margin: 0 !important;
+}
+
+/* Quand on clique, le choices s'agrandit SEULEMENT si items multiples */
+.filter-form-container .choices[data-type*="select-multiple"] .choices__inner {
+    max-height: fit-content !important;
+    overflow-y: visible !important;
+}
+
+/* Items sélectionnés (badges violets) */
+.filter-form-container .choices__list--multiple .choices__item {
+    background-color: #7136c4 !important;
+    border: 1px solid #5a2b9d !important;
+    color: white !important;
+    padding: 2px 8px !important;
+    border-radius: 12px !important;
+    margin: 2px !important;
+    font-size: 12px !important;
+    font-family: "Host Grotesk", sans-serif !important;
+    line-height: 1.2 !important;
+}
+
+/* Bouton X dans les badges */
+.filter-form-container .choices__list--multiple .choices__item .choices__button {
+    border-left: 1px solid rgba(255,255,255,0.3) !important;
+    padding-left: 6px !important;
+    margin-left: 6px !important;
+}
+
+/* Dropdown des options */
+.filter-form-container .choices__list--dropdown {
+    font-family: "Host Grotesk", sans-serif !important;
+}
+
+.filter-form-container .choices__list--dropdown .choices__item {
+    font-family: "Host Grotesk", sans-serif !important;
+}
+
+/* Item sélectionné dans le dropdown - VIOLET */
+.filter-form-container .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #7136c4 !important;
+    color: white !important;
+}
+
+/* Input de recherche dans Choices */
+.filter-form-container .choices__input {
+    font-family: "Host Grotesk", sans-serif !important;
+}
+
+/* 🎨 HOVER - Bordure violette */
+.filter-form-container select:hover,
+.filter-form-container input[type="text"]:hover,
+.filter-form-container .choices__inner:hover {
+    border-color: #7136c4 !important;
+}
+
+/* FOCUS - Bordure violette quand cliqué */
+.filter-form-container select:focus,
+.filter-form-container input[type="text"]:focus {
+    border-color: #7136c4 !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(113, 54, 196, 0.1) !important;
+}
+
+.filter-form-container .choices.is-focused .choices__inner,
+.filter-form-container .choices.is-open .choices__inner {
+    border-color: #7136c4 !important;
+}
+
+/* 📅 FLATPICKR - Date picker violet */
+.flatpickr-day.today {
+    background: #7136c4 !important;
+    color: white !important;
+    border-color: #7136c4 !important;
+}
+
+.flatpickr-day.selected,
+.flatpickr-day.startRange,
+.flatpickr-day.endRange,
+.flatpickr-day.selected.inRange,
+.flatpickr-day.startRange.inRange,
+.flatpickr-day.endRange.inRange {
+    background: #7136c4 !important;
+    border-color: #7136c4 !important;
+    color: white !important;
+}
+
+.flatpickr-day.inRange {
+    background: rgba(113, 54, 196, 0.2) !important;
+    border-color: rgba(113, 54, 196, 0.2) !important;
+}
+
+/* 🔘 BOUTONS - Espacement */
+.form-btn {
+    margin-top: 24px !important;
+}
+
+/* ========================================
+   🎨 AUTRES AMÉLIORATIONS
+   ======================================== */
+
+/* Flèches d'évolution colorées */
+.arrow-up {
+    color: #2e8b57;
+    font-weight: bold;
+}
+
+.arrow-down {
+    color: #b22222;
+    font-weight: bold;
+}
+
+.arrow-stable {
+    color: #888888;
+}
+
+/* Hover sur les lignes de tableau */
+tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+tbody tr:hover {
+    background-color: rgba(113, 54, 196, 0.15);
+}
+
+/* Barre de progression - Effet shimmer */
+.progress-bar {
+    position: relative;
+    overflow: hidden;
+}
+
+.progress-bar::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { left: -100%; }
+    100% { left: 100%; }
+}
+
+/* Hover du bouton de scraping */
+.scraping-btn {
+    transition: all 0.3s ease;
+}
+
+.scraping-btn:hover {
+    background-color: #7136c4;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(113, 54, 196, 0.3);
+}
+
+.scraping-btn:active {
+    transform: translateY(0);
+}
+
+/* Titre sidebar mieux positionné */
+.sidebar-title {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #7136c4;
+    color: #080e2d;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+#sidebar {
+    padding-top: 60px;
+}
+
+/* Headers de tableaux - Hover */
+th span {
+    opacity: 0.5;
+    font-size: 12px;
+    transition: opacity 0.2s ease;
+}
+
+th:hover span {
+    opacity: 1;
+}
+
+th.sortable {
+    cursor: pointer;
+    user-select: none;
+}
+
+th.sortable:hover {
+    background-color: #0a1035;
+}
+

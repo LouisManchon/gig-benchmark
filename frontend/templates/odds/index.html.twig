@@ -47,7 +47,7 @@
                 <!-- Progress bar -->
                 <div id="scraping-progress" style="display: none;">
                     <div class="progress-header">
-                        <h4>Scraping en cours...</h4>
+                        <h4>Scraping in progress...</h4>
                         <span class="progress-count" id="progress-count">0 / 0</span>
                     </div>
                     
@@ -59,7 +59,7 @@
                     
                     <div class="progress-info">
                         <div class="current-match">
-                            <strong>Match actuel:</strong>
+                            <strong>Current match:</strong>
                             <span id="current-match-name">-</span>
                         </div>
                         <div class="bookmakers-info">
@@ -98,9 +98,11 @@
                     {{ form_label(form.dateRange) }}
                     {{ form_widget(form.dateRange) }}
                 </div>
-                <button type="submit" id="filter-button" class="form-btn">Filter</button>
-                <button id="reset-btn" class="form-btn">Init</button>
-                <button type="button" id="export-csv-btn" class="form-btn export-btn">📊 Export CSV</button>
+                <div class="filter-buttons-group">
+                    <button type="submit" id="filter-button" class="form-btn">Filter</button>
+                    <button id="reset-btn" class="form-btn">Init</button>
+                    <button type="button" id="export-csv-btn" class="form-btn export-btn">📊 Export CSV</button>
+                </div>
             {{ form_end(form) }}
         </div>
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
@@ -111,7 +113,7 @@
                     <tr>
                         <th>Bookmaker <span>⬍</span></th>
                         <th>Average RTP <span>⬍</span></th>
-                        <th>Evolution</th>
+                        <th>Evolution  <span>⬍</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -124,7 +126,15 @@
                                 {{ row.avgTrj|number_format(2, '.', '') }}%
                             </td>
                             <td class="evol-container">
-                                <span>{% if row.evolution == 1 %}↑{% elseif row.evolution == -1 %}↓{% else %}-{% endif %}</span>
+                                <span>
+                                {% if row.evolution == 1 %}
+                                    <span class="arrow-up">↑</span>
+                                {% elseif row.evolution == -1 %}
+                                    <span class="arrow-down">↓</span>
+                                {% else %}
+                                    <span class="arrow-stable">→</span>
+                                {% endif %}
+                                </span>
                                 <span class="previous-trj">{{ row.previousAvgTrj ? row.previousAvgTrj|number_format(2, '.', '') ~ '%' : '-' }}</span>
                             </td>
                         </tr>
@@ -142,11 +152,11 @@
                     <tr>
                         <th>Match <span>⬍</span></th>
                         <th>Bookmaker <span>⬍</span></th>
-                        <th>Home<span>⬍</span></th>
-                        <th>Draw<span>⬍</span></th>
-                        <th>Away<span>⬍</span></th>
-                        <th>TRJ <span>⬍</span></th>
-                        <th>Evol</th>
+                        <th>Home <span>⬍</span></th>
+                        <th>Draw <span>⬍</span></th>
+                        <th>Away <span>⬍</span></th>
+                        <th>RTP <span>⬍</span></th>
+                        <th>Evol  <span>⬍</span></th>
                     </tr>
                 </thead>
                 <tbody>

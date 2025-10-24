@@ -680,3 +680,59 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 })();
+
+// 🎨 MODE DÉMO - Progress Bar visible pour le style
+(function() {
+    const DEMO_MODE = true;  // ← Mets false quand tu as fini le style
+    
+    if (DEMO_MODE) {
+        console.log('🎨 MODE DÉMO activé');
+        
+        // Récupère les éléments
+        const progressContainer = document.getElementById('scraping-progress');
+        const progressBarFill = document.getElementById('progress-bar-fill');
+        const progressPercentage = document.getElementById('progress-percentage');
+        const progressCount = document.getElementById('progress-count');
+        const currentMatchName = document.getElementById('current-match');
+        const bookmakersCount = document.getElementById('bookmakers-count');
+        const progressMessage = document.getElementById('progress-message');
+        
+        // Log pour debug
+        console.log('Progress container:', progressContainer);
+        console.log('Progress bar fill:', progressBarFill);
+        
+        // Affiche et remplit
+        if (progressContainer) {
+            progressContainer.style.display = 'block';
+            console.log('✅ Progress container affiché');
+        }
+        
+        if (progressBarFill) {
+            progressBarFill.style.width = '65%';
+            progressBarFill.setAttribute('aria-valuenow', '65');
+            console.log('✅ Barre à 65%');
+        }
+        
+        if (progressPercentage) {
+            progressPercentage.textContent = '65%';
+        }
+        
+        if (progressCount) {
+            progressCount.textContent = '12 / 18';
+        }
+        
+        if (currentMatchName) {
+            currentMatchName.textContent = 'Paris Saint-Germain - Olympique de Marseille';
+        }
+        
+        if (bookmakersCount) {
+            bookmakersCount.textContent = '13 bookmakers';
+        }
+        
+        if (progressMessage) {
+            progressMessage.textContent = '🚀 Scraping en cours...';
+        }
+        
+        console.log('🎨 Valeurs de démo appliquées');
+    }
+})();

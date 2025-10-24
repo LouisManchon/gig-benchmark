@@ -1,0 +1,188 @@
+/* ========================================
+   🔍 FILTRES - Formulaire principal
+   ======================================== */
+
+.filter-form-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2rem;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    max-width: fit-content;
+    font-family: "Host Grotesk", sans-serif;
+    margin: 5px;
+}
+
+.form-filters {
+    color: whitesmoke;
+    gap: 15px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ========================================
+   📋 GROUPES DE FORMULAIRE
+   ======================================== */
+
+.filter-form-container .form-group {
+    display: flex;
+    flex-direction: column;
+    min-width: 200px;
+    align-items: stretch;
+}
+
+.filter-form-container label {
+    font-weight: 600;
+    font-size: 14px;
+    color: #333;
+    margin-bottom: 4px;
+    height: 20px;
+}
+
+/* ========================================
+   🎨 INPUTS CLASSIQUES
+   ======================================== */
+
+select, .date-input {
+    border: none;
+    border-radius: 3px;
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.date-input {
+    width: 190px;
+}
+
+.filter-form-container select,
+.filter-form-container input[type="text"],
+.filter-form-container input[type="date"] {
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background: #fafafa;
+    font-size: 14px;
+    height: 38px;
+    font-family: "Host Grotesk", sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.filter-form-container select:hover,
+.filter-form-container input[type="text"]:hover {
+    border-color: #7136c4;
+}
+
+.filter-form-container select:focus,
+.filter-form-container input:focus {
+    border-color: #7136c4;
+    outline: none;
+}
+
+#odds_filter_dateRange {
+    height: 21px;
+}
+
+/* ========================================
+   🎯 BOUTONS
+   ======================================== */
+
+.filter-buttons-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.form-btn {
+    background-color: #080e2d;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    font-family: "Host Grotesk", sans-serif;
+    text-align: center;
+    margin-top: 24px;
+    height: 38px;
+}
+
+.form-btn:hover {
+    background-color: #7136c4;
+}
+
+/* ========================================
+   📦 CHOICES.JS - Selects multiples
+   ======================================== */
+
+.filter-form-container .choices {
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.filter-form-container .choices__inner {
+    background: #fafafa;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    width: 200px;
+    padding-top: 2px;
+    padding-bottom: 0;
+    overflow-y: hidden;
+    font-family: "Host Grotesk", sans-serif;
+    min-height: 37px;
+    margin: 0;
+    transition: all 0.2s ease;
+    align-items: center;
+    box-sizing: border-box !important;
+}
+
+.filter-form-container .choices__inner:hover {
+    border-color: #7136c4;
+}
+
+.filter-form-container .choices.is-focused .choices__inner,
+.filter-form-container .choices.is-open .choices__inner {
+    border-color: #7136c4;
+}
+
+/* Permet l'expansion si items multiples */
+.filter-form-container .choices[data-type*="select-multiple"] .choices__inner {
+    max-height: fit-content;
+    overflow-y: visible;
+}
+
+/* Items sélectionnés (badges) */
+.filter-form-container .choices__list--multiple .choices__item {
+    background-color: #7136c4;
+    border: 1px solid #5a2b9d;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin: 2px;
+    font-size: 12px;
+    font-family: "Host Grotesk", sans-serif;
+    line-height: 1.2;
+}
+
+/* Dropdown des options */
+.filter-form-container .choices__list--dropdown {
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.filter-form-container .choices__list--dropdown .choices__item {
+    color: #333;
+    font-family: "Host Grotesk", sans-serif;
+}
+
+.filter-form-container .choices__list--dropdown .choices__item--selectable.is-highlighted {
+    background-color: #7136c4;
+    color: white;
+}
+
+/* Input de recherche */
+.filter-form-container .choices__input {
+    font-family: "Host Grotesk", sans-serif;
+}
