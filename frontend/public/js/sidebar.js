@@ -433,7 +433,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const leaguesBySport = {
             'football': [
-                { value: 'all', label: '🌍 Toutes les leagues' },
+                { value: 'all', label: 'All leagues' },
                 { value: 'ligue_1', label: 'Ligue 1' },
                 { value: 'premier_league', label: 'Premier League' },
                 { value: 'la_liga', label: 'La Liga' },
@@ -441,16 +441,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 { value: 'bundesliga', label: 'Bundesliga' }
             ],
             'basketball': [
-                { value: 'all', label: '🌍 Toutes les leagues' },
+                { value: 'all', label: 'All leagues' },
                 { value: 'nba', label: 'NBA' },
                 { value: 'euroleague', label: 'Euroleague' }
             ],
             'rugby': [
-                { value: 'all', label: '🌍 Toutes les leagues' },
+                { value: 'all', label: 'All leagues' },
                 { value: 'top_14', label: 'Top 14' }
             ],
             'tennis': [
-                { value: 'all', label: '🌍 Toutes les leagues' },
+                { value: 'all', label: 'All leagues' },
                 { value: 'atp', label: 'ATP' }
             ]
         };
@@ -493,13 +493,13 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('📝 League:', league);
             
             if (!sport || sport === '') {
-                alert('❌ Veuillez sélectionner un sport');
+                alert('Select a sport');
                 isSubmitting = false;
                 return false;
             }
             
             if (!league || league === '') {
-                alert('❌ Veuillez sélectionner une league');
+                alert('Select a league');
                 isSubmitting = false;
                 return false;
             }
@@ -596,7 +596,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            if (progressMessage) progressMessage.textContent = '✅ Terminé !';
+            if (progressMessage) progressMessage.textContent = 'Finished';
             setTimeout(() => window.location.reload(), 3000);
         }
 
@@ -658,7 +658,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             clearInterval(pollingInterval);
                             
                             if (progressMessage) {
-                                let msg = `✅ ${scraper} terminé`;
+                                let msg = `${scraper} finished`;
                                 if (data.matches_scraped) msg += `: ${data.matches_scraped} matchs`;
                                 progressMessage.textContent = msg;
                             }
@@ -683,7 +683,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 🎨 MODE DÉMO - Progress Bar visible pour le style
 (function() {
-    const DEMO_MODE = true;  // ← Mets false quand tu as fini le style
+    const DEMO_MODE = false;  // ← Mets false quand tu as fini le style
     
     if (DEMO_MODE) {
         console.log('🎨 MODE DÉMO activé');

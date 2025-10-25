@@ -22,7 +22,7 @@
             <h3 class="sidebar-title">Scraping Filters</h3>
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
-                    <label for="sport-scraping">Sport :</label>
+                    <label for="sport-scraping">Sport</label>
                     <select name="scraping_sport" id="sport-scraping" class="form-control" required>
                         <option value="">Choose</option>
                         <option value="football">Football</option>
@@ -33,21 +33,21 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="league-scraping">League :</label>
+                    <label for="league-scraping">League</label>
                     <select name="scraping_league" id="league-scraping" class="form-control" required>
                         <option value="">Choose a sport first</option>
                     </select>
                 </div>
                 
                 <button type="submit" class="scraping-btn" id="start-scraping-btn">
-                    <span class="btn-text">🚀 Start Scraping</span>
+                    <span class="btn-text">Start Scraping</span>
                     <span class="btn-loader" style="display: none;">⏳ En cours...</span>
                 </button>
                 
                 <!-- Progress bar -->
                 <div id="scraping-progress" style="display: none;">
                     <div class="progress-header">
-                        <h4>Scraping in progress...</h4>
+                        <h3>Scraping in progress...</h3>
                         <span class="progress-count" id="progress-count">0 / 0</span>
                     </div>
                     
@@ -59,11 +59,11 @@
                     
                     <div class="progress-info">
                         <div class="current-match">
-                            <strong>Current match:</strong>
+                            <p>Current match:</p>
                             <span id="current-match-name">-</span>
                         </div>
                         <div class="bookmakers-info">
-                            <strong>Bookmakers:</strong>
+                            <p>Bookmakers:</p>
                             <span id="bookmakers-count">-</span>
                         </div>
                         <div class="progress-message" id="progress-message">

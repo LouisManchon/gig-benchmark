@@ -34,7 +34,7 @@
 .sidebar-title {
     margin-top: 10px;
     margin-bottom: 10px;
-    padding-bottom: 15px;
+    padding-bottom: 10px;
     border-bottom: 2px solid #7136c4;
     color: #080e2d;
     font-size: 1.1rem;
@@ -124,9 +124,9 @@
     margin-bottom: 15px;
 }
 
-.progress-header h4 {
+.progress-header h3 {
     margin: 0;
-    font-size: 18px;
+    font-size: 15px;
     color: white;
 }
 
@@ -135,7 +135,9 @@
     padding: 5px 15px;
     border-radius: 20px;
     font-weight: bold;
-    font-size: 16px;
+    font-size: 11px;
+    text-align: center;
+    text-wrap-mode: nowrap;
 }
 
 .progress-bar-container {
@@ -179,7 +181,7 @@
 .progress-percentage {
     color: white;
     font-weight: bold;
-    font-size: 14px;
+    font-size: 12px;
     text-shadow: 0 1px 2px rgba(0,0,0,0.3);
 }
 
@@ -198,10 +200,16 @@
     margin-bottom: 0;
 }
 
-.current-match strong,
-.bookmakers-info strong {
+.current-match p,
+.bookmakers-info p {
     display: inline-block;
-    min-width: 120px;
+    font-size: 13px;
+    margin-top: 0;
+    margin-bottom: 0;
+}
+
+#bookmakers-count, #current-match {
+  font-size: 13px;
 }
 
 .progress-message {
@@ -210,6 +218,7 @@
     border-top: 1px solid rgba(255,255,255,0.2);
     font-style: italic;
     text-align: center;
+    font-size: 13px;
 }
 
 /* ========================================
