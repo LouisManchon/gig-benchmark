@@ -11,15 +11,44 @@ import re
 import dateparser
 import pika
 import os
+import requests
 
+BACKEND_URL = os.environ.get('BACKEND_URL', 'http://backend:8000')
 
 def safe_float(val):
-    """Convertit une valeur en float de manière sécurisée"""
+    """Convert a value in float"""
     try:
         return float(val)
     except (ValueError, TypeError):
         return None
 
+def send_progress_update(scraper_name, data):
+    """Envoie une mise à jour de progression au backend"""
+    try:
+        url = f'{BACKEND_URL}/api/scraping/progress'
+        payload = {
+            'scraper': scraper_name,
+            **data
+        }
+        
+        print(f"📤 Envoi progression à {url}")
+        print(f"   Payload: {payload}")
+        
+        response = requests.post(url, json=payload, timeout=2)
+        
+        print(f"📥 Réponse: {response.status_code}")
+        
+        if response.status_code == 200:
+            print(f"✅ Progression envoyée avec succès")
+        else:
+            print(f"⚠️ Erreur status {response.status_code}: {response.text}")
+            
+    except requests.exceptions.Timeout:
+        print(f"⚠️ Timeout lors de l'envoi de la progression")
+    except requests.exceptions.ConnectionError as e:
+        print(f"⚠️ Erreur de connexion: {e}")
+    except Exception as e:
+        print(f"⚠️ Erreur inattendue: {type(e).__name__}: {e}")
 
 def scrape_premier_league():
     """Scrape TOUS les matchs de Premier_League"""
@@ -27,13 +56,6 @@ def scrape_premier_league():
     print("\n" + "="*60)
     print("DÉMARRAGE DU SCRAPING - Premier_League")
     print("="*60)
-    
-    options = webdriver.ChromeOptions()
-    options.add_argument('--headless')
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--disable-gpu')
-    options.add_argument('--window-size=1920,1080')
     
     driver = None
     connection = None
@@ -49,12 +71,24 @@ def scrape_premier_league():
         channel.queue_declare(queue='odds', durable=True)
         print("Connecté à RabbitMQ")
         
+        print("\n📋 Configuration Chrome...")
+        options = webdriver.ChromeOptions()
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--window-size=1920,1080')
+        options.page_load_strategy = 'eager'
+        print("✅ Options configurées")
+
         # Connexion Selenium Remote
         driver = webdriver.Remote(
             command_executor='http://selenium:4444/wd/hub',
             options=options
         )
         driver.set_page_load_timeout(30)
+        driver.set_script_timeout(60)
+        driver.implicitly_wait(10)
         print("Connecté à Selenium")
         
         # Aller sur la page Premier League
@@ -82,7 +116,8 @@ def scrape_premier_league():
                 match_links.append(href)
         
         match_links = list(set(match_links))  # Dédupliquer
-        print(f"{len(match_links)} matchs trouvés\n")
+        total_matches = len(match_links)
+        print(f"{total_matches} matchs trouvés\n")
         
         # SCRAPER TOUS LES MATCHS
         matches_scraped = 0
@@ -92,6 +127,8 @@ def scrape_premier_league():
             print(f"\n{'='*60}")
             print(f"MATCH {i}/{len(match_links)}")
             print(f"{'='*60}")
+
+            scraper_name = 'football.premier_league'
             
             try:
                 driver.get(match_url)
@@ -102,6 +139,15 @@ def scrape_premier_league():
                     title_element = driver.find_element(By.CSS_SELECTOR, ".page-title")
                     title = title_element.text.strip()
                     print(f"{title}")
+
+                    send_progress_update(scraper_name, {
+                        'status': 'running',
+                        'current': i,
+                        'total': total_matches,
+                        'message': f'Scraping match {i}/{total_matches}',
+                        'current_match': title,
+                        'bookmakers_count': 0
+                    })
                 except:
                     print("Pas de titre, skip")
                     continue
@@ -124,7 +170,17 @@ def scrape_premier_league():
                 
                 # Récupérer TOUS les bookmakers
                 rows = driver.find_elements(By.CSS_SELECTOR, ".d-flex[data-name]")
-                print(f"{len(rows)} bookmakers")
+                bookmakers_count = len(rows)
+                print(f"{bookmakers_count} bookmakers")
+
+                send_progress_update(scraper_name, {
+                    'status': 'running',
+                    'current': i,
+                    'total': total_matches,
+                    'message': f'Scraping match {i}/{total_matches}',
+                    'current_match': title,
+                    'bookmakers_count': bookmakers_count
+                })
                 
                 for row in rows:
                     bookmaker = row.get_attribute("data-name")
@@ -171,6 +227,15 @@ def scrape_premier_league():
                 print(f"Erreur: {e}")
                 continue
         
+
+        send_progress_update(scraper_name, {
+            'status': 'completed',
+            'current': total_matches,
+            'total': total_matches,
+            'message': f'Scraping finished: {matches_scraped} matchs, {odds_sent} odds',
+            'matches_scraped': matches_scraped,
+            'odds_sent': odds_sent
+        })
         print(f"\n{'='*60}")
         print(f"SCRAPING TERMINÉ")
         print(f"{'='*60}")
