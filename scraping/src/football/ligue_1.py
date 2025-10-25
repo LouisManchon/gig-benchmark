@@ -16,14 +16,14 @@ import requests
 BACKEND_URL = os.environ.get('BACKEND_URL', 'http://backend:8000')
 
 def safe_float(val):
-    """Convertit une valeur en float de manière sécurisée"""
+    """Convert value in float"""
     try:
         return float(val)
     except (ValueError, TypeError):
         return None
 
 def send_progress_update(scraper_name, data):
-    """Envoie une mise à jour de progression au backend"""
+    """Send update progress to backend"""
     try:
         url = f'{BACKEND_URL}/api/scraping/progress'
         payload = {
@@ -51,7 +51,7 @@ def send_progress_update(scraper_name, data):
         print(f"⚠️ Erreur inattendue: {type(e).__name__}: {e}")
 
 def scrape_ligue_1():
-    """Scrape TOUS les matchs de Ligue 1"""
+    """Scrape all ligue 1 matches"""
     
     print("\n" + "="*60)
     print("DÉMARRAGE DU SCRAPING - LIGUE 1")
@@ -89,15 +89,15 @@ def scrape_ligue_1():
         driver.set_page_load_timeout(60)
         driver.set_script_timeout(60)
         driver.implicitly_wait(10)
-        print("✅ Connecté à Selenium")
+        print("Connect to Selenium")
 
-        # Aller sur la page Ligue 1
+        # Go to page Ligue 1
         url = "https://www.coteur.com/cotes/foot/france/ligue-1"
         print(f"\n{url}")
         driver.get(url)
         time.sleep(3)
         
-        # Accepter les cookies
+        # Accept cookies
         try:
             cookie_btn = driver.find_element(By.ID, "cookie_consent_use_all_cookies")
             cookie_btn.click()
@@ -105,7 +105,7 @@ def scrape_ligue_1():
         except:
             pass
         
-        # Récupérer TOUS les liens de matchs
+        # retrieve all matches links
         link_elements = driver.find_elements(By.CSS_SELECTOR, "a.text-decoration-none")
         match_links = []
         for elem in link_elements:
@@ -117,9 +117,9 @@ def scrape_ligue_1():
         
         match_links = list(set(match_links))
         total_matches = len(match_links)
-        print(f"{total_matches} matchs trouvés\n")
+        print(f"{total_matches} matches found\n")
         
-        # SCRAPER TOUS LES MATCHS
+        # SCRAP ALL MATCHES
         matches_scraped = 0
         odds_sent = 0
         
@@ -134,7 +134,7 @@ def scrape_ligue_1():
                 driver.get(match_url)
                 time.sleep(5)
                 
-                # Récupérer le titre du match
+                # Retrieve match title
                 try:
                     title_element = driver.find_element(By.CSS_SELECTOR, ".page-title")
                     title = title_element.text.strip()
@@ -152,7 +152,7 @@ def scrape_ligue_1():
                     print("Pas de titre, skip")
                     continue
                 
-                # Récupérer la date (optionnel)
+                # Retrieve date
                 date_obj = None
                 try:
                     span_elems = driver.find_elements(By.CSS_SELECTOR, "span.small")
@@ -193,13 +193,13 @@ def scrape_ligue_1():
                             "cote_2": safe_float(odds[2].text.strip())
                         }
                         
-                        # Calculer le TRJ
+                        # Calculate RTP
                         if cote_dict["cote_1"] and cote_dict["cote_N"] and cote_dict["cote_2"]:
                             trj = round((1 / (1/cote_dict["cote_1"] + 1/cote_dict["cote_N"] + 1/cote_dict["cote_2"])) * 100, 2)
                         else:
                             trj = None
                         
-                        # Créer le message
+                        # Create message
                         message = {
                             "match": title,
                             "match_date": date_obj.strftime("%Y-%m-%d %H:%M:%S") if date_obj else None,
@@ -210,7 +210,7 @@ def scrape_ligue_1():
                             "sport": "football"
                         }
                         
-                        # Envoyer à RabbitMQ
+                        # Send to RabbitMQ
                         channel.basic_publish(
                             exchange='',
                             routing_key='odds',
@@ -231,7 +231,7 @@ def scrape_ligue_1():
             'status': 'completed',
             'current': total_matches,
             'total': total_matches,
-            'message': f'Scraping terminé: {matches_scraped} matchs, {odds_sent} cotes',
+            'message': f'Scraping finished: {matches_scraped} matchs, {odds_sent} odds',
             'matches_scraped': matches_scraped,
             'odds_sent': odds_sent
         })
