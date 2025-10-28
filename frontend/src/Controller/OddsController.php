@@ -24,6 +24,8 @@ class OddsController extends AbstractController
         $bookmakerChoices = [];
         $matchChoices = [];
         $leagueChoices = [];
+        $startTime = microtime(true);
+        error_log("⏱️ START - index()");
 
         try {
             // --- Récupération des données pour les filtres ---
@@ -83,6 +85,7 @@ class OddsController extends AbstractController
             ]);
             
             $form->handleRequest($request);
+            error_log("⏱️ Form created: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
 
             // --- Préparation des filtres ---
             $filters = [];
@@ -147,15 +150,25 @@ class OddsController extends AbstractController
                     }
                 }
             }
+            error_log("⏱️ Filters prepared: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
 
             error_log('🔍 Filtres appliqués: ' . json_encode($filters));
 
             // --- Récupération des données AVEC évolution ---
             $allOdds = $apiService->getOddsWithEvolution($filters);
+
+            error_log("⏱️ API called (odds): " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
+            error_log("   → Found " . count($allOdds) . " odds");
+
             $avgTrjRaw = $apiService->getAvgTrjWithEvolution($filters);
+
+            error_log("⏱️ API called (avgTrj): " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
+            error_log("   → Found " . count($avgTrj) . " bookmakers");
 
             error_log('📊 AvgTrjRaw reçu: ' . json_encode($avgTrjRaw));
             error_log('📊 Nombre de bookmakers: ' . count($avgTrjRaw));
+
+
 
             // --- Regroupement des cotes par match + bookmaker ---
             $groupedOdds = [];
@@ -251,6 +264,9 @@ class OddsController extends AbstractController
             error_log('Stack trace: ' . $e->getTraceAsString());
         }
 
+        $totalTime = round((microtime(true) - $startTime) * 1000, 2);
+        error_log("⏱️ TOTAL TIME: {$totalTime}ms");
+
         // --- Rendu ---
         return $this->render('odds/index.html.twig', [
             'form' => $form ? $form->createView() : null,
@@ -271,7 +287,7 @@ class OddsController extends AbstractController
             $bookmakerFilter = $request->query->get('bookmaker');
             $matchFilter = $request->query->get('match');
             $leagueFilter = $request->query->get('league');
-            $dateRange = $request->query->get('odds_filter')['dateRange'] ?? $request->query->get('dateRange');
+            $dateRange = $request->query->get('dateRange');
 
             if ($sportFilter && $sportFilter !== 'all') {
                 $filters['sport'] = $sportFilter;
@@ -403,8 +419,8 @@ class OddsController extends AbstractController
     public function triggerScraping(Request $request, OddsApiService $apiService): Response
     {
         try {
-            $sport = $request->request->get('sport');
-            $league = $request->request->get('league');
+        $sport = $request->request->get('sport') ?? $request->request->get('scraping_sport');
+        $league = $request->request->get('league') ?? $request->request->get('scraping_league');
             
             if (!$sport || !$league) {
                 return $this->json([
@@ -441,6 +457,56 @@ class OddsController extends AbstractController
                 'success' => false,
                 'error' => $e->getMessage()
             ], 500);
+        }
+    }
+
+    #[Route('/api/scraping/status', name: 'scraping_status_proxy', methods: ['GET'])]
+    public function getScrapingStatus(Request $request, OddsApiService $apiService): Response
+    {
+        $scraper = $request->query->get('scraper');
+        
+        if (!$scraper) {
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0,
+                'message' => 'Pas de scraping en cours'
+            ]);
+        }
+        
+        try {
+            // Appelle le backend Django via le service
+            $backendUrl = $_ENV['BACKEND_API_URL'] ?? 'http://backend:8000/api';
+            $url = $backendUrl . '/scraping/status?scraper=' . urlencode($scraper);
+            
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'timeout' => 3,
+                    'ignore_errors' => true
+                ]
+            ]);
+            
+            $response = @file_get_contents($url, false, $context);
+            
+            if ($response) {
+                $data = json_decode($response, true);
+                return $this->json($data);
+            }
+            
+            // Si pas de réponse, retourne idle
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0
+            ]);
+            
+        } catch (\Exception $e) {
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0
+            ]);
         }
     }
 }

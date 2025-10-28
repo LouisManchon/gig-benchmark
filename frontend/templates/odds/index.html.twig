@@ -18,14 +18,13 @@
 
 <div class="container">
     <!-- aside for scraping -->
-        {# Dans odds/index.html.twig, modifie la sidebar #}
         <aside id="sidebar">
             <h3 class="sidebar-title">Scraping Filters</h3>
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
-                    <label for="sport-scraping">Sport :</label>
-                    <select name="sport" id="sport-scraping" class="form-control" required>
-                        <option value="">Sélectionner</option>
+                    <label for="sport-scraping">Sport</label>
+                    <select name="scraping_sport" id="sport-scraping" class="form-control" required>
+                        <option value="">Choose</option>
                         <option value="football">Football</option>
                         <option value="basketball">Basketball</option>
                         <option value="rugby">Rugby</option>
@@ -34,10 +33,9 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="league-scraping">League :</label>
-                    <select name="league" id="league-scraping" class="form-control" required>
-                        <option value="">Sélectionner...</option>
-                        <!-- Les options seront remplies dynamiquement selon le sport -->
+                    <label for="league-scraping">League</label>
+                    <select name="scraping_league" id="league-scraping" class="form-control" required>
+                        <option value="">Choose a sport first</option>
                     </select>
                 </div>
                 
@@ -46,7 +44,33 @@
                     <span class="btn-loader" style="display: none;">⏳ En cours...</span>
                 </button>
                 
-                <div id="scraping-status" style="display: none; margin-top: 10px;"></div>
+                <!-- Progress bar -->
+                <div id="scraping-progress" style="display: none;">
+                    <div class="progress-header">
+                        <h3>Scraping in progress...</h3>
+                        <span class="progress-count" id="progress-count">0 / 0</span>
+                    </div>
+                    
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progress-bar-fill">
+                            <span class="progress-percentage" id="progress-percentage">0%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-info">
+                        <div class="current-match">
+                            <p>Current match:</p>
+                            <span id="current-match-name">-</span>
+                        </div>
+                        <div class="bookmakers-info">
+                            <p>Bookmakers:</p>
+                            <span id="bookmakers-count">-</span>
+                        </div>
+                        <div class="progress-message" id="progress-message">
+                            Initialisation...
+                        </div>
+                    </div>
+                </div>
             </form>
         </aside>
     <main>       
@@ -74,9 +98,11 @@
                     {{ form_label(form.dateRange) }}
                     {{ form_widget(form.dateRange) }}
                 </div>
-                <button type="submit" id="filter-button" class="form-btn">Filter</button>
-                <button id="reset-btn" class="form-btn">Init</button>
-                <button type="button" id="export-csv-btn" class="form-btn export-btn">📊 Export CSV</button>
+                <div class="filter-buttons-group">
+                    <button type="submit" id="filter-button" class="form-btn">Filter</button>
+                    <button id="reset-btn" class="form-btn">Init</button>
+                    <button type="button" id="export-csv-btn" class="form-btn export-btn">📊 Export CSV</button>
+                </div>
             {{ form_end(form) }}
         </div>
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
@@ -87,7 +113,7 @@
                     <tr>
                         <th>Bookmaker <span>⬍</span></th>
                         <th>Average RTP <span>⬍</span></th>
-                        <th>Evolution</th>
+                        <th>Evolution  <span>⬍</span></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -100,7 +126,15 @@
                                 {{ row.avgTrj|number_format(2, '.', '') }}%
                             </td>
                             <td class="evol-container">
-                                <span>{% if row.evolution == 1 %}↑{% elseif row.evolution == -1 %}↓{% else %}-{% endif %}</span>
+                                <span>
+                                {% if row.evolution == 1 %}
+                                    <span class="arrow-up">↑</span>
+                                {% elseif row.evolution == -1 %}
+                                    <span class="arrow-down">↓</span>
+                                {% else %}
+                                    <span class="arrow-stable">→</span>
+                                {% endif %}
+                                </span>
                                 <span class="previous-trj">{{ row.previousAvgTrj ? row.previousAvgTrj|number_format(2, '.', '') ~ '%' : '-' }}</span>
                             </td>
                         </tr>
@@ -118,11 +152,11 @@
                     <tr>
                         <th>Match <span>⬍</span></th>
                         <th>Bookmaker <span>⬍</span></th>
-                        <th>Home<span>⬍</span></th>
-                        <th>Draw<span>⬍</span></th>
-                        <th>Away<span>⬍</span></th>
-                        <th>TRJ <span>⬍</span></th>
-                        <th>Evol</th>
+                        <th>Home <span>⬍</span></th>
+                        <th>Draw <span>⬍</span></th>
+                        <th>Away <span>⬍</span></th>
+                        <th>RTP <span>⬍</span></th>
+                        <th>Evol  <span>⬍</span></th>
                     </tr>
                 </thead>
                 <tbody>

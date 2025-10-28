@@ -252,7 +252,7 @@ services:
     ports:
       - "4444:4444"
       - "7900:7900"
-    shm_size: '2gb'  # ← AUGMENTE LA MÉMOIRE PARTAGÉE
+    shm_size: '3gb'  # ← AUGMENTE LA MÉMOIRE PARTAGÉE
     environment:
       - SE_NODE_MAX_SESSIONS=1  # ← LIMITE À 1 SESSION
       - SE_NODE_SESSION_TIMEOUT=300
@@ -263,9 +263,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 2G  # ← LIMITE LA RAM
+          memory: 3G  # ← LIMITE LA RAM
         reservations:
-          memory: 1G
+          memory: 2G
 
   # ============================================
   # SCRAPING Service
@@ -289,6 +289,7 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_DEFAULT_PASS}
       RABBITMQ_QUEUE: scraping_tasks
       BACKEND_API_URL: http://backend:${BACKEND_PORT}
+      BACKEND_URL: http://backend:8000
     command: python worker.py
     depends_on:
       db:
