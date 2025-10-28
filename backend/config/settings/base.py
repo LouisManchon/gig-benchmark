@@ -30,12 +30,11 @@ INSTALLED_APPS = [
 # ==== MIDDLEWARE ====
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'corsheaders.middleware.CorsMiddleware',  # ✅ AJOUT CORS (doit être en 2e position)
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'core.authentication.middlewares.KeycloakAuthMiddleware',  # ✅ AJOUT KEYCLOAK
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -107,39 +106,12 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ==== KEYCLOAK CONFIGURATION ====
-KEYCLOAK_SERVER_URL = os.getenv("KEYCLOAK_SERVER_URL", "http://keycloak:8080")
-KEYCLOAK_REALM = os.getenv("KEYCLOAK_REALM", "GigBenchmarkRealm")
-KEYCLOAK_CLIENT_ID = os.getenv("KEYCLOAK_CLIENT_ID", "gig-api")
-KEYCLOAK_CLIENT_SECRET = os.getenv("KEYCLOAK_CLIENT_SECRET", "")
-
-# Chemin vers la clé PEM
-KEYCLOAK_PEM_PATH = BASE_DIR / 'config' / 'keycloak_public_key.pem'
-
-# Charge la clé depuis le fichier
-try:
-    with open(KEYCLOAK_PEM_PATH, 'r') as f:
-        KEYCLOAK_PUBLIC_KEY = f.read().strip()
-except FileNotFoundError:
-    if not DEBUG:
-        raise FileNotFoundError(f"❌ Fichier de clé Keycloak manquant : {KEYCLOAK_PEM_PATH}")
-    else:
-        KEYCLOAK_PUBLIC_KEY = None
-        print(f"⚠️ WARNING: Fichier PEM Keycloak introuvable en mode DEBUG")
-
-# Validation du format
-if KEYCLOAK_PUBLIC_KEY and not KEYCLOAK_PUBLIC_KEY.startswith("-----BEGIN PUBLIC KEY-----"):
-    raise ValueError(f"❌ Format de clé invalide dans {KEYCLOAK_PEM_PATH}")
-
-KEYCLOAK_ISSUER = f"{KEYCLOAK_SERVER_URL}/realms/{KEYCLOAK_REALM}"
-
 # ==== REST FRAMEWORK ====
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'core.authentication.keycloak_auth.KeycloakAuthentication',  # ✅ KEYCLOAK EN PRIORITÉ
         'rest_framework.authentication.SessionAuthentication',       # Fallback
     ],
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
@@ -180,23 +152,7 @@ LOGGING = {
             'style': '{',
         },
     },
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
-        },
-        'file_keycloak': {
-            'class': 'logging.FileHandler',
-            'filename': LOG_DIR / 'keycloak_auth.log',
-            'formatter': 'verbose',
-        },
-    },
     'loggers': {
-        'core.authentication': {
-            'handlers': ['console', 'file_keycloak'],
-            'level': 'DEBUG' if DEBUG else 'INFO',
-            'propagate': False,
-        },
         'django': {
             'handlers': ['console'],
             'level': 'INFO',
