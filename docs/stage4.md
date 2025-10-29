@@ -259,13 +259,13 @@ Every tuesday, We had a call with our tutor, Morgan. With the same questiosn as 
 
 ### Bug Tracking
 
-| ID | Priority | Description | Sprint | Status |
-|----|----------|-------------|--------|--------|
-| #001 |  High | Choices.js doesn't load leagues | 2 | Resolved |
-| #002 | Medium | Progress bar stuck at 15/18 | 2 | In progress |
-| #003 |  Low | CSV export missing header | 3 | Resolved |
-| #004 |  High | Champions League import error | 2 | Resolved |
-| #005 | Medium | Match select auto-enlarges | 3 | Resolved |
+| Priority | Description | Sprint | Status |
+|----------|-------------|--------|--------|
+| High | Choices.js doesn't load leagues | 2 | Resolved |
+| Medium | Progress bar stuck at 15/18 | 2 | In progress |
+| Low | CSV export missing header | 3 | Resolved |
+|  High | Champions League import error | 2 | Resolved |
+| Medium | Match select auto-enlarges | 3 | Resolved |
 
 ---
 
@@ -351,6 +351,7 @@ Every tuesday, We had a call with our tutor, Morgan. With the same questiosn as 
 **What didn't go well:**
 - Some features can't be add by lack of time : graphics, authetification with Keycloak.
 - Website is very long to charge.
+- Bad communication.
 
 
 ---
