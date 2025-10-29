@@ -30,7 +30,7 @@ Develop a web platform to:
 - [ ] Graphics with RTP evolution
 - [ ] Others types of odds than Home, Draw, Away
 
-#### **Sprint 2: Multi-Sport Scraping** (Weeks 2-3)
+#### **Sprint 2: Multi-Sport Scraping & Login authentication** (Weeks 2-3)
 **Must Have**
 - [x] Football Scraper: Ligue 1
 - [x] Football Scraper: Premier League
@@ -39,6 +39,7 @@ Develop a web platform to:
 - [x] Football Scraper: Bundesliga
 - [x] Football Scraper: Champions League
 - [x] Real-time progress system
+- [x] Login auth with Keycloak on the backend
 
 **Should Have**
 - [x] Scraping error handling
@@ -65,6 +66,7 @@ Develop a web platform to:
 - [x] Hover effects on tables
 - [x] Date picker
 - [x] CSV export
+- [ ] Login auth with Keycloak on the frontend
 - [ ] Trend charts
 
 **Could Have**
@@ -78,9 +80,9 @@ Develop a web platform to:
 
 | Member | Role | Main Responsibilities |
 |--------|------|----------------------|
-| Dorine Lemée | Frontend Developer / Backend Developer | Symfony Interface, CSS, JavaScript, API Routes, Scrappers |
+| Dorine Lemée | Frontend Developer / Backend Developer / Documentation | Symfony Interface, CSS, JavaScript, API Routes, Scrappers |
 | Simon Paulin | Backend Developer / DevOps | Docker, Scrapers, RabbitMQ Worker, API Routes |
-| Louis Manchon | Backend Developer | Django Interface and API Routes |
+| Louis Manchon | Backend Developer | Django Interface and API Routes, Login authentification |
 
 ---
 
@@ -259,13 +261,13 @@ Every tuesday, We had a call with our tutor, Morgan. With the same questiosn as 
 
 ### Bug Tracking
 
-| ID | Priority | Description | Sprint | Status |
-|----|----------|-------------|--------|--------|
-| #001 |  High | Choices.js doesn't load leagues | 2 | Resolved |
-| #002 | Medium | Progress bar stuck at 15/18 | 2 | In progress |
-| #003 |  Low | CSV export missing header | 3 | Resolved |
-| #004 |  High | Champions League import error | 2 | Resolved |
-| #005 | Medium | Match select auto-enlarges | 3 | Resolved |
+| Priority | Description | Sprint | Status |
+|----------|-------------|--------|--------|
+| High | Choices.js doesn't load leagues | 2 | Resolved |
+| Medium | Progress bar stuck at 15/18 | 2 | In progress |
+| Low | CSV export missing header | 3 | Resolved |
+|  High | Champions League import error | 2 | Resolved |
+| Medium | Match select auto-enlarges | 3 | Resolved |
 
 ---
 
@@ -351,6 +353,7 @@ Every tuesday, We had a call with our tutor, Morgan. With the same questiosn as 
 **What didn't go well:**
 - Some features can't be add by lack of time : graphics, authetification with Keycloak.
 - Website is very long to charge.
+- Bad communication.
 
 
 ---
