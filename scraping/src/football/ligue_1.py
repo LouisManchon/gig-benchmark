@@ -168,7 +168,7 @@ def scrape_ligue_1():
                 except:
                     pass
                 
-                # Récupérer TOUS les bookmakers
+                # Retrieve all bookmakers
                 rows = driver.find_elements(By.CSS_SELECTOR, ".d-flex[data-name]")
                 bookmakers_count = len(rows)
                 print(f"{bookmakers_count} bookmakers")

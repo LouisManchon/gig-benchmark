@@ -58,7 +58,7 @@ except ImportError as e:
     scrape_bundesliga = None
 
 try:
-    from scraping.src.football.champions_league import scrape_champions_league
+    from src.football.champions_league import scrape_champions_league
     scrapers_loaded.append('football.champions_league')
 except ImportError as e:
     scrapers_failed.append(('football.champions_league', str(e)))

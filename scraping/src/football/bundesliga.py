@@ -54,7 +54,7 @@ def scrape_bundesliga():
     """Scrape all ligue 1 matches"""
     
     print("\n" + "="*60)
-    print("DÉMARRAGE DU SCRAPING - LIGUE 1")
+    print("DÉMARRAGE DU SCRAPING - Bundesliga")
     print("="*60)
     
     connection = None
