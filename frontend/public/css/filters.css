@@ -68,6 +68,7 @@ select, .date-input {
     height: 38px;
     font-family: "Host Grotesk", sans-serif;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    max-width: 200px;
 }
 
 .filter-form-container select:hover,

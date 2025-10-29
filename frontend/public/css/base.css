@@ -80,6 +80,11 @@ main {
     cursor: pointer;
 }
 
+.toggle-btn:hover {
+    background-color:#7136c4;
+    transition: background-color 0.2s ease;
+}
+
 /* ========================================
    📅 FLATPICKR - Date picker
    ======================================== */
