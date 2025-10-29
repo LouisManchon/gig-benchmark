@@ -77,13 +77,37 @@ def trigger_scraping(request):
     Body: {"scraper": "football.ligue_1"}
     """
     scraper = request.data.get('scraper')
+
+    if not scraper:
+        sport = request.data.get('sport')
+        league = request.data.get('league')
+        
+        if sport and league:
+            # Cas "all leagues"
+            if league == 'all':
+                # Router vers la fonction appropriée
+                if sport == 'football':
+                    return scrape_all_football(request)
+                elif sport == 'basketball':
+                    return scrape_all_basketball(request)
+                elif sport == 'rugby':
+                    return scrape_all_rugby(request)
+                elif sport == 'tennis':
+                    return scrape_all_tennis(request)
+                else:
+                    return Response(
+                        {'success': False, 'error': f'Sport inconnu: {sport}'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            else:
+                # Cas ligue spécifique
+                scraper = f"{sport}.{league}"
     
     if not scraper:
         return Response(
-            {'success': False, 'error': 'scraper field required'}, 
+            {'success': False, 'error': 'scraper or (sport + league) required'}, 
             status=status.HTTP_400_BAD_REQUEST
         )
-    
     # Envoie la tâche dans RabbitMQ
     success = send_scraping_task(scraper)
     
@@ -107,7 +131,8 @@ def scrape_all_football(request):
         'football.premier_league',
         'football.la_liga',
         'football.serie_a',
-        'football.bundesliga'
+        'football.bundesliga',
+        'football.champions_league'
     ]
     
     tasks_sent = []
