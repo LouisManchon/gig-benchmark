@@ -78,7 +78,7 @@ Develop a web platform to:
 
 | Member | Role | Main Responsibilities |
 |--------|------|----------------------|
-| Dorine Lemée | Frontend Developer / Backend Developer | Symfony Interface, CSS, JavaScript, API Routes, Scrappers |
+| Dorine Lemée | Frontend Developer / Backend Developer / Documentation | Symfony Interface, CSS, JavaScript, API Routes, Scrappers |
 | Simon Paulin | Backend Developer / DevOps | Docker, Scrapers, RabbitMQ Worker, API Routes |
 | Louis Manchon | Backend Developer | Django Interface and API Routes |
 
