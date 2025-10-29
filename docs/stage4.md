@@ -30,7 +30,7 @@ Develop a web platform to:
 - [ ] Graphics with RTP evolution
 - [ ] Others types of odds than Home, Draw, Away
 
-#### **Sprint 2: Multi-Sport Scraping** (Weeks 2-3)
+#### **Sprint 2: Multi-Sport Scraping & Login authentication** (Weeks 2-3)
 **Must Have**
 - [x] Football Scraper: Ligue 1
 - [x] Football Scraper: Premier League
@@ -39,6 +39,7 @@ Develop a web platform to:
 - [x] Football Scraper: Bundesliga
 - [x] Football Scraper: Champions League
 - [x] Real-time progress system
+- [x] Login auth with Keycloak on the backend
 
 **Should Have**
 - [x] Scraping error handling
@@ -65,6 +66,7 @@ Develop a web platform to:
 - [x] Hover effects on tables
 - [x] Date picker
 - [x] CSV export
+- [ ] Login auth with Keycloak on the frontend
 - [ ] Trend charts
 
 **Could Have**
@@ -80,7 +82,7 @@ Develop a web platform to:
 |--------|------|----------------------|
 | Dorine Lemée | Frontend Developer / Backend Developer / Documentation | Symfony Interface, CSS, JavaScript, API Routes, Scrappers |
 | Simon Paulin | Backend Developer / DevOps | Docker, Scrapers, RabbitMQ Worker, API Routes |
-| Louis Manchon | Backend Developer | Django Interface and API Routes |
+| Louis Manchon | Backend Developer | Django Interface and API Routes, Login authentification |
 
 ---
 
