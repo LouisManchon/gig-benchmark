@@ -51,7 +51,7 @@ def send_progress_update(scraper_name, data):
         print(f"⚠️ Erreur inattendue: {type(e).__name__}: {e}")
 
 def scrape_champions_league():
-    """Scrape all ligue 1 matches"""
+    """Scrape all champions League matches"""
     
     print("\n" + "="*60)
     print("DÉMARRAGE DU SCRAPING - CHAMPIONS LEAGUE")

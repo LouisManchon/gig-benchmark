@@ -171,7 +171,7 @@ def scrape_all_basketball(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def scrape_all_rugby(request):
-    scrapers = ['rugby.top_14']
+    scrapers = ['rugby.top14']
     tasks_sent = []
     for scraper in scrapers:
         if send_scraping_task(scraper):
