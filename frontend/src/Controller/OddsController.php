@@ -367,13 +367,13 @@ class OddsController extends AbstractController
                 fputcsv($handle, [
                     'Date',
                     'Match',
-                    'Equipe Domicile',
-                    'Equipe Exterieur',
+                    'Home Team',
+                    'Away team',
                     'Bookmaker',
-                    'Cote 1',
-                    'Cote X',
-                    'Cote 2',
-                    'TRJ (%)'
+                    'Home',
+                    'Draw',
+                    'Away',
+                    'RTP (%)'
                 ], ';');
 
                 foreach ($groupedOdds as $grouped) {
@@ -438,13 +438,11 @@ class OddsController extends AbstractController
             $result = $apiService->triggerScraping($scraper);
             
             if ($result['success'] ?? false) {
-                $this->addFlash('success', 'Scraping lancé avec succès !');
                 return $this->json([
                     'success' => true,
                     'message' => 'Scraping en cours...'
                 ]);
             } else {
-                $this->addFlash('error', 'Erreur lors du lancement du scraping');
                 return $this->json([
                     'success' => false,
                     'error' => $result['error'] ?? 'Erreur inconnue'

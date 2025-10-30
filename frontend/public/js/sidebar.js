@@ -438,7 +438,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 { value: 'premier_league', label: 'Premier League' },
                 { value: 'la_liga', label: 'La Liga' },
                 { value: 'serie_a', label: 'Serie A' },
-                { value: 'bundesliga', label: 'Bundesliga' }
+                { value: 'bundesliga', label: 'Bundesliga' },
+                { value: 'champions_league', label: 'UEFA Champions League'}
             ],
             'basketball': [
                 { value: 'all', label: 'All leagues' },
@@ -447,7 +448,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ],
             'rugby': [
                 { value: 'all', label: 'All leagues' },
-                { value: 'top_14', label: 'Top 14' }
+                { value: 'top14', label: 'Top 14' }
             ],
             'tennis': [
                 { value: 'all', label: 'All leagues' },
@@ -459,7 +460,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const sport = this.value;
             console.log('🔄 Sport changé:', sport);
             
-            leagueSelect.innerHTML = '<option value="">Sélectionner...</option>';
             
             if (sport && leaguesBySport[sport]) {
                 leaguesBySport[sport].forEach(league => {
