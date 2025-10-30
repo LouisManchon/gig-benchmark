@@ -16,6 +16,7 @@ db.sqlite3
 /staticfiles
 /front_copu
 google-chrome-stable_current_amd64.deb
+staticfiles*
 =======
 # Environnement
 backend/.env

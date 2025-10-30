@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     # Apps tierces
     'rest_framework',
     'rest_framework_simplejwt',
+    'drf_yasg',
     'corsheaders',
 
     # Apps locales
@@ -52,7 +53,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -195,3 +196,8 @@ LOGGING = {
         },
     },
 }
+
+# ==== AUTHENTICATION ====
+LOGIN_URL = None  # Désactive complètement la redirection login
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'

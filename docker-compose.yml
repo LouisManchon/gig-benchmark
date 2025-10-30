@@ -60,7 +60,7 @@ services:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
     ports:
-      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    - "${BACKEND_PORT:-8000}:8000"
     environment:
       DJANGO_SETTINGS_MODULE: ${DJANGO_SETTINGS_MODULE}
       SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-change-me}
@@ -79,7 +79,7 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       BACKEND_PORT: ${BACKEND_PORT}
       PYTHONPATH: /app
-    command: tail -f /dev/null
+    command: gunicorn backend.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 60
     depends_on:
       db:
         condition: service_healthy
@@ -88,7 +88,7 @@ services:
     networks:
       - app_network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${BACKEND_PORT}/api/health/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/scraping/health"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -292,13 +292,13 @@ services:
       - "443:443"
     volumes:
       - ./frontend:/var/www/html:ro
-      - static_volume:/static:ro
-      - media_volume:/media:ro
-      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - static_volume:/app/staticfiles:ro
+      - media_volume:/app/media:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./logs/nginx:/var/log/nginx
     depends_on:
-      - php
       - backend
+      - php
     networks:
       - app_network
     restart: unless-stopped

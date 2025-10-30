@@ -13,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     g++ \
     pkg-config \
     netcat-traditional \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # Créer le répertoire de travail
@@ -25,14 +26,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le code de l'application
 COPY . .
 
+# Copier et rendre exécutable l'entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Créer les dossiers nécessaires
 RUN mkdir -p /app/staticfiles /app/media
 
 # Exposer le port
 EXPOSE 8000
 
-# Healthcheck
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD python -c "import socket; socket.create_connection(('localhost', 8000), timeout=2)" || exit 1
+# Définir l'entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
 
-# La commande est définie dans docker-compose.yml
+# Commande par défaut (peut être surchargée dans docker-compose)
+CMD ["gunicorn", "--config", "gunicorn.conf.py"]

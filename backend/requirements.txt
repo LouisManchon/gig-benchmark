@@ -6,6 +6,8 @@ django-environ==0.11.2
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
 djangorestframework-simplejwt==5.5.1
+drf-yasg==1.21.7
+
 
 # ============================================
 # DATABASE
