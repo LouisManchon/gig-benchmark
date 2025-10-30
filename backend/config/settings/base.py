@@ -29,8 +29,12 @@ INSTALLED_APPS = [
 
     # Apps locales
     'accounts',
-    'core'
+    'core',
 ]
+
+# Modèle User personnalisé
+AUTH_USER_MODEL = 'accounts.User'
+
 # ==== MIDDLEWARE ====
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -191,7 +195,3 @@ LOGGING = {
         },
     },
 }
-
-
-# Modèle User personnalisé
-AUTH_USER_MODEL = 'accounts.User'

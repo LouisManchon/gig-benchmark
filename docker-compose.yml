@@ -25,45 +25,6 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # KEYCLOAK - Authentification SSO
-  # ============================================
-  keycloak:
-    image: quay.io/keycloak/keycloak:23.0
-    container_name: gig-benchmark-keycloak
-    environment:
-      # Admin depuis .env
-      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN}
-      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD}
-
-      # Configuration base de données depuis .env
-      KC_DB: mysql
-      KC_DB_URL: jdbc:mysql://db:3306/keycloak?characterEncoding=UTF-8
-      KC_DB_USERNAME: ${DB_USER}
-      KC_DB_PASSWORD: ${DB_PASSWORD}
-
-      # Configuration réseau
-      KC_HOSTNAME_STRICT: false
-      KC_HTTP_ENABLED: true
-      KC_PROXY: edge
-    ports:
-      - "8080:8080"
-    command: start-dev
-    volumes:
-      - keycloak_data:/opt/keycloak/data
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - app_network
-    healthcheck:
-      test: ["CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/8080 || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 90s
-    restart: unless-stopped
-
-  # ============================================
   # RabbitMQ - Message Broker
   # ============================================
   rabbitmq:
@@ -117,27 +78,12 @@ services:
       RABBITMQ_USER: ${RABBITMQ_USER}
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
       BACKEND_PORT: ${BACKEND_PORT}
-      KEYCLOAK_SERVER_URL: ${KEYCLOAK_SERVER_URL}
-      KEYCLOAK_REALM: ${KEYCLOAK_REALM}
-      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID}
-      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET}
-    command: >
-      sh -c "
-        echo 'Waiting for database...' &&
-        until python -c 'import socket; socket.create_connection((\"db\", 3306), timeout=2)' 2>/dev/null; do
-          sleep 2;
-        done &&
-        echo 'Database is ready!' &&
-        python manage.py migrate --noinput &&
-        python manage.py collectstatic --noinput &&
-        gunicorn --bind 0.0.0.0:${BACKEND_PORT} --workers 4 --timeout 120 config.wsgi:application
-      "
+      PYTHONPATH: /app
+    command: tail -f /dev/null
     depends_on:
       db:
         condition: service_healthy
       rabbitmq:
-        condition: service_healthy
-      keycloak:
         condition: service_healthy
     networks:
       - app_network
@@ -366,8 +312,6 @@ volumes:
     name: gig-benchmark_static
   media_volume:
     name: gig-benchmark_media
-  keycloak_data:
-    name: gig-benchmark_keycloak
 
 networks:
   app_network:
