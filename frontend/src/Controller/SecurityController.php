@@ -6,7 +6,7 @@ use App\Service\AuthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpFoundation\Cookie;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class SecurityController extends AbstractController
@@ -19,10 +19,10 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/login', name: 'app_login')]
-    public function login(Request $request): Response
+    public function login(Request $request, SessionInterface $session): Response
     {
-        // Si déjà connecté, redirige vers la home
-        if ($request->cookies->has('jwt_token')) {
+        // Si déjà connecté, redirige vers home
+        if ($session->has('jwt_token')) {
             return $this->redirectToRoute('home');
         }
 
@@ -33,33 +33,15 @@ class SecurityController extends AbstractController
             $result = $this->authService->login($username, $password);
 
             if ($result['success']) {
-                $response = $this->redirectToRoute('home');
+                // 🔥 STOCKE LES TOKENS EN SESSION
+                $session->set('jwt_token', $result['access']);
+                $session->set('jwt_refresh', $result['refresh']);
 
-                // Stocke le token dans un cookie sécurisé
-                $response->headers->setCookie(
-                    Cookie::create('jwt_token')
-                        ->withValue($result['token'])
-                        ->withExpires(strtotime('+1 hour'))
-                        ->withPath('/')
-                        ->withSecure(false) // true en production avec HTTPS
-                        ->withHttpOnly(true)
-                );
-
-                // Stocke le refresh token
-                $response->headers->setCookie(
-                    Cookie::create('jwt_refresh')
-                        ->withValue($result['refresh'])
-                        ->withExpires(strtotime('+7 days'))
-                        ->withPath('/')
-                        ->withSecure(false)
-                        ->withHttpOnly(true)
-                );
-
-                $this->addFlash('success', 'Connexion réussie !');
-                return $response;
+                $this->addFlash('success', 'Login successful!');
+                return $this->redirectToRoute('home');
             }
 
-            $this->addFlash('error', $result['error'] ?? 'Identifiants invalides');
+            $this->addFlash('error', $result['error'] ?? 'Invalid credentials');
         }
 
         return $this->render('security/login.html.twig');
@@ -68,10 +50,6 @@ class SecurityController extends AbstractController
     #[Route('/register', name: 'app_register')]
     public function register(Request $request): Response
     {
-        if ($request->cookies->has('jwt_token')) {
-            return $this->redirectToRoute('home');
-        }
-
         if ($request->isMethod('POST')) {
             $userData = [
                 'username' => $request->request->get('username'),
@@ -83,7 +61,7 @@ class SecurityController extends AbstractController
             $result = $this->authService->register($userData);
 
             if ($result['success']) {
-                $this->addFlash('success', 'Inscription réussie ! Vous pouvez maintenant vous connecter.');
+                $this->addFlash('success', 'Registration successful! You can now login.');
                 return $this->redirectToRoute('app_login');
             }
 
@@ -101,15 +79,13 @@ class SecurityController extends AbstractController
     }
 
     #[Route('/logout', name: 'app_logout')]
-    public function logout(): Response
+    public function logout(SessionInterface $session): Response
     {
-        $response = $this->redirectToRoute('app_login');
+        // 🔥 SUPPRIME LES TOKENS DE LA SESSION
+        $session->remove('jwt_token');
+        $session->remove('jwt_refresh');
 
-        // Supprime les cookies
-        $response->headers->clearCookie('jwt_token');
-        $response->headers->clearCookie('jwt_refresh');
-
-        $this->addFlash('success', 'Déconnexion réussie');
-        return $response;
+        $this->addFlash('success', 'Logout successful');
+        return $this->redirectToRoute('app_login');
     }
 }

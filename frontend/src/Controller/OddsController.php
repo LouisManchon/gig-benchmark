@@ -8,14 +8,22 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\Routing\Annotation\Route;
 
 class OddsController extends AbstractController
 {
     #[Route('/', name: 'home')]
     #[Route('/odds', name: 'odds_list')]
-    public function index(Request $request, OddsApiService $apiService): Response
+    public function index(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        // ==================== 🔒 PROTECTION AVEC SESSION ====================
+        if (!$session->has('jwt_token')) {
+            $this->addFlash('error', 'Please login to access this page');
+            return $this->redirectToRoute('app_login');
+        }
+        // ==================== FIN PROTECTION ====================
+
         // Initialisation par défaut
         $form = null;
         $oddsWithEvolution = [];
@@ -33,7 +41,7 @@ class OddsController extends AbstractController
             $bookmakersArray = $apiService->getDistinctBookmakers();
             $matchesArray = $apiService->getDistinctMatches();
             $leaguesArray = $apiService->getDistinctLeagues();
-            
+
             // Transform sports
             if (is_array($sportsArray)) {
                 foreach ($sportsArray as $sport) {
@@ -42,7 +50,7 @@ class OddsController extends AbstractController
                     }
                 }
             }
-            
+
             // Transformer les bookmakers
             if (is_array($bookmakersArray)) {
                 foreach ($bookmakersArray as $bookmaker) {
@@ -83,13 +91,13 @@ class OddsController extends AbstractController
                 'matches' => $matchChoices,
                 'leagues' => $leagueChoices,
             ]);
-            
+
             $form->handleRequest($request);
             error_log("⏱️ Form created: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
 
             // --- Préparation des filtres ---
             $filters = [];
-            
+
             if ($form->isSubmitted() && $form->isValid()) {
                 $sportFilter = $form->get('sport')->getData();
                 $bookmakerFilter = $form->get('bookmaker')->getData();
@@ -101,7 +109,7 @@ class OddsController extends AbstractController
                 if ($sportFilter) {
                     $filters['sport'] = $sportFilter;
                 }
-                
+
                 // Bookmaker (multiple)
                 if ($bookmakerFilter && is_array($bookmakerFilter)) {
                     $bookmakerFilter = array_filter($bookmakerFilter, fn($v) => $v !== 'all');
@@ -109,12 +117,12 @@ class OddsController extends AbstractController
                         $filters['bookmaker'] = implode(',', $bookmakerFilter);
                     }
                 }
-                
+
                 // Match (simple)
                 if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
                     $filters['match'] = $matchFilter;
                 }
-                
+
                 // League (multiple)
                 if ($leagueFilter && is_array($leagueFilter)) {
                     $leagueFilter = array_filter($leagueFilter, fn($v) => $v !== 'all');
@@ -130,11 +138,11 @@ class OddsController extends AbstractController
                     } else {
                         $dates = [$dateRange];
                     }
-                    
+
                     try {
                         $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
                         $start->setTime(0, 0, 0);
-                        
+
                         if (isset($dates[1])) {
                             $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
                             $end->setTime(23, 59, 59);
@@ -142,7 +150,7 @@ class OddsController extends AbstractController
                             $end = clone $start;
                             $end->setTime(23, 59, 59);
                         }
-                        
+
                         $filters['start'] = $start->format('Y-m-d H:i:s');
                         $filters['end'] = $end->format('Y-m-d H:i:s');
                     } catch (\Exception $e) {
@@ -168,8 +176,6 @@ class OddsController extends AbstractController
             error_log('📊 AvgTrjRaw reçu: ' . json_encode($avgTrjRaw));
             error_log('📊 Nombre de bookmakers: ' . count($avgTrjRaw));
 
-
-
             // --- Regroupement des cotes par match + bookmaker ---
             $groupedOdds = [];
             if (is_array($allOdds)) {
@@ -177,7 +183,7 @@ class OddsController extends AbstractController
                     $matchId = $odd['match']['id'] ?? 0;
                     $bookmakerId = $odd['bookmaker']['id'] ?? 0;
                     $key = $matchId . '_' . $bookmakerId;
-                    
+
                     if (!isset($groupedOdds[$key])) {
                         $groupedOdds[$key] = [
                             'match' => $odd['match'],
@@ -192,7 +198,7 @@ class OddsController extends AbstractController
                             $groupedOdds[$key]['previous_trj'] = $odd['previous_trj'];
                         }
                     }
-                    
+
                     $outcome = $odd['outcome'] ?? '';
                     if (in_array($outcome, ['1', 'X', '2'])) {
                         $groupedOdds[$key]['cotes'][$outcome] = $odd['odd_value'] ?? 0;
@@ -204,7 +210,7 @@ class OddsController extends AbstractController
             foreach ($groupedOdds as $grouped) {
                 $currentTrj = $grouped['trj'];
                 $previousTrj = $grouped['previous_trj'];
-                
+
                 // Calcul de l'évolution : 1 = hausse, -1 = baisse, 0 = stable/pas de donnée
                 $evolution = 0;
                 if ($previousTrj !== null && $previousTrj > 0) {
@@ -214,7 +220,7 @@ class OddsController extends AbstractController
                         $evolution = -1;
                     }
                 }
-                
+
                 $oddsWithEvolution[] = [
                     'odd' => [
                         'match' => $grouped['match'],
@@ -233,10 +239,10 @@ class OddsController extends AbstractController
             if (is_array($avgTrjRaw)) {
                 foreach ($avgTrjRaw as $row) {
                     $currentAvgTrj = isset($row['avg_trj']) ? round((float)$row['avg_trj'], 2) : 0;
-                    $previousAvgTrj = isset($row['previous_avg_trj']) && $row['previous_avg_trj'] !== null 
-                        ? round((float)$row['previous_avg_trj'], 2) 
+                    $previousAvgTrj = isset($row['previous_avg_trj']) && $row['previous_avg_trj'] !== null
+                        ? round((float)$row['previous_avg_trj'], 2)
                         : null;
-                    
+
                     // Calcul de l'évolution
                     $evolution = 0;
                     if ($previousAvgTrj !== null && $previousAvgTrj > 0) {
@@ -246,7 +252,7 @@ class OddsController extends AbstractController
                             $evolution = -1;
                         }
                     }
-                    
+
                     $avgTrj[] = [
                         'bookmaker' => $row['bookmaker__name'] ?? 'Unknown',
                         'avgTrj' => $currentAvgTrj,
@@ -278,11 +284,18 @@ class OddsController extends AbstractController
     }
 
     #[Route('/odds/export-csv', name: 'odds_export_csv', methods: ['GET'])]
-    public function exportCsv(Request $request, OddsApiService $apiService): Response
+    public function exportCsv(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        // ==================== 🔒 PROTECTION AVEC SESSION ====================
+        if (!$session->has('jwt_token')) {
+            $this->addFlash('error', 'Please login to access this page');
+            return $this->redirectToRoute('app_login');
+        }
+        // ==================== FIN PROTECTION ====================
+
         try {
             $filters = [];
-            
+
             $sportFilter = $request->query->get('sport');
             $bookmakerFilter = $request->query->get('bookmaker');
             $matchFilter = $request->query->get('match');
@@ -292,15 +305,15 @@ class OddsController extends AbstractController
             if ($sportFilter && $sportFilter !== 'all') {
                 $filters['sport'] = $sportFilter;
             }
-            
+
             if ($bookmakerFilter && $bookmakerFilter !== 'all') {
                 $filters['bookmaker'] = $bookmakerFilter;
             }
-            
+
             if ($matchFilter && $matchFilter !== 'all') {
                 $filters['match'] = $matchFilter;
             }
-            
+
             if ($leagueFilter && $leagueFilter !== 'all') {
                 $filters['league'] = $leagueFilter;
             }
@@ -311,11 +324,11 @@ class OddsController extends AbstractController
                 } else {
                     $dates = [$dateRange];
                 }
-                
+
                 try {
                     $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
                     $start->setTime(0, 0, 0);
-                    
+
                     if (isset($dates[1])) {
                         $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
                         $end->setTime(23, 59, 59);
@@ -323,7 +336,7 @@ class OddsController extends AbstractController
                         $end = clone $start;
                         $end->setTime(23, 59, 59);
                     }
-                    
+
                     $filters['start'] = $start->format('Y-m-d H:i:s');
                     $filters['end'] = $end->format('Y-m-d H:i:s');
                 } catch (\Exception $e) {
@@ -340,7 +353,7 @@ class OddsController extends AbstractController
                     $matchId = $odd['match']['id'] ?? 0;
                     $bookmakerId = $odd['bookmaker']['id'] ?? 0;
                     $key = $matchId . '_' . $bookmakerId;
-                    
+
                     if (!isset($groupedOdds[$key])) {
                         $groupedOdds[$key] = [
                             'match' => $odd['match'],
@@ -350,7 +363,7 @@ class OddsController extends AbstractController
                             'date' => $odd['match']['match_date'] ?? ''
                         ];
                     }
-                    
+
                     $outcome = $odd['outcome'] ?? '';
                     if (in_array($outcome, ['1', 'X', '2'])) {
                         $groupedOdds[$key]['cotes'][$outcome] = $odd['odd_value'] ?? 0;
@@ -360,10 +373,10 @@ class OddsController extends AbstractController
 
             $response = new StreamedResponse(function() use ($groupedOdds) {
                 $handle = fopen('php://output', 'w');
-                
+
                 // BOM UTF-8 pour Excel
                 fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF));
-                
+
                 fputcsv($handle, [
                     'Date',
                     'Match',
@@ -406,7 +419,7 @@ class OddsController extends AbstractController
             $filename = 'odds_export_' . date('Y-m-d_His') . '.csv';
             $response->headers->set('Content-Type', 'text/csv; charset=utf-8');
             $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
-            
+
             return $response;
 
         } catch (\Exception $e) {
@@ -416,27 +429,36 @@ class OddsController extends AbstractController
     }
 
     #[Route('/odds/scraping/trigger', name: 'scraping_trigger', methods: ['POST'])]
-    public function triggerScraping(Request $request, OddsApiService $apiService): Response
+    public function triggerScraping(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        // ==================== 🔒 PROTECTION AVEC SESSION ====================
+        if (!$session->has('jwt_token')) {
+            return $this->json([
+                'success' => false,
+                'error' => 'Authentication required'
+            ], 401);
+        }
+        // ==================== FIN PROTECTION ====================
+
         try {
-        $sport = $request->request->get('sport') ?? $request->request->get('scraping_sport');
-        $league = $request->request->get('league') ?? $request->request->get('scraping_league');
-            
+            $sport = $request->request->get('sport') ?? $request->request->get('scraping_sport');
+            $league = $request->request->get('league') ?? $request->request->get('scraping_league');
+
             if (!$sport || !$league) {
                 return $this->json([
                     'success' => false,
                     'error' => 'Sport et league requis'
                 ], 400);
             }
-            
+
             // Construire le nom du scraper (ex: football.ligue_1)
             $scraper = $sport . '.' . str_replace(' ', '_', strtolower($league));
-            
+
             error_log("🚀 Déclenchement du scraping: $scraper");
-            
+
             // Appeler l'API Django
             $result = $apiService->triggerScraping($scraper);
-            
+
             if ($result['success'] ?? false) {
                 $this->addFlash('success', 'Scraping lancé avec succès !');
                 return $this->json([
@@ -450,7 +472,7 @@ class OddsController extends AbstractController
                     'error' => $result['error'] ?? 'Erreur inconnue'
                 ], 500);
             }
-            
+
         } catch (\Exception $e) {
             error_log('❌ Erreur scraping: ' . $e->getMessage());
             return $this->json([
@@ -461,10 +483,21 @@ class OddsController extends AbstractController
     }
 
     #[Route('/api/scraping/status', name: 'scraping_status_proxy', methods: ['GET'])]
-    public function getScrapingStatus(Request $request, OddsApiService $apiService): Response
+    public function getScrapingStatus(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        // ==================== 🔒 PROTECTION AVEC SESSION ====================
+        if (!$session->has('jwt_token')) {
+            return $this->json([
+                'status' => 'idle',
+                'current' => 0,
+                'total' => 0,
+                'message' => 'Authentication required'
+            ], 401);
+        }
+        // ==================== FIN PROTECTION ====================
+
         $scraper = $request->query->get('scraper');
-        
+
         if (!$scraper) {
             return $this->json([
                 'status' => 'idle',
@@ -473,12 +506,12 @@ class OddsController extends AbstractController
                 'message' => 'Pas de scraping en cours'
             ]);
         }
-        
+
         try {
             // Appelle le backend Django via le service
             $backendUrl = $_ENV['BACKEND_API_URL'] ?? 'http://backend:8000/api';
             $url = $backendUrl . '/scraping/status?scraper=' . urlencode($scraper);
-            
+
             $context = stream_context_create([
                 'http' => [
                     'method' => 'GET',
@@ -486,21 +519,21 @@ class OddsController extends AbstractController
                     'ignore_errors' => true
                 ]
             ]);
-            
+
             $response = @file_get_contents($url, false, $context);
-            
+
             if ($response) {
                 $data = json_decode($response, true);
                 return $this->json($data);
             }
-            
+
             // Si pas de réponse, retourne idle
             return $this->json([
                 'status' => 'idle',
                 'current' => 0,
                 'total' => 0
             ]);
-            
+
         } catch (\Exception $e) {
             return $this->json([
                 'status' => 'idle',

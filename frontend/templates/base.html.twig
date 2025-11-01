@@ -20,9 +20,41 @@
         <link rel="stylesheet" href="{{ asset('css/sidebar.css') }}">
         <link rel="stylesheet" href="{{ asset('css/filters.css') }}">
         <link rel="stylesheet" href="{{ asset('css/tables.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/navbar.css') }}">
     {% endblock %}
 </head>
 <body>
+    {# ==================== NAVBAR ==================== #}
+    <nav class="top-navbar">
+        <div class="navbar-container">
+            <a href="{{ path('odds_list') }}" class="navbar-brand">
+                <img src="{{ asset('images/logo.png') }}" alt="Logo" class="navbar-logo">
+                <span>Benchmark</span>
+            </a>
+
+            <div class="navbar-user">
+                {# ✅ VÉRIFIE LA SESSION (pas les cookies) #}
+                {% if app.session.get('jwt_token') %}
+                    <span class="user-name">👤 Connected</span>
+                    <a href="{{ path('app_logout') }}" class="btn-logout">🚪 Logout</a>
+                {% else %}
+                    <a href="{{ path('app_login') }}" class="btn-login">🔑 Login</a>
+                    <a href="{{ path('app_register') }}" class="btn-register">✨ Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {# ==================== MESSAGES FLASH ==================== #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }} alert-dismissible">
+                {{ message }}
+                <button type="button" class="alert-close" onclick="this.parentElement.remove()">×</button>
+            </div>
+        {% endfor %}
+    {% endfor %}
+
     <!-- Contenu principal -->
     {% block body %}{% endblock %}
 

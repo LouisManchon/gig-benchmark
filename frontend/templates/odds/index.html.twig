@@ -3,77 +3,93 @@
 {% block title %}Odds List{% endblock %}
 
 {% block body %}
-<header>
-    <div class="title-container">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="site-logo">
-        <h1>Benchmark</h1>
-    </div>    
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ label }}">{{ message }}</div>
-        {% endfor %}
-    {% endfor %}
-</header>
 
+<!-- ========== 🔓 HEADER AVEC BOUTON LOGOUT ========== -->
+<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ path('home') }}">
+            <i class="fas fa-chart-line"></i> Odds Dashboard
+        </a>
+
+        <div class="d-flex">
+            <div class="dropdown">
+                <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fas fa-user"></i> Account
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <li><h6 class="dropdown-header">Logged in</h6></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item text-danger" href="{{ path('app_logout') }}">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</nav>
+<!-- ====================================================== -->
 
 <div class="container">
     <!-- aside for scraping -->
-        <aside id="sidebar">
-            <h3 class="sidebar-title">Scraping Filters</h3>
-            <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
-                <div class="form-group">
-                    <label for="sport-scraping">Sport</label>
-                    <select name="scraping_sport" id="sport-scraping" class="form-control" required>
-                        <option value="">Choose</option>
-                        <option value="football">Football</option>
-                        <option value="basketball">Basketball</option>
-                        <option value="rugby">Rugby</option>
-                        <option value="tennis">Tennis</option>
-                    </select>
+    <aside id="sidebar">
+        <h3 class="sidebar-title">Scraping Filters</h3>
+        <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
+            <div class="form-group">
+                <label for="sport-scraping">Sport</label>
+                <select name="scraping_sport" id="sport-scraping" class="form-control" required>
+                    <option value="">Choose</option>
+                    <option value="football">Football</option>
+                    <option value="basketball">Basketball</option>
+                    <option value="rugby">Rugby</option>
+                    <option value="tennis">Tennis</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="league-scraping">League</label>
+                <select name="scraping_league" id="league-scraping" class="form-control" required>
+                    <option value="">Choose a sport first</option>
+                </select>
+            </div>
+
+            <button type="submit" class="scraping-btn" id="start-scraping-btn">
+                <span class="btn-text">Start Scraping</span>
+                <span class="btn-loader" style="display: none;">⏳ En cours...</span>
+            </button>
+
+            <!-- Progress bar -->
+            <div id="scraping-progress" style="display: none;">
+                <div class="progress-header">
+                    <h3>Scraping in progress...</h3>
+                    <span class="progress-count" id="progress-count">0 / 0</span>
                 </div>
-                
-                <div class="form-group">
-                    <label for="league-scraping">League</label>
-                    <select name="scraping_league" id="league-scraping" class="form-control" required>
-                        <option value="">Choose a sport first</option>
-                    </select>
-                </div>
-                
-                <button type="submit" class="scraping-btn" id="start-scraping-btn">
-                    <span class="btn-text">Start Scraping</span>
-                    <span class="btn-loader" style="display: none;">⏳ En cours...</span>
-                </button>
-                
-                <!-- Progress bar -->
-                <div id="scraping-progress" style="display: none;">
-                    <div class="progress-header">
-                        <h3>Scraping in progress...</h3>
-                        <span class="progress-count" id="progress-count">0 / 0</span>
-                    </div>
-                    
-                    <div class="progress-bar-container">
-                        <div class="progress-bar" id="progress-bar-fill">
-                            <span class="progress-percentage" id="progress-percentage">0%</span>
-                        </div>
-                    </div>
-                    
-                    <div class="progress-info">
-                        <div class="current-match">
-                            <p>Current match:</p>
-                            <span id="current-match-name">-</span>
-                        </div>
-                        <div class="bookmakers-info">
-                            <p>Bookmakers:</p>
-                            <span id="bookmakers-count">-</span>
-                        </div>
-                        <div class="progress-message" id="progress-message">
-                            Initialisation...
-                        </div>
+
+                <div class="progress-bar-container">
+                    <div class="progress-bar" id="progress-bar-fill">
+                        <span class="progress-percentage" id="progress-percentage">0%</span>
                     </div>
                 </div>
-            </form>
-        </aside>
-    <main>       
+
+                <div class="progress-info">
+                    <div class="current-match">
+                        <p>Current match:</p>
+                        <span id="current-match-name">-</span>
+                    </div>
+                    <div class="bookmakers-info">
+                        <p>Bookmakers:</p>
+                        <span id="bookmakers-count">-</span>
+                    </div>
+                    <div class="progress-message" id="progress-message">
+                        Initialisation...
+                    </div>
+                </div>
+            </div>
+        </form>
+    </aside>
+
+    <main>
         <!-- filter by bookmaker, date & match -->
         <h2>Filters</h2>
         <div class="filter-form-container">
@@ -105,7 +121,9 @@
                 </div>
             {{ form_end(form) }}
         </div>
+
         <button id="toggleSidebar" class="toggle-btn">☰ Scraping</button>
+
         <div class="tables">
             <!--table for trj by bookmakers-->
             <table class="avgtrj">
@@ -119,8 +137,6 @@
                 <tbody>
                     {% for row in avgTrj %}
                         <tr>
-
-
                             <td>{{ row.bookmaker }}</td>
                             <td class="{% if row.avgTrj > 90 %}trj-high{% elseif row.avgTrj < 90 %}trj-low{% endif %}">
                                 {{ row.avgTrj|number_format(2, '.', '') }}%
@@ -191,7 +207,9 @@
         </div>
     </main>
 </div>
+
 <script id="leagues-data" type="application/json">
     {{ leaguesData|raw }}
 </script>
+
 {% endblock %}

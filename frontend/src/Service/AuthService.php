@@ -56,7 +56,7 @@ class AuthService
 
             return [
                 'success' => $response->getStatusCode() === 200,
-                'token' => $data['access'] ?? null,
+                'access' => $data['access'] ?? null,
                 'refresh' => $data['refresh'] ?? null,
                 'user' => $data['user'] ?? null
             ];
