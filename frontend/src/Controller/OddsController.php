@@ -17,13 +17,6 @@ class OddsController extends AbstractController
     #[Route('/odds', name: 'odds_list')]
     public function index(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
-        // ==================== 🔒 PROTECTION AVEC SESSION ====================
-        if (!$session->has('jwt_token')) {
-            $this->addFlash('error', 'Please login to access this page');
-            return $this->redirectToRoute('app_login');
-        }
-        // ==================== FIN PROTECTION ====================
-
         // Initialisation par défaut
         $form = null;
         $oddsWithEvolution = [];
@@ -286,13 +279,6 @@ class OddsController extends AbstractController
     #[Route('/odds/export-csv', name: 'odds_export_csv', methods: ['GET'])]
     public function exportCsv(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
-        // ==================== 🔒 PROTECTION AVEC SESSION ====================
-        if (!$session->has('jwt_token')) {
-            $this->addFlash('error', 'Please login to access this page');
-            return $this->redirectToRoute('app_login');
-        }
-        // ==================== FIN PROTECTION ====================
-
         try {
             $filters = [];
 
@@ -431,15 +417,6 @@ class OddsController extends AbstractController
     #[Route('/odds/scraping/trigger', name: 'scraping_trigger', methods: ['POST'])]
     public function triggerScraping(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
-        // ==================== 🔒 PROTECTION AVEC SESSION ====================
-        if (!$session->has('jwt_token')) {
-            return $this->json([
-                'success' => false,
-                'error' => 'Authentication required'
-            ], 401);
-        }
-        // ==================== FIN PROTECTION ====================
-
         try {
             $sport = $request->request->get('sport') ?? $request->request->get('scraping_sport');
             $league = $request->request->get('league') ?? $request->request->get('scraping_league');
@@ -485,17 +462,6 @@ class OddsController extends AbstractController
     #[Route('/api/scraping/status', name: 'scraping_status_proxy', methods: ['GET'])]
     public function getScrapingStatus(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
-        // ==================== 🔒 PROTECTION AVEC SESSION ====================
-        if (!$session->has('jwt_token')) {
-            return $this->json([
-                'status' => 'idle',
-                'current' => 0,
-                'total' => 0,
-                'message' => 'Authentication required'
-            ], 401);
-        }
-        // ==================== FIN PROTECTION ====================
-
         $scraper = $request->query->get('scraper');
 
         if (!$scraper) {

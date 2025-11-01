@@ -145,10 +145,13 @@ SIMPLE_JWT = {
 }
 
 # ==== CORS CONFIGURATION ====
-CORS_ALLOWED_ORIGINS = os.getenv(
-    'CORS_ALLOWED_ORIGINS',
-    'http://localhost:80,http://localhost:8080,http://127.0.0.1:80'
-).split(',')
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:10014',      # 🔴 Frontend Symfony
+    'http://127.0.0.1:10014',
+    'http://localhost:80',
+    'http://localhost:8080',
+    'http://127.0.0.1:80',
+]
 
 CORS_ALLOW_CREDENTIALS = True
 

@@ -21,7 +21,11 @@
             {% endfor %}
         {% endfor %}
 
-        <form method="post" class="auth-form">
+        {# 🔴 MESSAGE D'ERREUR (géré par JS) #}
+        <div id="error-message" style="display: none; color: red; padding: 10px; margin-bottom: 15px; background: #ffe6e6; border-radius: 5px;"></div>
+
+        {# 🔴 AJOUT DE L'ID "login-form" #}
+        <form id="login-form" class="auth-form">
             <div class="form-group">
                 <label for="username">Nom d'utilisateur</label>
                 <input
@@ -53,4 +57,10 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{# 🔴 AJOUT DU SCRIPT LOGIN.JS #}
+{% block javascripts %}
+    {{ parent() }}
+    <script src="{{ asset('js/login.js') }}"></script>
 {% endblock %}

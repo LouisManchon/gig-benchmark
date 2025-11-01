@@ -236,3 +236,98 @@
         height: 35px;
     }
 }
+
+/* ========================================
+   👤 SECTION UTILISATEUR
+   ======================================== */
+
+.navbar-user {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* 🟢 Statut "Logged in" */
+.user-status {
+    color: white;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 8px 16px;
+    background: rgba(46, 213, 115, 0.2); /* Vert doux */
+    border-radius: 20px;
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(46, 213, 115, 0.3);
+    transition: all 0.3s ease;
+}
+
+.user-status:hover {
+    background: rgba(46, 213, 115, 0.3);
+    border-color: rgba(46, 213, 115, 0.5);
+}
+
+/* 🔴 Bouton Logout */
+.btn-logout {
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 24px;
+    background: rgba(255, 71, 87, 0.2); /* Rouge doux */
+    border-radius: 25px;
+    border: 2px solid rgba(255, 71, 87, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.btn-logout:hover {
+    background: rgba(255, 71, 87, 0.3);
+    border-color: rgba(255, 71, 87, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
+}
+
+/* 🔵 Bouton Login */
+.btn-login {
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 24px;
+    background: rgba(52, 152, 219, 0.2); /* Bleu doux */
+    border-radius: 25px;
+    border: 2px solid rgba(52, 152, 219, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-login:hover {
+    background: rgba(52, 152, 219, 0.3);
+    border-color: rgba(52, 152, 219, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+}
+
+/* 🟣 Bouton Register */
+.btn-register {
+    color: white;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 24px;
+    background: rgba(155, 89, 182, 0.2); /* Violet doux */
+    border-radius: 25px;
+    border: 2px solid rgba(155, 89, 182, 0.3);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    display: inline-block;
+}
+
+.btn-register:hover {
+    background: rgba(155, 89, 182, 0.3);
+    border-color: rgba(155, 89, 182, 0.5);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+}
