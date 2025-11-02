@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('🚀 DOM loaded');
     
     // ============================================
-    // 1. SIDEBAR TOGGLE (en premier)
+    // 1. SIDEBAR TOGGLE
     // ============================================
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
@@ -15,14 +15,14 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // ============================================
-    // 2. CHOICES.JS - BOOKMAKER
+    // 2. CHOICES.JS - BOOKMAKER + LEAGUE + MATCH
     // ============================================
     let bookmakerChoices = null;
     const bookmakerSelect = document.querySelector('select[name="odds_filter[bookmaker][]"]');
-    
+
     console.log('Bookmaker select found:', bookmakerSelect);
     console.log('Choices available:', typeof Choices !== 'undefined');
-    
+
     function initializeChoices() {
         if (typeof Choices === 'undefined') {
             console.log('⏳ Choices.js not ready, waiting...');
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Bookmaker
         const bookmakerSelect = document.querySelector('select[name="odds_filter[bookmaker][]"]');
-        if (bookmakerSelect) {
+        if (bookmakerSelect && !bookmakerSelect.classList.contains('choices__input')) {
             const bookmakerChoices = new Choices(bookmakerSelect, {
                 removeItemButton: true,
                 searchEnabled: true,
@@ -49,7 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // League
         const leagueSelect = document.querySelector('select[name="odds_filter[league][]"]');
-        if (leagueSelect) {
+        if (leagueSelect && !leagueSelect.classList.contains('choices__input')) {
             window.leagueChoices = new Choices(leagueSelect, {
                 removeItemButton: true,
                 searchEnabled: true,
@@ -61,17 +61,157 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             console.log('✅ Choices initialized on league');
         }
+        
+        // Match - AJOUT ICI
+        const matchSelect = document.querySelector('select[name="odds_filter[match]"]');
+        if (matchSelect && !matchSelect.classList.contains('choices__input')) {
+            if (matchSelect.options.length === 0) {
+                const placeholderOption = document.createElement('option');
+                placeholderOption.value = '';
+                placeholderOption.textContent = 'All matches';
+                matchSelect.appendChild(placeholderOption);
+            }
+
+            window.matchChoices = new Choices(matchSelect, {
+                searchEnabled: true,
+                searchPlaceholderValue: 'Search a match...',
+                placeholder: true,
+                placeholderValue: 'All matches',
+                noResultsText: 'No match found',
+                itemSelectText: '',
+                shouldSort: false,
+                removeItemButton: false,
+            });
+            console.log('✅ Choices initialized on match');
+
+            // 👇 Écouter les changements de sélection
+            matchSelect.addEventListener('change', function() {
+                const selectedValue = matchSelect.value;
+                const selectedText = matchSelect.options[matchSelect.selectedIndex]?.text || 'All matches';
+                console.log('✅ Match selected:', { value: selectedValue, text: selectedText });
+            }, true);
+
+            // Charger les données des matchs et initialiser le filtrage
+            initializeMatchFilter();
+        }
+    }
+
+    initializeChoices();
+
+    // ============================================
+    // FILTRE MATCH DYNAMIQUE
+    // ============================================
+    function initializeMatchFilter() {
+        console.log('🎯 Initializing match filter');
+        
+        const matchesDataElement = document.getElementById('matches-data');
+        let allMatches = [];
+        
+        if (matchesDataElement) {
+            try {
+                allMatches = JSON.parse(matchesDataElement.textContent);
+                console.log('✅ Matches data loaded:', allMatches.length);
+            } catch (e) {
+                console.error('❌ Error parsing matches data:', e);
+                return;
+            }
+        } else {
+            console.error('❌ matches-data element not found');
+            return;
+        }
+        
+        if (!window.matchChoices) {
+            console.error('❌ matchChoices not initialized');
+            return;
+        }
+        
+        // Fonction pour mettre à jour la liste des matchs
+        function updateMatchList() {
+            const sportSelect = document.querySelector('select[name="odds_filter[sport]"]');
+            const selectedSport = sportSelect ? sportSelect.value : null;
+            const selectedLeagues = window.leagueChoices ? 
+                window.leagueChoices.getValue(true).filter(v => v !== 'all' && v !== '') 
+                : [];
+            
+            console.log('🔍 Filtering matches:', { sport: selectedSport, leagues: selectedLeagues });
+            
+            // Filtrer les matchs
+            let filteredMatches = allMatches;
+            
+            // Filtre par sport
+            if (selectedSport && selectedSport !== 'all' && selectedSport !== '') {
+                filteredMatches = filteredMatches.filter(match => {
+                    const matchSportId = match.league?.sport?.id;
+                    return String(matchSportId) === String(selectedSport);
+                });
+                console.log('   → After sport filter:', filteredMatches.length);
+            }
+            
+            // Filtre par ligues
+            if (selectedLeagues.length > 0) {
+                filteredMatches = filteredMatches.filter(match => {
+                    const matchLeagueId = match.league?.id;
+                    return selectedLeagues.includes(String(matchLeagueId));
+                });
+                console.log('   → After league filter:', filteredMatches.length);
+            }
+            
+            // Préparer les choix pour Choices.js
+            const choicesArray = [
+                { value: '', label: 'All matches', selected: false }
+            ];
+            
+            filteredMatches.forEach(match => {
+                const homeTeam = match.home_team?.name || 'Unknown';
+                const awayTeam = match.away_team?.name || 'Unknown';
+                const matchName = `${homeTeam} - ${awayTeam}`;
+                
+                choicesArray.push({
+                    value: String(match.id),
+                    label: matchName,
+                    selected: false
+                });
+            });
+            
+            console.log('📋 Updating choices with', choicesArray.length, 'options');
+
+            // Mettre à jour Choices.js
+            window.matchChoices.clearStore();
+            window.matchChoices.setChoices(choicesArray, 'value', 'label', true);
+
+            console.log('✅ Match choices updated');
+        }
+        
+        // Écouter les changements de sport
+        const sportSelect = document.querySelector('select[name="odds_filter[sport]"]');
+        if (sportSelect) {
+            sportSelect.addEventListener('change', function() {
+                console.log('🔄 Sport changed');
+                updateMatchList();
+            });
+        }
+        
+        // Écouter les changements de ligue
+        if (window.leagueChoices) {
+            const leagueElement = window.leagueChoices.passedElement.element;
+            leagueElement.addEventListener('change', function() {
+                console.log('🔄 League changed');
+                updateMatchList();
+            });
+        }
+        
+        // Initialiser au chargement
+        console.log('🚀 Initial match list update');
+        updateMatchList();
     }
     
-    initializeChoices();
-    
-// ============================================
-// FLATPICKR AVEC RACCOURCIS INTÉGRÉS
-// ============================================
+    // ============================================
+    // 3. FLATPICKR AVEC RACCOURCIS
+    // ============================================
     setTimeout(function() {
         const dateInput = document.querySelector('.js-date-range');
         
-        if (dateInput) {
+        if (dateInput && !dateInput._flatpickr) {
             const flatpickrInstance = flatpickr(dateInput, {
                 mode: 'range',
                 dateFormat: 'Y-m-d',
@@ -80,10 +220,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.log('📅 Date selected:', dateStr);
                 },
                 onReady: function(selectedDates, dateStr, instance) {
-                    // ✅ Ajoute les raccourcis dans le calendrier
                     const calendarContainer = instance.calendarContainer;
                     
-                    // Crée le conteneur des raccourcis
                     const shortcutsDiv = document.createElement('div');
                     shortcutsDiv.className = 'flatpickr-shortcuts';
                     shortcutsDiv.style.cssText = `
@@ -95,7 +233,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         background: #fff;
                     `;
                     
-                    // Définit les raccourcis
                     const shortcuts = [
                         { label: 'Today', days: 0 },
                         { label: 'Yesterday', days: -1 },
@@ -155,7 +292,6 @@ document.addEventListener('DOMContentLoaded', function() {
                                 start = new Date(2020, 0, 1);
                                 end = new Date();
                             } else {
-                                // Gestion par nombre de jours
                                 end = new Date();
                                 start = new Date();
                                 if (shortcut.days < 0) {
@@ -166,86 +302,65 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                             
                             instance.setDate([start, end], true);
-                            console.log(`📅 Shortcut: ${shortcut.label}`);
                         });
                         
                         shortcutsDiv.appendChild(btn);
                     });
                     
-                    // Ajoute les raccourcis en bas du calendrier
                     calendarContainer.appendChild(shortcutsDiv);
                 }
             });
             
-            console.log('✅ Flatpickr initialized with shortcuts');
+            console.log('✅ Flatpickr initialized');
         }
     }, 200);
 
+    
     // ============================================
-    // FILTRE SPORT → LEAGUE
-    // ============================================
-    const sportSelect = document.querySelector('select[name="odds_filter[sport]"]');
-
-    if (sportSelect) {
-        const leaguesDataElement = document.getElementById('leagues-data');
-        const leaguesData = leaguesDataElement ? JSON.parse(leaguesDataElement.textContent || '[]') : [];
-        
-        console.log('📊 Total leagues:', leaguesData.length);
-        
-        sportSelect.addEventListener('change', function() {
-            const selectedSportId = this.value;
-            console.log('🎯 Sport changed to:', selectedSportId);
-            
-            if (window.leagueChoices) {
-                // Sauvegarde les valeurs sélectionnées
-                const currentValues = window.leagueChoices.getValue(true);
-                console.log('Current selected leagues:', currentValues);
-                
-                // Filtre les leagues par sport
-                const filteredLeagues = selectedSportId 
-                    ? leaguesData.filter(league => String(league.sport.id) === String(selectedSportId))
-                    : leaguesData;
-                
-                console.log('Filtered leagues:', filteredLeagues.length);
-                
-                // Prépare les choix pour Choices.js
-                const choicesArray = filteredLeagues.map(league => ({
-                    value: String(league.id),
-                    label: league.name,
-                    selected: currentValues.includes(String(league.id))
-                }));
-                
-                // Réinitialise Choices avec les nouvelles options
-                window.leagueChoices.clearStore();
-                window.leagueChoices.setChoices(choicesArray, 'value', 'label', true);
-                
-                console.log('✅ League choices updated');
-            }
-        });
-    }
-    // ============================================
-    // 5. RESET BUTTON
+    // 6. RESET BUTTON
     // ============================================
     const resetBtn = document.getElementById('reset-btn');
     if (resetBtn) {
         resetBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            console.log('🔄 Reset clicked');
             window.location.href = window.location.pathname;
         });
     }
-    
+
+// ============================================
+    // GESTION SOUMISSION FORMULAIRE
     // ============================================
-    // 6. FORM SUBMIT DEBUG
-    // ============================================
-    const form = document.querySelector('.form-filters');
-    if (form) {
-        form.addEventListener('submit', function(e) {
-            console.log('🚀 Form submitting');
+    const oddsFilterFor = document.querySelector('form[name="odds_filter"]');
+    if (oddsFilterFor) {
+        oddsFilterFor.addEventListener('submit', function(e) {
+            console.log('🚀 Form submitting...');
+            
+            // Vérifier la valeur du match
+            if (window.matchChoices) {
+                const matchValue = window.matchChoices.getValue(true);
+                console.log('📋 Match value from Choices:', matchValue);
+                
+                const matchSelect = document.querySelector('select[name="odds_filter[match]"]');
+                console.log('📋 Match select value:', matchSelect ? matchSelect.value : 'null');
+                
+                // Si différents, forcer la mise à jour
+                if (matchSelect && matchValue && matchSelect.value !== matchValue) {
+                    console.log('⚠️ Values differ! Updating select...');
+                    matchSelect.value = matchValue;
+                }
+            }
+            
+            // Log tous les champs
+            const formData = new FormData(this);
+            console.log('📤 Form data being sent:');
+            for (let [key, value] of formData.entries()) {
+                console.log(`   ${key}: ${value}`);
+            }
         });
     }
-
-    // Tables triables
+    // ============================================
+    // 7. TABLES TRIABLES
+    // ============================================
     function makeTableSortable(tableSelector) {
         const table = document.querySelector(tableSelector);
         if (!table) return;
@@ -287,47 +402,38 @@ document.addEventListener('DOMContentLoaded', function() {
     makeTableSortable('.all_matchs');
     makeTableSortable('.avgtrj');
 
-
     // ============================================
-    // EXPORT CSV AVEC FILTRES
+    // 8. EXPORT CSV
     // ============================================
-
     const exportBtn = document.getElementById('export-csv-btn');
-    const oddsFilterForm = document.querySelector('form[name="odds_filter"]'); // Formulaire des FILTRES seulement
+    const oddsFilterForm = document.querySelector('form[name="odds_filter"]');
     
     if (exportBtn && oddsFilterForm) {
         exportBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
             
-            console.log('📊 Export CSV cliqué');
-            
             const params = new URLSearchParams();
             
-            // ✅ Récupère les valeurs simples SANS le préfixe "odds_filter"
             const sport = oddsFilterForm.querySelector('[name="odds_filter[sport]"]')?.value;
             const match = oddsFilterForm.querySelector('[name="odds_filter[match]"]')?.value;
             const dateRange = oddsFilterForm.querySelector('[name="odds_filter[dateRange]"]')?.value;
             
-            // Ajoute sport
             if (sport && sport !== '' && sport !== 'all') {
                 params.append('sport', sport);
             }
             
-            // Ajoute match
             if (match && match !== '' && match !== 'all') {
                 params.append('match', match);
             }
             
-            // Ajoute dateRange
             if (dateRange && dateRange !== '') {
                 params.append('dateRange', dateRange);
             } else {
-                alert('⚠️ Veuillez sélectionner une période de dates pour l\'export');
+                alert('⚠️ Veuillez sélectionner une période');
                 return;
             }
             
-            // ✅ Récupère les bookmakers cochés
             const bookmakerCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[bookmaker][]"]:checked');
             if (bookmakerCheckboxes.length > 0) {
                 const bookmakerValues = Array.from(bookmakerCheckboxes)
@@ -340,7 +446,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // ✅ Récupère les leagues cochées
             const leagueCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[league][]"]:checked');
             if (leagueCheckboxes.length > 0) {
                 const leagueValues = Array.from(leagueCheckboxes)
@@ -353,32 +458,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             
-            // Construit l'URL
-            const exportUrl = '/odds/export-csv?' + params.toString();
-            
-            console.log('📤 Export URL:', exportUrl);
-            console.log('📋 Params:', {
-                sport: sport,
-                match: match,
-                dateRange: dateRange,
-                bookmaker: params.get('bookmaker'),
-                league: params.get('league')
-            });
-            
-            // Lance le téléchargement
-            window.location.href = exportUrl;
+            window.location.href = '/odds/export-csv?' + params.toString();
         });
     }
 });
 
 // ============================================
-// GESTION DU SCRAPING AVEC PROGRESSION
+// GESTION DU SCRAPING
 // ============================================
-
 (function() {
     'use strict';
-    
-    console.log('🧹 Initialisation du scraping...');
     
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initScraping);
@@ -387,35 +476,19 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     function initScraping() {
-        console.log('🎬 Setup du scraping');
-        
-        // ✅ Sélection SPÉCIFIQUE du formulaire de scraping
         const scrapingForm = document.getElementById('scraping-form');
         
         if (!scrapingForm) {
-            console.log('ℹ️ Pas de formulaire de scraping sur cette page');
             return;
         }
-        
-        // Vérification que c'est bien le bon formulaire
-        if (scrapingForm.getAttribute('name') === 'odds_filter') {
-            console.error('❌ ERREUR: Le formulaire de scraping a le même name que celui des filtres !');
-            console.error('   Supprime name="odds_filter" du formulaire de scraping dans ton Twig');
-            return;
-        }
-        
-        console.log('✅ Formulaire de scraping trouvé:', scrapingForm);
         
         const sportSelect = document.getElementById('sport-scraping');
         const leagueSelect = document.getElementById('league-scraping');
         const submitBtn = document.getElementById('start-scraping-btn');
         
         if (!sportSelect || !leagueSelect || !submitBtn) {
-            console.error('❌ Éléments manquants');
             return;
         }
-        
-        console.log('✅ Tous les éléments trouvés');
         
         const btnText = submitBtn.querySelector('.btn-text');
         const btnLoader = submitBtn.querySelector('.btn-loader');
@@ -458,8 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         sportSelect.addEventListener('change', function() {
             const sport = this.value;
-            console.log('🔄 Sport changé:', sport);
-            
+            leagueSelect.innerHTML = '';
             
             if (sport && leaguesBySport[sport]) {
                 leaguesBySport[sport].forEach(league => {
@@ -470,7 +542,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 
                 leagueSelect.value = 'all';
-                console.log('✅ Leagues chargées');
             }
         });
 
@@ -479,27 +550,16 @@ document.addEventListener('DOMContentLoaded', function() {
             e.stopPropagation();
             
             if (isSubmitting) {
-                console.log('⚠️ Soumission déjà en cours');
                 return false;
             }
             
             isSubmitting = true;
-            console.log('🚀 Scraping soumis !');
             
             const sport = sportSelect.value;
             const league = leagueSelect.value;
             
-            console.log('📝 Sport:', sport);
-            console.log('📝 League:', league);
-            
-            if (!sport || sport === '') {
-                alert('Select a sport');
-                isSubmitting = false;
-                return false;
-            }
-            
-            if (!league || league === '') {
-                alert('Select a league');
+            if (!sport || !league) {
+                alert('Select sport and league');
                 isSubmitting = false;
                 return false;
             }
@@ -513,8 +573,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 leaguesToScrape = [league];
             }
             
-            console.log('✅ Leagues à scraper:', leaguesToScrape);
-            
             submitBtn.disabled = true;
             if (btnText) btnText.style.display = 'none';
             if (btnLoader) btnLoader.style.display = 'inline';
@@ -527,9 +585,9 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 await startScrapingWithProgress(sport, leaguesToScrape);
             } catch (error) {
-                console.error('❌ Erreur:', error);
+                console.error('❌ Error:', error);
                 if (progressMessage) {
-                    progressMessage.textContent = '❌ Erreur lors du scraping';
+                    progressMessage.textContent = '❌ Error';
                 }
             } finally {
                 submitBtn.disabled = false;
@@ -541,24 +599,18 @@ document.addEventListener('DOMContentLoaded', function() {
             return false;
         });
         
-        console.log('✅ Listeners ajoutés');
-        
         function resetProgress() {
             if (progressBarFill) progressBarFill.style.width = '0%';
             if (progressPercentage) progressPercentage.textContent = '0%';
             if (progressCount) progressCount.textContent = '0 / 0';
             if (currentMatchName) currentMatchName.textContent = '-';
             if (bookmakersCount) bookmakersCount.textContent = '-';
-            if (progressMessage) progressMessage.textContent = 'Initialisation...';
+            if (progressMessage) progressMessage.textContent = 'Initializing...';
         }
         
         async function startScrapingWithProgress(sport, leagues) {
-            console.log('🎯 Démarrage:', sport, leagues);
-            
             for (const league of leagues) {
                 const scraper = `${sport}.${league}`;
-                
-                console.log(`📡 Lancement ${scraper}`);
                 
                 if (progressMessage) {
                     progressMessage.textContent = `🚀 ${league.replace('_', ' ')}...`;
@@ -568,11 +620,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const formData = new FormData();
                     formData.append('sport', sport);
                     formData.append('league', league);
-
-                    console.log('=== FormData Debug ===');
-                    for (let pair of formData.entries()) {
-                        console.log(pair[0] + ': ' + pair[1]);
-                    }
                     
                     const response = await fetch('/odds/scraping/trigger', {
                         method: 'POST',
@@ -580,7 +627,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     
                     const result = await response.json();
-                    console.log('📊', result);
                     
                     if (result.success) {
                         await pollScrapingProgress(scraper);
@@ -603,63 +649,47 @@ document.addEventListener('DOMContentLoaded', function() {
         let lastProgress = 0;
         
         async function pollScrapingProgress(scraper) {
-            console.log('👂 DEBUT polling pour:', scraper);
-            
             return new Promise((resolve) => {
                 pollingInterval = setInterval(async () => {
                     try {
-                        const url = `/api/scraping/status?scraper=${scraper}`;
-                        console.log('📡 Appel:', url);
-                        
-                        const response = await fetch(url);
-                        console.log('📥 Response status:', response.status);
-                        
+                        const response = await fetch(`/api/scraping/status?scraper=${scraper}`);
                         const data = await response.json();
-                        console.log('📊 Data reçue:', data);
                         
                         if (data.status === 'idle') {
-                            console.log('⏳ Status: idle, on attend...');
                             return;
                         }
 
                         if (data.current < lastProgress && data.status !== 'completed') {
-                            console.log(`⚠️ Progression en arrière ignorée: ${data.current} < ${lastProgress}`);
                             return;
                         }
 
                         lastProgress = data.current;
                         
                         const progress = data.total > 0 ? (data.current / data.total) * 100 : 0;
-                        console.log(`📈 Progress: ${data.current}/${data.total} = ${progress}%`);
                         
-                        // Mise à jour de l'interface
                         if (progressCount) progressCount.textContent = `${data.current} / ${data.total}`;
                         if (progressPercentage) progressPercentage.textContent = `${Math.round(progress)}%`;
                         if (progressBarFill) progressBarFill.style.width = progress + '%';
                         
                         if (data.current_match && currentMatchName) {
-                            console.log('🏟️ Match actuel:', data.current_match);
                             currentMatchName.textContent = data.current_match;
                         }
                         
                         if (data.bookmakers_count > 0 && bookmakersCount) {
-                            console.log('📚 Bookmakers:', data.bookmakers_count);
                             bookmakersCount.textContent = `${data.bookmakers_count} bookmakers`;
                         }
                         
                         if (progressMessage) {
-                            progressMessage.textContent = data.message || 'En cours...';
+                            progressMessage.textContent = data.message || 'In progress...';
                         }
                         
-                        // Si terminé
                         if (data.status === 'completed' || (data.current >= data.total && data.total > 0)) {
-                            console.log('✅ SCRAPING TERMINÉ !');
                             lastProgress = 0;
                             clearInterval(pollingInterval);
                             
                             if (progressMessage) {
                                 let msg = `${scraper} finished`;
-                                if (data.matches_scraped) msg += `: ${data.matches_scraped} matchs`;
+                                if (data.matches_scraped) msg += `: ${data.matches_scraped} matches`;
                                 progressMessage.textContent = msg;
                             }
                             
@@ -667,72 +697,15 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                         
                     } catch (error) {
-                        console.error('❌ Erreur polling:', error);
+                        console.error('❌ Polling error:', error);
                     }
                 }, 1500);
                 
                 setTimeout(() => {
-                    console.log('⏱️ Timeout polling atteint');
                     if (pollingInterval) clearInterval(pollingInterval);
                     resolve();
                 }, 600000);
             });
         }
-    }
-})();
-
-// 🎨 MODE DÉMO - Progress Bar visible pour le style
-(function() {
-    const DEMO_MODE = false;  // ← Mets false quand tu as fini le style
-    
-    if (DEMO_MODE) {
-        console.log('🎨 MODE DÉMO activé');
-        
-        // Récupère les éléments
-        const progressContainer = document.getElementById('scraping-progress');
-        const progressBarFill = document.getElementById('progress-bar-fill');
-        const progressPercentage = document.getElementById('progress-percentage');
-        const progressCount = document.getElementById('progress-count');
-        const currentMatchName = document.getElementById('current-match');
-        const bookmakersCount = document.getElementById('bookmakers-count');
-        const progressMessage = document.getElementById('progress-message');
-        
-        // Log pour debug
-        console.log('Progress container:', progressContainer);
-        console.log('Progress bar fill:', progressBarFill);
-        
-        // Affiche et remplit
-        if (progressContainer) {
-            progressContainer.style.display = 'block';
-            console.log('✅ Progress container affiché');
-        }
-        
-        if (progressBarFill) {
-            progressBarFill.style.width = '65%';
-            progressBarFill.setAttribute('aria-valuenow', '65');
-            console.log('✅ Barre à 65%');
-        }
-        
-        if (progressPercentage) {
-            progressPercentage.textContent = '65%';
-        }
-        
-        if (progressCount) {
-            progressCount.textContent = '12 / 18';
-        }
-        
-        if (currentMatchName) {
-            currentMatchName.textContent = 'Paris Saint-Germain - Olympique de Marseille';
-        }
-        
-        if (bookmakersCount) {
-            bookmakersCount.textContent = '13 bookmakers';
-        }
-        
-        if (progressMessage) {
-            progressMessage.textContent = '🚀 Scraping en cours...';
-        }
-        
-        console.log('🎨 Valeurs de démo appliquées');
     }
 })();

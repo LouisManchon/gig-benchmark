@@ -80,8 +80,8 @@ class OddsController extends AbstractController
                 'method' => 'GET',
                 'sports' => $sportChoices,
                 'bookmakers' => $bookmakerChoices,
-                'matches' => $matchChoices,
                 'leagues' => $leagueChoices,
+                'matches' => $matchChoices,
             ]);
             
             $form->handleRequest($request);
@@ -96,6 +96,8 @@ class OddsController extends AbstractController
                 $matchFilter = $form->get('match')->getData();
                 $leagueFilter = $form->get('league')->getData();
                 $dateRange = $form->get('dateRange')->getData();
+
+                error_log('🔍 Match filter value: ' . var_export($matchFilter, true));
 
                 // Sport
                 if ($sportFilter) {
@@ -112,7 +114,15 @@ class OddsController extends AbstractController
                 
                 // Match (simple)
                 if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
-                    $filters['match'] = $matchFilter;
+                    error_log('🔍 MATCH FILTER DETECTED: ' . $matchFilter);
+                    
+                    if (is_numeric($matchFilter)) {
+                        $filters['match'] = $matchFilter;
+                        error_log('   → Filtering by ID: ' . $matchFilter);
+                    } else {
+                        $filters['match_name'] = $matchFilter;
+                        error_log('   → Filtering by name: ' . $matchFilter);
+                    }
                 }
                 
                 // League (multiple)
@@ -274,6 +284,7 @@ class OddsController extends AbstractController
             'oddsWithEvolution' => $oddsWithEvolution,
             'avgTrj' => $avgTrj,
             'leaguesData' => json_encode($leaguesArray ?? []),
+            'matchesData' => json_encode($matchesArray ?? []), 
         ]);
     }
 

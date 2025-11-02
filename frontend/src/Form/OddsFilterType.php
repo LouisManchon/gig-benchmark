@@ -44,16 +44,20 @@ class OddsFilterType extends AbstractType
                 'placeholder' => 'All bookmakers',
                 'attr' => [
                     'class' => 'form-control',
-                    'data-placeholder' => 'All bookmakers'  // ✅ Pour Choices.js
+                    'data-placeholder' => 'All bookmakers'
                 ],
                 'label' => 'Bookmaker'
             ])
             ->add('match', ChoiceType::class, [
-                'choices' => $options['matches'],
+                'choices' => $options['matches'], // 👈 Vide au départ, rempli par JS
                 'required' => false,
                 'placeholder' => 'All matches',
-                'attr' => ['class' => 'form-control'],
-                'label' => 'Match'
+                'attr' => [
+                    'class' => 'form-control',
+                    'data-filter' => 'match'
+                ],
+                'label' => 'Match',
+                'invalid_message' => false
             ])
             ->add('dateRange', TextType::class, [
                 'required' => false,
@@ -74,6 +78,7 @@ class OddsFilterType extends AbstractType
             'matches' => [],
             'method' => 'GET',
             'csrf_protection' => false,
+            'allow_extra_fields' => true,
         ]);
     }
 }
