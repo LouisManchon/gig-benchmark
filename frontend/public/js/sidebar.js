@@ -504,6 +504,118 @@ document.addEventListener('DOMContentLoaded', function() {
         let pollingInterval = null;
         let isSubmitting = false;
 
+        // ============================================
+        // SAUVEGARDE & RESTAURATION DE L'ÉTAT
+        // ============================================
+        function saveScrapingState(state) {
+            sessionStorage.setItem('scrapingState', JSON.stringify(state));
+        }
+
+        function getScrapingState() {
+            const saved = sessionStorage.getItem('scrapingState');
+            return saved ? JSON.parse(saved) : null;
+        }
+
+        function clearScrapingState() {
+            sessionStorage.removeItem('scrapingState');
+        }
+
+        // Vérifier au chargement si un scraping est en cours
+        function checkAndResumeScrapingOnLoad() {
+            const state = getScrapingState();
+
+            if (state && state.inProgress) {
+                console.log('🔄 Scraping en cours détecté, reconnexion...');
+
+                // Afficher la progress bar
+                if (progressContainer) {
+                    progressContainer.style.display = 'block';
+                }
+
+                // Désactiver le bouton
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    if (btnText) btnText.style.display = 'none';
+                    if (btnLoader) btnLoader.style.display = 'inline';
+                }
+
+                // Activer l'indicateur visuel
+                const sidebarTitle = document.querySelector('.sidebar-title');
+                if (sidebarTitle) {
+                    sidebarTitle.classList.add('scraping-active');
+                }
+
+                // Afficher le bouton reset
+                toggleResetButton(true);
+
+                // Reprendre le polling
+                resumeScrapingProgress(state.sport, state.leagues, state.currentLeagueIndex);
+            }
+        }
+
+        // Activer/désactiver l'indicateur visuel
+        function setScrapingActiveIndicator(active) {
+            const sidebarTitle = document.querySelector('.sidebar-title');
+            if (sidebarTitle) {
+                if (active) {
+                    sidebarTitle.classList.add('scraping-active');
+                } else {
+                    sidebarTitle.classList.remove('scraping-active');
+                }
+            }
+        }
+
+        // Afficher/masquer le bouton reset
+        function toggleResetButton(show) {
+            const resetBtn = document.getElementById('reset-scraping-btn');
+            if (resetBtn) {
+                resetBtn.style.display = show ? 'block' : 'none';
+            }
+        }
+
+        // Fonction pour réinitialiser complètement le scraping
+        function forceResetScraping() {
+            console.log('🔄 Force reset scraping...');
+
+            // Nettoyer le sessionStorage
+            clearScrapingState();
+
+            // Arrêter le polling
+            if (pollingInterval) {
+                clearInterval(pollingInterval);
+                pollingInterval = null;
+            }
+
+            // Réinitialiser l'UI
+            setScrapingActiveIndicator(false);
+            toggleResetButton(false);
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                if (btnText) btnText.style.display = 'inline';
+                if (btnLoader) btnLoader.style.display = 'none';
+            }
+
+            if (progressContainer) {
+                progressContainer.style.display = 'none';
+            }
+
+            resetProgress();
+            isSubmitting = false;
+
+            console.log('✅ Scraping reset complete');
+        }
+
+        // Ajouter l'event listener sur le bouton reset
+        const resetScrapingBtn = document.getElementById('reset-scraping-btn');
+        if (resetScrapingBtn) {
+            resetScrapingBtn.addEventListener('click', function() {
+                if (confirm('Are you sure you want to stop the scraping?')) {
+                    forceResetScraping();
+                }
+            });
+        }
+
         const leaguesBySport = {
             'football': [
                 { value: 'all', label: 'All leagues' },
@@ -589,13 +701,17 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (progressMessage) {
                     progressMessage.textContent = '❌ Error';
                 }
-            } finally {
+
+                // En cas d'erreur, nettoyer et réactiver
+                clearScrapingState();
+                setScrapingActiveIndicator(false);
+                toggleResetButton(false);
                 submitBtn.disabled = false;
                 if (btnText) btnText.style.display = 'inline';
                 if (btnLoader) btnLoader.style.display = 'none';
                 isSubmitting = false;
             }
-            
+
             return false;
         });
         
@@ -609,39 +725,104 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         async function startScrapingWithProgress(sport, leagues) {
-            for (const league of leagues) {
+            // Activer l'indicateur visuel
+            setScrapingActiveIndicator(true);
+
+            // Afficher le bouton reset
+            toggleResetButton(true);
+
+            // Sauvegarder l'état initial
+            saveScrapingState({
+                inProgress: true,
+                sport: sport,
+                leagues: leagues,
+                currentLeagueIndex: 0
+            });
+
+            for (let i = 0; i < leagues.length; i++) {
+                const league = leagues[i];
                 const scraper = `${sport}.${league}`;
-                
+
+                // Mettre à jour l'état avec la league actuelle
+                saveScrapingState({
+                    inProgress: true,
+                    sport: sport,
+                    leagues: leagues,
+                    currentLeagueIndex: i
+                });
+
                 if (progressMessage) {
                     progressMessage.textContent = `🚀 ${league.replace('_', ' ')}...`;
                 }
-                
+
                 try {
                     const formData = new FormData();
                     formData.append('sport', sport);
                     formData.append('league', league);
-                    
+
                     const response = await fetch('/odds/scraping/trigger', {
                         method: 'POST',
                         body: formData
                     });
-                    
+
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         await pollScrapingProgress(scraper);
                     } else {
                         if (progressMessage) progressMessage.textContent = `❌ ${league}`;
                         await new Promise(r => setTimeout(r, 2000));
                     }
-                    
+
                 } catch (error) {
                     console.error(`❌ ${league}:`, error);
                     if (progressMessage) progressMessage.textContent = `❌ ${league}`;
                     await new Promise(r => setTimeout(r, 2000));
                 }
             }
-            
+
+            // Nettoyage de l'état à la fin
+            clearScrapingState();
+            setScrapingActiveIndicator(false);
+            toggleResetButton(false);
+
+            if (progressMessage) progressMessage.textContent = 'Finished';
+            setTimeout(() => window.location.reload(), 3000);
+        }
+
+        // Nouvelle fonction pour reprendre le scraping après rechargement
+        async function resumeScrapingProgress(sport, leagues, startIndex) {
+            for (let i = startIndex; i < leagues.length; i++) {
+                const league = leagues[i];
+                const scraper = `${sport}.${league}`;
+
+                // Mettre à jour l'état
+                saveScrapingState({
+                    inProgress: true,
+                    sport: sport,
+                    leagues: leagues,
+                    currentLeagueIndex: i
+                });
+
+                if (progressMessage) {
+                    progressMessage.textContent = `🔄 ${league.replace('_', ' ')}...`;
+                }
+
+                // Vérifier si le scraping est déjà en cours côté serveur
+                await pollScrapingProgress(scraper);
+            }
+
+            // Nettoyage
+            clearScrapingState();
+            setScrapingActiveIndicator(false);
+            toggleResetButton(false);
+
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                if (btnText) btnText.style.display = 'inline';
+                if (btnLoader) btnLoader.style.display = 'none';
+            }
+
             if (progressMessage) progressMessage.textContent = 'Finished';
             setTimeout(() => window.location.reload(), 3000);
         }
@@ -707,5 +888,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 600000);
             });
         }
+
+        // ============================================
+        // INITIALISATION AU CHARGEMENT
+        // ============================================
+        // Vérifier si un scraping est en cours au chargement
+        checkAndResumeScrapingOnLoad();
     }
 })();

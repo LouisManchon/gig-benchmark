@@ -120,13 +120,12 @@ def scrape_euroleague():
         # SCRAP ALL MATCHES
         matches_scraped = 0
         odds_sent = 0
-        
+        scraper_name = 'basketball.euroleague'
+
         for i, match_url in enumerate(match_links, 1):
             print(f"\n{'='*60}")
             print(f"MATCH {i}/{len(match_links)}")
             print(f"{'='*60}")
-
-            scraper_name = 'basketball.euroleague'
             
             try:
                 driver.get(match_url)
