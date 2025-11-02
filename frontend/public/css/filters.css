@@ -17,7 +17,6 @@
 }
 
 .form-filters {
-    color: whitesmoke;
     gap: 15px;
     display: flex;
     justify-content: center;
@@ -181,4 +180,34 @@ select, .date-input {
 /* Input de recherche */
 .filter-form-container .choices__input {
     font-family: "Host Grotesk", sans-serif;
+}
+
+/* ========================================
+   🎯 STYLE POUR LE TEXTE DU MATCH SÉLECTIONNÉ
+   ======================================== */
+
+/* Forcer le texte sélectionné en noir (surcharge .form-filters color: whitesmoke) */
+.form-filters .choices__list--single,
+.form-filters .choices__list--single *,
+.filter-form-container .choices__list--single,
+.filter-form-container .choices__list--single * {
+    color: #000 !important;
+    font-weight: normal;
+}
+
+.form-filters .choices__list--single .choices__item,
+.form-filters .choices__list--single .choices__item *,
+.filter-form-container .choices__list--single .choices__item,
+.filter-form-container .choices__list--single .choices__item * {
+    color: #000 !important;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+/* Placeholder en gris quand rien n'est sélectionné */
+.filter-form-container .choices__list--single .choices__placeholder,
+.form-filters .choices__list--single .choices__placeholder {
+    color: #999 !important;
+    opacity: 1;
 }
