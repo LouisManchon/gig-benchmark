@@ -75,8 +75,14 @@ class OddsController extends AbstractController
         }
 
         try {
+            // --- Valeur par défaut pour dateRange ---
+            $today = new \DateTime('now', new \DateTimeZone('UTC'));
+            $defaultDateRange = $today->format('Y-m-d');  // Format pour flatpickr
+
             // --- Création du formulaire ---
-            $form = $this->createForm(OddsFilterType::class, null, [
+            $form = $this->createForm(OddsFilterType::class, [
+                'dateRange' => $defaultDateRange  // Pré-remplir avec la date du jour
+            ], [
                 'method' => 'GET',
                 'sports' => $sportChoices,
                 'bookmakers' => $bookmakerChoices,
@@ -89,7 +95,22 @@ class OddsController extends AbstractController
 
             // --- Préparation des filtres ---
             $filters = [];
-            
+
+            // Définir la date du jour par défaut si aucun filtre n'est soumis
+            $defaultDateApplied = false;
+            if (!$form->isSubmitted()) {
+                $today = new \DateTime('now', new \DateTimeZone('UTC'));
+                $today->setTime(0, 0, 0);
+                $todayEnd = clone $today;
+                $todayEnd->setTime(23, 59, 59);
+
+                $filters['start'] = $today->format('Y-m-d H:i:s');
+                $filters['end'] = $todayEnd->format('Y-m-d H:i:s');
+                $defaultDateApplied = true;
+
+                error_log('📅 Default date filter applied: ' . $filters['start'] . ' to ' . $filters['end']);
+            }
+
             if ($form->isSubmitted() && $form->isValid()) {
                 $sportFilter = $form->get('sport')->getData();
                 $bookmakerFilter = $form->get('bookmaker')->getData();
@@ -140,11 +161,11 @@ class OddsController extends AbstractController
                     } else {
                         $dates = [$dateRange];
                     }
-                    
+
                     try {
                         $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
                         $start->setTime(0, 0, 0);
-                        
+
                         if (isset($dates[1])) {
                             $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
                             $end->setTime(23, 59, 59);
@@ -152,12 +173,18 @@ class OddsController extends AbstractController
                             $end = clone $start;
                             $end->setTime(23, 59, 59);
                         }
-                        
+
                         $filters['start'] = $start->format('Y-m-d H:i:s');
                         $filters['end'] = $end->format('Y-m-d H:i:s');
+                        $defaultDateApplied = false; // Date explicitement fournie
                     } catch (\Exception $e) {
                         error_log('Date error: ' . $e->getMessage());
                     }
+                } else if ($form->isSubmitted()) {
+                    // Si le formulaire est soumis SANS date, ne pas appliquer de filtre de date
+                    unset($filters['start']);
+                    unset($filters['end']);
+                    $defaultDateApplied = false;
                 }
             }
             error_log("⏱️ Filters prepared: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
