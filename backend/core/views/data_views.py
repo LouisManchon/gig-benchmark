@@ -244,6 +244,31 @@ def get_odds_with_evolution(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+def get_last_scraping_date(request):
+    """
+    Récupère la dernière date de scraping (la plus récente côte scrappée)
+    """
+    try:
+        # Récupère la date de scraping la plus récente
+        last_odd = Odd.objects.order_by('-scraped_at').first()
+
+        if last_odd and last_odd.scraped_at:
+            return Response({
+                'last_scraping_date': last_odd.scraped_at.isoformat()
+            })
+        else:
+            return Response({
+                'last_scraping_date': None
+            })
+
+    except Exception as e:
+        print(f"❌ Error in get_last_scraping_date: {str(e)}")
+        traceback.print_exc()
+        return Response({'error': str(e)}, status=500)
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
 def get_avg_trj_with_evolution(request):
     """
     Récupère les moyennes TRJ avec évolution par bookmaker

@@ -19,4 +19,5 @@ urlpatterns = [
     path('avg-trj', data_views.get_avg_trj),
     path('odds-with-evolution', data_views.get_odds_with_evolution, name='odds_with_evolution'),
     path('avg-trj-with-evolution', data_views.get_avg_trj_with_evolution, name='avg_trj_with_evolution'),
+    path('last-scraping-date', data_views.get_last_scraping_date, name='last_scraping_date'),
 ]

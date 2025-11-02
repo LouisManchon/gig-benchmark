@@ -42,6 +42,37 @@
 }
 
 /* ========================================
+   📅 DERNIÈRE DATE DE SCRAPING
+   ======================================== */
+
+.last-scraping-info {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 12px 14px;
+    border-radius: 8px;
+    border-left: 4px solid #7136c4;
+    margin-bottom: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.last-scraping-label {
+    display: block;
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    font-weight: 600;
+}
+
+.last-scraping-date {
+    display: block;
+    font-size: 14px;
+    color: #080e2d;
+    font-weight: 600;
+    font-family: "Host Grotesk", monospace;
+}
+
+/* ========================================
    📝 FORMULAIRE DE SCRAPING
    ======================================== */
 

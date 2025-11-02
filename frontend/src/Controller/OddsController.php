@@ -277,6 +277,14 @@ class OddsController extends AbstractController
         $totalTime = round((microtime(true) - $startTime) * 1000, 2);
         error_log("⏱️ TOTAL TIME: {$totalTime}ms");
 
+        // --- Récupération de la dernière date de scraping ---
+        $lastScrapingDate = null;
+        try {
+            $lastScrapingDate = $apiService->getLastScrapingDate();
+        } catch (\Exception $e) {
+            error_log('❌ Error fetching last scraping date: ' . $e->getMessage());
+        }
+
         // --- Rendu ---
         return $this->render('odds/index.html.twig', [
             'form' => $form ? $form->createView() : null,
@@ -284,7 +292,8 @@ class OddsController extends AbstractController
             'oddsWithEvolution' => $oddsWithEvolution,
             'avgTrj' => $avgTrj,
             'leaguesData' => json_encode($leaguesArray ?? []),
-            'matchesData' => json_encode($matchesArray ?? []), 
+            'matchesData' => json_encode($matchesArray ?? []),
+            'lastScrapingDate' => $lastScrapingDate,
         ]);
     }
 

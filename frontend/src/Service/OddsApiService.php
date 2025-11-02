@@ -217,4 +217,16 @@ class OddsApiService
             ];
         }
     }
+
+    public function getLastScrapingDate(): ?string
+    {
+        try {
+            $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/last-scraping-date');
+            $data = $response->toArray();
+            return $data['last_scraping_date'] ?? null;
+        } catch (\Exception $e) {
+            error_log('❌ API Error (getLastScrapingDate): ' . $e->getMessage());
+            return null;
+        }
+    }
 }

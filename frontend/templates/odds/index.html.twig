@@ -20,6 +20,12 @@
     <!-- aside for scraping -->
         <aside id="sidebar">
             <h3 class="sidebar-title">Scraping Filters</h3>
+            {% if lastScrapingDate %}
+                <div class="last-scraping-info">
+                    <span class="last-scraping-label">Last scraping:</span>
+                    <span class="last-scraping-date">{{ lastScrapingDate|date('d/m/Y H:i') }}</span>
+                </div>
+            {% endif %}
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
                     <label for="sport-scraping">Sport</label>
