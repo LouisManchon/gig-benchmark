@@ -235,21 +235,154 @@ def update_scraping_progress(request):
 def get_scraping_progress(request):
     try:
         scraper = request.query_params.get('scraper')
-        
+
         if scraper:
             # ✅ Lecture avec verrou
             with progress_lock:
                 if scraper in scraping_progress:
                     data = scraping_progress[scraper].copy()  # ← Copie pour éviter les modifications
                     return Response(data)
-        
+
         return Response({
             'status': 'idle',
             'current': 0,
             'total': 0,
             'message': 'Aucun scraping en cours'
         })
-        
+
     except Exception as e:
         print(f"❌ ERREUR: {e}")
         return Response({'status': 'idle', 'current': 0, 'total': 0})
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_auto_scraping_status(request):
+    """
+    Récupère le statut du scraping automatique avec la prochaine exécution
+    """
+    try:
+        from django_celery_beat.models import PeriodicTask
+        from datetime import timedelta
+        from django.utils import timezone
+
+        task = PeriodicTask.objects.filter(name='Scraping automatique toutes les 6h').first()
+
+        if task:
+            next_run = None
+            if task.enabled:
+                # Utiliser la méthode schedule de Celery Beat pour calculer la prochaine exécution
+                now = timezone.now()
+
+                if task.crontab:
+                    # Si c'est un crontab, calculer la prochaine exécution basée sur le crontab
+                    # Le crontab est: 0 */6 * * * (minute 0, toutes les 6h)
+                    # Donc: 00:00, 06:00, 12:00, 18:00 (en timezone du crontab)
+
+                    # Convertir en timezone du crontab (Europe/Paris)
+                    import pytz
+                    # task.crontab.timezone peut être soit un string soit un objet ZoneInfo
+                    if isinstance(task.crontab.timezone, str):
+                        tz = pytz.timezone(task.crontab.timezone)
+                    else:
+                        # C'est déjà un objet timezone
+                        tz = task.crontab.timezone
+                    now_local = now.astimezone(tz)
+
+                    # Trouver la prochaine heure parmi 0, 6, 12, 18
+                    current_hour = now_local.hour
+                    next_hours = [0, 6, 12, 18]
+
+                    # Trouver la prochaine heure
+                    next_hour = None
+                    for h in next_hours:
+                        if h > current_hour or (h == current_hour and now_local.minute < 1):
+                            next_hour = h
+                            break
+
+                    # Si aucune heure trouvée aujourd'hui, prendre la première heure demain
+                    if next_hour is None:
+                        next_run = now_local.replace(hour=next_hours[0], minute=0, second=0, microsecond=0) + timedelta(days=1)
+                    else:
+                        next_run = now_local.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+
+                    # Convertir en UTC pour l'API
+                    next_run = next_run.astimezone(pytz.UTC).isoformat()
+
+                elif task.interval:
+                    # Si c'est un interval, ajouter l'intervalle à la dernière exécution
+                    if task.last_run_at:
+                        next_run = task.last_run_at + timedelta(seconds=task.interval.every)
+                        next_run = next_run.isoformat()
+                    else:
+                        # Si jamais exécutée, exécuter maintenant
+                        next_run = now.isoformat()
+
+            return Response({
+                'success': True,
+                'enabled': task.enabled,
+                'last_run_at': task.last_run_at.isoformat() if task.last_run_at else None,
+                'next_run_at': next_run
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Tâche de scraping automatique non trouvée'
+            }, status=404)
+
+    except Exception as e:
+        print(f"❌ Error getting auto scraping status: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def toggle_auto_scraping(request):
+    """
+    Active/Désactive le scraping automatique
+    Body: {"enabled": true/false}
+    """
+    try:
+        from django_celery_beat.models import PeriodicTask
+
+        enabled = request.data.get('enabled')
+
+        if enabled is None:
+            return Response({
+                'success': False,
+                'error': 'Le paramètre "enabled" est requis'
+            }, status=400)
+
+        task = PeriodicTask.objects.filter(name='Scraping automatique toutes les 6h').first()
+
+        if task:
+            task.enabled = enabled
+            task.save()
+
+            status_text = 'activé' if enabled else 'désactivé'
+            print(f"✅ Scraping automatique {status_text}")
+
+            return Response({
+                'success': True,
+                'enabled': task.enabled,
+                'message': f'Scraping automatique {status_text}'
+            })
+        else:
+            return Response({
+                'success': False,
+                'error': 'Tâche de scraping automatique non trouvée'
+            }, status=404)
+
+    except Exception as e:
+        print(f"❌ Error toggling auto scraping: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({
+            'success': False,
+            'error': str(e)
+        }, status=500)

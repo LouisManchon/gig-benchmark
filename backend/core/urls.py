@@ -11,6 +11,8 @@ urlpatterns = [
     path('scraping/tennis/all', scraping_views.scrape_all_tennis, name='scrape-tennis'),
     path('scraping/progress', scraping_views.update_scraping_progress, name='scraping-progress'),
     path('scraping/status', scraping_views.get_scraping_progress, name='scraping-status'),
+    path('scraping/auto/status', scraping_views.get_auto_scraping_status, name='auto-scraping-status'),
+    path('scraping/auto/toggle', scraping_views.toggle_auto_scraping, name='toggle-auto-scraping'),
     path('sports', data_views.get_distinct_sports),
     path('bookmakers', data_views.get_distinct_bookmakers),
     path('leagues', data_views.get_distinct_leagues),

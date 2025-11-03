@@ -150,8 +150,6 @@ class Odd(models.Model):
             models.Index(fields=['scraped_at'], name='idx_odds_scraped'),
             models.Index(fields=['bookmaker'], name='idx_odds_bookmaker'),
         ]
-        # ✅ Ajoute ça pour dire à Django de ne pas gérer ces champs
-        managed = False  # Django ne créera pas/modifiera pas cette table
 
     def __str__(self):
         trj_str = f" (TRJ: {self.trj}%)" if self.trj else ""

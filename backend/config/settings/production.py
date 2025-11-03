@@ -14,6 +14,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',  # ✅ Ajoute ça
     'core',
+    'services',  # ✅ Ajoute l'app services pour les commandes de scraping
     # ... autres apps
 ]
 
