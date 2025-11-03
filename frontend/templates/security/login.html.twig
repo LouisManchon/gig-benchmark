@@ -25,33 +25,22 @@
         <div id="error-message" style="display: none; color: red; padding: 10px; margin-bottom: 15px; background: #ffe6e6; border-radius: 5px;"></div>
 
         {# 🔴 AJOUT DE L'ID "login-form" #}
-        <form id="login-form" class="auth-form">
-            <div class="form-group">
-                <label for="username">Nom d'utilisateur</label>
-                <input
-                    type="text"
-                    id="username"
-                    name="username"
-                    class="form-control"
-                    required
-                    autofocus
-                >
-            </div>
+        <form id="login-form"
+            class="auth-form"
+            action="{{ path('app_login') }}"
+            method="post">
+        <div class="form-group">
+            <label for="username">Nom d'utilisateur</label>
+            <input type="text" id="username" name="username" class="form-control" required autofocus>
+        </div>
 
-            <div class="form-group">
-                <label for="password">Mot de passe</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    class="form-control"
-                    required
-                >
-            </div>
+        <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
 
-            <button type="submit" class="auth-btn">Se connecter</button>
+        <button type="submit" class="auth-btn">Se connecter</button>
         </form>
-
         <div class="auth-footer">
             <p>Pas encore de compte ? <a href="{{ path('app_register') }}">S'inscrire</a></p>
         </div>
@@ -59,8 +48,7 @@
 </div>
 {% endblock %}
 
-{# 🔴 AJOUT DU SCRIPT LOGIN.JS #}
 {% block javascripts %}
     {{ parent() }}
-    <script src="{{ asset('js/login.js') }}"></script>
+    {# <script src="{{ asset('js/login.js') }}"></script> #}
 {% endblock %}

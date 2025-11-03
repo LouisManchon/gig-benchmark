@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Service\AuthService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse; // ✅ AJOUT
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
@@ -21,9 +22,9 @@ class SecurityController extends AbstractController
     #[Route('/login', name: 'app_login')]
     public function login(Request $request, SessionInterface $session): Response
     {
-        // Si déjà connecté, redirige vers home
+        // Si déjà connecté, redirige vers /odds
         if ($session->has('jwt_token')) {
-            return $this->redirectToRoute('home');
+            return $this->redirectToRoute('odds_list');
         }
 
         if ($request->isMethod('POST')) {
@@ -32,13 +33,18 @@ class SecurityController extends AbstractController
 
             $result = $this->authService->login($username, $password);
 
-            if ($result['success']) {
-                // 🔥 STOCKE LES TOKENS EN SESSION
-                $session->set('jwt_token', $result['access']);
-                $session->set('jwt_refresh', $result['refresh']);
+            if (!empty($result['success'])) {
+                // ✅ Stocker les tokens côté serveur (session)
+                $session->set('jwt_token', $result['access'] ?? null);
+                $session->set('jwt_refresh', $result['refresh'] ?? null);
+
+                // Optionnel: si ton API renvoie un user, tu peux le stocker aussi
+                if (!empty($result['user'])) {
+                    $session->set('user', $result['user']);
+                }
 
                 $this->addFlash('success', 'Login successful!');
-                return $this->redirectToRoute('home');
+                return $this->redirectToRoute('odds_list');
             }
 
             $this->addFlash('error', $result['error'] ?? 'Invalid credentials');
@@ -60,7 +66,7 @@ class SecurityController extends AbstractController
 
             $result = $this->authService->register($userData);
 
-            if ($result['success']) {
+            if (!empty($result['success'])) {
                 $this->addFlash('success', 'Registration successful! You can now login.');
                 return $this->redirectToRoute('app_login');
             }
@@ -78,14 +84,29 @@ class SecurityController extends AbstractController
         return $this->render('security/register.html.twig');
     }
 
-    #[Route('/logout', name: 'app_logout')]
+    #[Route('/logout', name: 'app_logout', methods: ['GET'])]
     public function logout(SessionInterface $session): Response
     {
-        // 🔥 SUPPRIME LES TOKENS DE LA SESSION
+        // ✅ Nettoyage session
         $session->remove('jwt_token');
         $session->remove('jwt_refresh');
+        $session->remove('user');
 
         $this->addFlash('success', 'Logout successful');
-        return $this->redirectToRoute('app_login');
+    return $this->redirectToRoute('app_login');
+    }
+
+    // ✅ NOUVEAU: endpoint que la navbar va interroger
+    #[Route('/auth/status', name: 'auth_status', methods: ['GET'])]
+    public function status(Request $request): JsonResponse
+    {
+        $session = $request->getSession();
+        $loggedIn = $session->has('jwt_token');
+
+        return $this->json([
+            'loggedIn' => $loggedIn,
+            // on renvoie un mini profil si dispo (optionnel)
+            'user' => $loggedIn ? $session->get('user') : null,
+        ]);
     }
 }

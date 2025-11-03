@@ -13,10 +13,15 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class OddsController extends AbstractController
 {
-    #[Route('/', name: 'home')]
     #[Route('/odds', name: 'odds_list')]
     public function index(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        if (!$session->has('jwt_token')) {
+            $this->addFlash('error', 'Vous devez être connecté pour accéder à cette page.');
+            return $this->redirectToRoute('app_login');
+        }
+        $token = $session->get('jwt_token');
+
         // Initialisation par défaut
         $form = null;
         $oddsWithEvolution = [];
