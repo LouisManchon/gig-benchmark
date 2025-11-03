@@ -616,30 +616,68 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
 
-        const leaguesBySport = {
-            'football': [
-                { value: 'all', label: 'All leagues' },
-                { value: 'ligue_1', label: 'Ligue 1' },
-                { value: 'premier_league', label: 'Premier League' },
-                { value: 'la_liga', label: 'La Liga' },
-                { value: 'serie_a', label: 'Serie A' },
-                { value: 'bundesliga', label: 'Bundesliga' },
-                { value: 'champions_league', label: 'UEFA Champions League'}
-            ],
-            'basketball': [
-                { value: 'all', label: 'All leagues' },
-                { value: 'nba', label: 'NBA' },
-                { value: 'euroleague', label: 'Euroleague' }
-            ],
-            'rugby': [
-                { value: 'all', label: 'All leagues' },
-                { value: 'top14', label: 'Top 14' }
-            ],
-            'tennis': [
-                { value: 'all', label: 'All leagues' },
-                { value: 'atp', label: 'ATP' }
-            ]
+        // Load leagues dynamically from API
+        let leaguesBySport = {
+            'football': [{ value: 'all', label: 'All leagues' }],
+            'basketball': [{ value: 'all', label: 'All leagues' }],
+            'rugby': [{ value: 'all', label: 'All leagues' }],
+            'tennis': [{ value: 'all', label: 'All leagues' }]
         };
+
+        // Fetch leagues from API
+        (async function loadLeagues() {
+            try {
+                const response = await fetch('/api/leagues');
+                const leagues = await response.json();
+
+                // Reset with "All leagues"
+                leaguesBySport = {
+                    'football': [{ value: 'all', label: 'All leagues' }],
+                    'basketball': [{ value: 'all', label: 'All leagues' }],
+                    'rugby': [{ value: 'all', label: 'All leagues' }],
+                    'tennis': [{ value: 'all', label: 'All leagues' }]
+                };
+
+                leagues.forEach(league => {
+                    const sportCode = league.sport?.code;
+                    let sportKey = null;
+
+                    if (sportCode === 'FOOT') sportKey = 'football';
+                    else if (sportCode === 'BASK') sportKey = 'basketball';
+                    else if (sportCode === 'RUGB') sportKey = 'rugby';
+                    else if (sportCode === 'TENN') sportKey = 'tennis';
+
+                    if (sportKey) {
+                        const leagueValue = league.name.toLowerCase()
+                            .replace(/[àáâãäå]/g, 'a')
+                            .replace(/[èéêë]/g, 'e')
+                            .replace(/[ìíîï]/g, 'i')
+                            .replace(/[òóôõö]/g, 'o')
+                            .replace(/[ùúûü]/g, 'u')
+                            .replace(/'/g, '')
+                            .replace(/\s+/g, '_')
+                            .replace(/[^a-z0-9_]/g, '');
+
+                        leaguesBySport[sportKey].push({
+                            value: leagueValue,
+                            label: league.name
+                        });
+                    }
+                });
+
+                // Sort alphabetically (skip first "All leagues")
+                Object.keys(leaguesBySport).forEach(sport => {
+                    const allLeagues = leaguesBySport[sport][0];
+                    const otherLeagues = leaguesBySport[sport].slice(1).sort((a, b) => a.label.localeCompare(b.label));
+                    leaguesBySport[sport] = [allLeagues, ...otherLeagues];
+                });
+
+                console.log('✅ Leagues loaded from API:', Object.keys(leaguesBySport).map(k => `${k}: ${leaguesBySport[k].length - 1}`));
+
+            } catch (error) {
+                console.error('❌ Error loading leagues:', error);
+            }
+        })();
 
         sportSelect.addEventListener('change', function() {
             const sport = this.value;
