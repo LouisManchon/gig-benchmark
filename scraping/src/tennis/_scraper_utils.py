@@ -129,7 +129,7 @@ def scrape_league(league_name, league_url, display_name=None):
         # SCRAPER TOUS LES MATCHS
         matches_scraped = 0
         odds_sent = 0
-        scraper_name = 'tennis.{league_name}'
+        scraper_name = f"tennis.{league_name.lower().replace(' ', '_').replace(chr(39), '')}"
 
         for i, match_url in enumerate(match_links, 1):
             print(f"\n{'='*60}")

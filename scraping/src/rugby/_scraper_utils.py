@@ -136,7 +136,7 @@ def scrape_league(league_name, league_url, display_name=None):
             print(f"MATCH {i}/{len(match_links)}")
             print(f"{'='*60}")
 
-            scraper_name = 'rugby.{league_name}'
+            scraper_name = f"rugby.{league_name.lower().replace(' ', '_').replace(chr(39), '')}"
 
             try:
                 driver.get(match_url)
