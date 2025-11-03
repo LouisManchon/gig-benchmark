@@ -1,0 +1,12 @@
+# scraping/src/tennis/roland_garros_doubles_w.py
+
+from ._scraper_utils import scrape_league
+
+
+def scrape_roland_garros_doubles_w():
+    """Scrape Roland-Garros Doubles W"""
+    return scrape_league(
+        league_name="Roland-Garros Doubles W",
+        league_url="https://www.coteur.com/cotes/tennis/monde/wta-roland-garros-doubles",
+        display_name="Roland-Garros Doubles W"
+    )

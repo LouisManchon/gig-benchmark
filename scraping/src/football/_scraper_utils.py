@@ -1,3 +1,5 @@
+# scraping/src/football/scraper_utils.py
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,8 +15,9 @@ import requests
 
 BACKEND_URL = os.environ.get('BACKEND_URL', 'http://backend:8000')
 
+
 def safe_float(val):
-    """Convert value in float"""
+    """Convertit une valeur en float de manière sécurisée"""
     try:
         return float(val)
     except (ValueError, TypeError):
@@ -48,17 +51,37 @@ def send_progress_update(scraper_name, data):
     except Exception as e:
         print(f"⚠️ Erreur inattendue: {type(e).__name__}: {e}")
 
-def scrape_euroleague():
-    """Scrape all nba matches"""
-    
+def scrape_league(league_name, league_url, display_name=None):
+    """
+    Fonction générique pour scraper n'importe quelle ligue
+
+    Args:
+        league_name: Nom de la ligue (ex: "Bundesliga", "Ligue 1")
+        league_url: URL de la page de la ligue sur coteur.com
+        display_name: Nom à afficher (optionnel, sinon utilise league_name)
+
+    Returns:
+        dict: Résultats du scraping (status, matches_scraped, odds_sent)
+    """
+
+    if display_name is None:
+        display_name = league_name
+
     print("\n" + "="*60)
-    print("DÉMARRAGE DU SCRAPING - EUROLEAGUE")
+    print(f"DÉMARRAGE DU SCRAPING - {display_name}")
     print("="*60)
-    
+
+    options = webdriver.ChromeOptions()
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+    options.add_argument('--disable-dev-shm-usage')
+    options.add_argument('--disable-gpu')
+    options.add_argument('--window-size=1920,1080')
+
+    driver = None
     connection = None
     channel = None
-    driver = None
-    
+
     try:
         # Connexion RabbitMQ
         credentials = pika.PlainCredentials('gig_user', 'gig_password_2025')
@@ -69,41 +92,28 @@ def scrape_euroleague():
         channel.queue_declare(queue='odds', durable=True)
         print("Connecté à RabbitMQ")
 
-        print("\n📋 Configuration Chrome...")
-        options = webdriver.ChromeOptions()
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
-        options.add_argument('--disable-dev-shm-usage')
-        options.add_argument('--disable-gpu')
-        options.add_argument('--window-size=1920,1080')
-        options.page_load_strategy = 'eager'
-        print("✅ Options configurées")
-        
         # Connexion Selenium Remote
         driver = webdriver.Remote(
             command_executor='http://selenium:4444/wd/hub',
             options=options
         )
-        driver.set_page_load_timeout(60)
-        driver.set_script_timeout(60)
-        driver.implicitly_wait(10)
-        print("Connect to Selenium")
+        driver.set_page_load_timeout(30)
+        print("Connecté à Selenium")
 
-        # Go to page Euroleague
-        url = "https://www.coteur.com/cotes/basket/europe/euroligue"
-        print(f"\n{url}")
-        driver.get(url)
+        # Aller sur la page de la ligue
+        print(f"\n{league_url}")
+        driver.get(league_url)
         time.sleep(3)
-        
-        # Accept cookies
+
+        # Accepter les cookies
         try:
             cookie_btn = driver.find_element(By.ID, "cookie_consent_use_all_cookies")
             cookie_btn.click()
             time.sleep(1)
         except:
             pass
-        
-        # retrieve all matches links
+
+        # Récupérer TOUS les liens de matchs
         link_elements = driver.find_elements(By.CSS_SELECTOR, "a.text-decoration-none")
         match_links = []
         for elem in link_elements:
@@ -112,26 +122,26 @@ def scrape_euroleague():
                 if href.startswith("/"):
                     href = "https://www.coteur.com" + href
                 match_links.append(href)
-        
+
         match_links = list(set(match_links))
         total_matches = len(match_links)
         print(f"{total_matches} matches found\n")
-        
-        # SCRAP ALL MATCHES
+
+        # SCRAPER TOUS LES MATCHS
         matches_scraped = 0
         odds_sent = 0
-        scraper_name = 'basketball.euroleague'
+        scraper_name = 'football.{league_name}'
 
         for i, match_url in enumerate(match_links, 1):
             print(f"\n{'='*60}")
             print(f"MATCH {i}/{len(match_links)}")
             print(f"{'='*60}")
-            
+
             try:
                 driver.get(match_url)
-                time.sleep(5)
-                
-                # Retrieve match title
+                time.sleep(3)
+
+                # Récupérer le titre du match
                 try:
                     title_element = driver.find_element(By.CSS_SELECTOR, ".page-title")
                     title = title_element.text.strip()
@@ -148,8 +158,8 @@ def scrape_euroleague():
                 except:
                     print("Pas de titre, skip")
                     continue
-                
-                # Retrieve date
+
+                # Récupérer la date (optionnel)
                 date_obj = None
                 try:
                     span_elems = driver.find_elements(By.CSS_SELECTOR, "span.small")
@@ -164,8 +174,8 @@ def scrape_euroleague():
                                 break
                 except:
                     pass
-                
-                # Retrieve all bookmakers
+
+                # Récupérer TOUS les bookmakers
                 rows = driver.find_elements(By.CSS_SELECTOR, ".d-flex[data-name]")
                 bookmakers_count = len(rows)
                 print(f"{bookmakers_count} bookmakers")
@@ -178,48 +188,48 @@ def scrape_euroleague():
                     'current_match': title,
                     'bookmakers_count': bookmakers_count
                 })
-                
+
                 for row in rows:
                     bookmaker = row.get_attribute("data-name")
                     odds = row.find_elements(By.CSS_SELECTOR, ".border.odds-col")
-                    
-                    if len(odds) >= 2:
+
+                    if len(odds) >= 3:
                         cote_dict = {
                             "cote_1": safe_float(odds[0].text.strip()),
-                            "cote_N": None,
-                            "cote_2": safe_float(odds[1].text.strip())
+                            "cote_N": safe_float(odds[1].text.strip()),
+                            "cote_2": safe_float(odds[2].text.strip())
                         }
-                        
-                        # Calculate RTP
-                        if cote_dict["cote_1"] and cote_dict["cote_2"]:
-                            trj = round((1 / (1/cote_dict["cote_1"] + 1/cote_dict["cote_2"])) * 100, 2)
+
+                        # Calculer le TRJ
+                        if cote_dict["cote_1"] and cote_dict["cote_N"] and cote_dict["cote_2"]:
+                            trj = round((1 / (1/cote_dict["cote_1"] + 1/cote_dict["cote_N"] + 1/cote_dict["cote_2"])) * 100, 2)
                         else:
                             trj = None
-                        
-                        # Create message
+
+                        # Créer le message
                         message = {
                             "match": title,
                             "match_date": date_obj.strftime("%Y-%m-%d %H:%M:%S") if date_obj else None,
                             "bookmaker": bookmaker,
                             "cotes": cote_dict,
                             "trj": trj,
-                            "league": "Euroleague",
-                            "sport": "basketball"
+                            "league": league_name,
+                            "sport": "football"
                         }
-                        
-                        # Send to RabbitMQ
+
+                        # Envoyer à RabbitMQ
                         channel.basic_publish(
                             exchange='',
                             routing_key='odds',
                             body=json.dumps(message),
                             properties=pika.BasicProperties(delivery_mode=2)
                         )
-                        
+
                         print(f"{bookmaker}: {cote_dict['cote_1']}/{cote_dict['cote_N']}/{cote_dict['cote_2']} (TRJ: {trj}%)")
                         odds_sent += 1
-                
+
                 matches_scraped += 1
-                
+
             except Exception as e:
                 print(f"Erreur: {e}")
                 continue
@@ -232,26 +242,26 @@ def scrape_euroleague():
             'matches_scraped': matches_scraped,
             'odds_sent': odds_sent
         })
-        
+
         print(f"\n{'='*60}")
         print(f"SCRAPING TERMINÉ")
         print(f"{'='*60}")
         print(f"Matchs scrapés: {matches_scraped}/{len(match_links)}")
         print(f"Cotes envoyées: {odds_sent}")
         print(f"{'='*60}\n")
-        
+
         return {
             "status": "success",
             "matches_scraped": matches_scraped,
             "odds_sent": odds_sent
         }
-        
+
     except Exception as e:
         print(f"\nERREUR CRITIQUE: {e}")
         import traceback
         traceback.print_exc()
         return None
-        
+
     finally:
         if driver:
             driver.quit()
