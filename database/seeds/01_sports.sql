@@ -6,13 +6,14 @@
 
 
 -- Sports disponibles dans l'application
-INSERT INTO Sports (code, name) VALUES
-  ('FOOT', 'Football'),
-  ('BASK', 'Basketball'),
-  ('TENN', 'Tennis'),
-  ('RUGB', 'Rugby')
-ON DUPLICATE KEY UPDATE 
-  name = VALUES(name);
+INSERT INTO Sports (code, name, created_at, updated_at) VALUES
+  ('FOOT', 'Football', NOW(), NOW()),
+  ('BASK', 'Basketball', NOW(), NOW()),
+  ('TENN', 'Tennis', NOW(), NOW()),
+  ('RUGB', 'Rugby', NOW(), NOW())
+ON DUPLICATE KEY UPDATE
+  name = VALUES(name),
+  updated_at = NOW();
 
 -- Vérification
 SELECT 'Sports inserted successfully!' as Status;

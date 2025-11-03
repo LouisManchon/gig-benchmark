@@ -8,31 +8,31 @@
 -- =============================================
 -- FOOTBALL - Ligues principales
 -- =============================================
-INSERT INTO Leagues (sport_id, code, name, country) VALUES
+INSERT INTO Leagues (sport_id, code, name, country, created_at, updated_at) VALUES
   -- France
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'LIGUE_1', 'Ligue 1', 'France'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'LIGUE_2', 'Ligue 2', 'France'),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'LIGUE_1', 'Ligue 1', 'France', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'LIGUE_2', 'Ligue 2', 'France', NOW(), NOW()),
   
   -- Angleterre
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'PREMIER_LEAGUE', 'Premier League', 'England'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'CHAMPIONSHIP', 'Championship', 'England'),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'PREMIER_LEAGUE', 'Premier League', 'England', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'CHAMPIONSHIP', 'Championship', 'England', NOW(), NOW()),
   
   -- Espagne
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'LA_LIGA', 'La Liga', 'Spain'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'SEGUNDA', 'Segunda División', 'Spain'),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'LA_LIGA', 'La Liga', 'Spain', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'SEGUNDA', 'Segunda División', 'Spain', NOW(), NOW()),
   
   -- Italie
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'SERIE_A', 'Serie A', 'Italy'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'SERIE_B', 'Serie B', 'Italy'),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'SERIE_A', 'Serie A', 'Italy', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'SERIE_B', 'Serie B', 'Italy', NOW(), NOW()),
   
   -- Allemagne
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'BUNDESLIGA', 'Bundesliga', 'Germany'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'BUNDESLIGA_2', '2. Bundesliga', 'Germany'),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'BUNDESLIGA', 'Bundesliga', 'Germany', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'BUNDESLIGA_2', '2. Bundesliga', 'Germany', NOW(), NOW()),
   
   -- Compétitions européennes
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'UCL', 'UEFA Champions League', 'Europe'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'UEL', 'UEFA Europa League', 'Europe'),
-  ((SELECT id FROM Sports WHERE code='FOOT'), 'UECL', 'UEFA Conference League', 'Europe')
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'UCL', 'UEFA Champions League', 'Europe', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'UEL', 'UEFA Europa League', 'Europe', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='FOOT'), 'UECL', 'UEFA Conference League', 'Europe', NOW(), NOW())
 ON DUPLICATE KEY UPDATE 
   name = VALUES(name),
   country = VALUES(country);
@@ -40,10 +40,10 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- BASKETBALL - Ligues principales
 -- =============================================
-INSERT INTO Leagues (sport_id, code, name, country) VALUES
-  ((SELECT id FROM Sports WHERE code='BASK'), 'NBA', 'NBA', 'USA'),
-  ((SELECT id FROM Sports WHERE code='BASK'), 'EUROLEAGUE', 'EuroLeague', 'Europe'),
-  ((SELECT id FROM Sports WHERE code='BASK'), 'LNB', 'LNB Pro A', 'France')
+INSERT INTO Leagues (sport_id, code, name, country, created_at, updated_at) VALUES
+  ((SELECT id FROM Sports WHERE code='BASK'), 'NBA', 'NBA', 'USA', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='BASK'), 'EUROLEAGUE', 'EuroLeague', 'Europe', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='BASK'), 'LNB', 'LNB Pro A', 'France', NOW(), NOW())
 ON DUPLICATE KEY UPDATE 
   name = VALUES(name),
   country = VALUES(country);
@@ -51,10 +51,10 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- TENNIS - Tournois principaux
 -- =============================================
-INSERT INTO Leagues (sport_id, code, name, country) VALUES
-  ((SELECT id FROM Sports WHERE code='TENN'), 'ATP', 'ATP Tour', 'International'),
-  ((SELECT id FROM Sports WHERE code='TENN'), 'WTA', 'WTA Tour', 'International'),
-  ((SELECT id FROM Sports WHERE code='TENN'), 'GRAND_SLAM', 'Grand Slam', 'International')
+INSERT INTO Leagues (sport_id, code, name, country, created_at, updated_at) VALUES
+  ((SELECT id FROM Sports WHERE code='TENN'), 'ATP', 'ATP Tour', 'International', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='TENN'), 'WTA', 'WTA Tour', 'International', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='TENN'), 'GRAND_SLAM', 'Grand Slam', 'International', NOW(), NOW())
 ON DUPLICATE KEY UPDATE 
   name = VALUES(name),
   country = VALUES(country);
@@ -62,11 +62,11 @@ ON DUPLICATE KEY UPDATE
 -- =============================================
 -- RUGBY - Ligues principales
 -- =============================================
-INSERT INTO Leagues (sport_id, code, name, country) VALUES
-  ((SELECT id FROM Sports WHERE code='RUGB'), 'TOP14', 'Top 14', 'France'),
-  ((SELECT id FROM Sports WHERE code='RUGB'), 'PRO_D2', 'Pro D2', 'France'),
-  ((SELECT id FROM Sports WHERE code='RUGB'), 'PREMIERSHIP', 'Premiership Rugby', 'England'),
-  ((SELECT id FROM Sports WHERE code='RUGB'), 'URC', 'United Rugby Championship', 'Europe')
+INSERT INTO Leagues (sport_id, code, name, country, created_at, updated_at) VALUES
+  ((SELECT id FROM Sports WHERE code='RUGB'), 'TOP14', 'Top 14', 'France', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='RUGB'), 'PRO_D2', 'Pro D2', 'France', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='RUGB'), 'PREMIERSHIP', 'Premiership Rugby', 'England', NOW(), NOW()),
+  ((SELECT id FROM Sports WHERE code='RUGB'), 'URC', 'United Rugby Championship', 'Europe', NOW(), NOW())
 ON DUPLICATE KEY UPDATE 
   name = VALUES(name),
   country = VALUES(country);
