@@ -554,4 +554,86 @@ class OddsController extends AbstractController
             ]);
         }
     }
+
+    #[Route('/api/scraping/auto/status', name: 'auto_scraping_status', methods: ['GET'])]
+    public function getAutoScrapingStatus(Request $request): Response
+    {
+        try {
+            $backendUrl = $_ENV['BACKEND_API_URL'] ?? 'http://backend:8000/api';
+            $url = $backendUrl . '/scraping/auto/status';
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'GET',
+                    'timeout' => 5,
+                    'ignore_errors' => true
+                ]
+            ]);
+
+            $response = @file_get_contents($url, false, $context);
+
+            if ($response) {
+                $data = json_decode($response, true);
+                return $this->json($data);
+            }
+
+            return $this->json([
+                'success' => false,
+                'error' => 'Backend unreachable'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    #[Route('/api/scraping/auto/toggle', name: 'toggle_auto_scraping', methods: ['POST'])]
+    public function toggleAutoScraping(Request $request): Response
+    {
+        try {
+            $data = json_decode($request->getContent(), true);
+            $enabled = $data['enabled'] ?? null;
+
+            if ($enabled === null) {
+                return $this->json([
+                    'success' => false,
+                    'error' => 'enabled parameter required'
+                ], 400);
+            }
+
+            $backendUrl = $_ENV['BACKEND_API_URL'] ?? 'http://backend:8000/api';
+            $url = $backendUrl . '/scraping/auto/toggle';
+
+            $context = stream_context_create([
+                'http' => [
+                    'method' => 'POST',
+                    'header' => 'Content-Type: application/json',
+                    'content' => json_encode(['enabled' => $enabled]),
+                    'timeout' => 5,
+                    'ignore_errors' => true
+                ]
+            ]);
+
+            $response = @file_get_contents($url, false, $context);
+
+            if ($response) {
+                $responseData = json_decode($response, true);
+                return $this->json($responseData);
+            }
+
+            return $this->json([
+                'success' => false,
+                'error' => 'Backend unreachable'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return $this->json([
+                'success' => false,
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

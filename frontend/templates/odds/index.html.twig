@@ -26,6 +26,29 @@
                     <span class="last-scraping-date">{{ lastScrapingDate|date('d/m/Y H:i') }}</span>
                 </div>
             {% endif %}
+
+            <!-- Auto Scraping Toggle -->
+            <div class="auto-scraping-control">
+                <div class="auto-scraping-header">
+                    <span class="auto-scraping-label">Auto Scraping (6h)</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="auto-scraping-toggle">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="auto-scraping-status" id="auto-scraping-status">
+                    <span class="status-indicator"></span>
+                    <span class="status-text">Loading...</span>
+                </div>
+                <div class="next-run-info" id="next-run-info" style="display: none;">
+                    <svg class="clock-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span class="next-run-text" id="next-run-text">Next: --:--</span>
+                </div>
+            </div>
+
             <form class="aside-form" id="scraping-form" method="post" action="{{ path('scraping_trigger') }}">
                 <div class="form-group">
                     <label for="sport-scraping">Sport</label>

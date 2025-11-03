@@ -895,4 +895,109 @@ document.addEventListener('DOMContentLoaded', function() {
         // Vérifier si un scraping est en cours au chargement
         checkAndResumeScrapingOnLoad();
     }
+
+    // ============================================
+    // AUTO SCRAPING TOGGLE
+    // ============================================
+    const autoScrapingToggle = document.getElementById('auto-scraping-toggle');
+    const autoScrapingStatus = document.getElementById('auto-scraping-status');
+    const statusIndicator = autoScrapingStatus?.querySelector('.status-indicator');
+    const statusText = autoScrapingStatus?.querySelector('.status-text');
+
+    async function loadAutoScrapingStatus() {
+        try {
+            const response = await fetch('/api/scraping/auto/status');
+            const data = await response.json();
+
+            if (data.success && autoScrapingToggle) {
+                autoScrapingToggle.checked = data.enabled;
+                updateStatusUI(data.enabled, data.next_run_at);
+            }
+        } catch (error) {
+            console.error('Error loading auto scraping status:', error);
+            if (statusText) statusText.textContent = 'Error loading status';
+        }
+    }
+
+    function updateStatusUI(enabled, nextRunAt = null) {
+        if (!statusIndicator || !statusText) return;
+
+        if (enabled) {
+            statusIndicator.classList.add('active');
+            statusIndicator.classList.remove('inactive');
+            statusText.textContent = 'Active';
+        } else {
+            statusIndicator.classList.add('inactive');
+            statusIndicator.classList.remove('active');
+            statusText.textContent = 'Inactive';
+        }
+
+        // Afficher la prochaine exécution
+        const nextRunInfo = document.getElementById('next-run-info');
+        const nextRunText = document.getElementById('next-run-text');
+
+        if (nextRunInfo && nextRunText && enabled && nextRunAt) {
+            const nextDate = new Date(nextRunAt);
+            const now = new Date();
+            const diffMs = nextDate - now;
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+            let timeText = '';
+            if (diffHours > 0) {
+                timeText = `in ${diffHours}h${diffMins > 0 ? diffMins + 'm' : ''}`;
+            } else if (diffMins > 0) {
+                timeText = `in ${diffMins}m`;
+            } else {
+                timeText = 'soon...';
+            }
+
+            nextRunText.textContent = `Next: ${timeText}`;
+            nextRunInfo.style.display = 'flex';
+        } else if (nextRunInfo) {
+            nextRunInfo.style.display = 'none';
+        }
+    }
+
+    if (autoScrapingToggle) {
+        autoScrapingToggle.addEventListener('change', async function() {
+            const enabled = this.checked;
+
+            try {
+                // Désactiver le toggle pendant la requête
+                this.disabled = true;
+
+                const response = await fetch('/api/scraping/auto/toggle', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ enabled })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Recharger le statut complet pour avoir la prochaine exécution
+                    await loadAutoScrapingStatus();
+                    console.log('✅ Auto scraping:', data.enabled ? 'enabled' : 'disabled');
+                } else {
+                    console.error('❌ Error toggling auto scraping:', data.error);
+                    // Revert the toggle
+                    this.checked = !enabled;
+                    if (statusText) statusText.textContent = 'Error';
+                }
+            } catch (error) {
+                console.error('❌ Network error:', error);
+                // Revert the toggle
+                this.checked = !enabled;
+                if (statusText) statusText.textContent = 'Network error';
+            } finally {
+                this.disabled = false;
+            }
+        });
+
+        // Charger le statut au démarrage
+        loadAutoScrapingStatus();
+    }
 })();

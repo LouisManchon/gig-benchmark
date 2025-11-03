@@ -352,3 +352,141 @@
 .checkbox-inline input[type="checkbox"] {
     margin-right: 8px;
 }
+
+/* ========================================
+   🔄 AUTO SCRAPING TOGGLE
+   ======================================== */
+
+.auto-scraping-control {
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    padding: 12px;
+    border-radius: 8px;
+    border-left: 3px solid #7136c4;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.auto-scraping-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.auto-scraping-label {
+    font-size: 12px;
+    color: #080e2d;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Toggle Switch - Style iOS moderne */
+.toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 52px;
+    height: 28px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 28px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-slider:before {
+    position: absolute;
+    content: "";
+    height: 22px;
+    width: 22px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 50%;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    box-shadow: 0 0 8px rgba(40, 167, 69, 0.4);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+.toggle-switch input:disabled + .toggle-slider {
+    background-color: #e0e0e0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.toggle-switch:hover .toggle-slider:not([disabled]) {
+    box-shadow: 0 0 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Auto Scraping Status */
+.auto-scraping-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #666;
+}
+
+.status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #ccc;
+}
+
+.status-indicator.active {
+    background-color: #28a745;
+    animation: pulse-dot 2s infinite;
+}
+
+.status-indicator.inactive {
+    background-color: #dc3545;
+}
+
+.status-text {
+    font-weight: 500;
+}
+
+/* Next Run Info */
+.next-run-info {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 10.5px;
+    color: #7136c4;
+}
+
+.clock-icon {
+    flex-shrink: 0;
+    color: #7136c4;
+}
+
+.next-run-text {
+    font-weight: 600;
+    font-family: "Host Grotesk", monospace;
+}
