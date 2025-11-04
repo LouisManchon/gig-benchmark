@@ -1,0 +1,46 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Login{% endblock %}
+
+{% block body %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <h1>Login</h1>
+        </div>
+
+        {% for label, messages in app.flashes %}
+            {% for message in messages %}
+                <div class="alert alert-{{ label }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        <div id="error-message" style="display: none; color: red; padding: 10px; margin-bottom: 15px; background: #ffe6e6; border-radius: 5px;"></div>
+
+        <form id="login-form"
+            class="auth-form"
+            action="{{ path('app_login') }}"
+            method="post">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="form-control" required autofocus>
+        </div>
+
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="form-control" required>
+        </div>
+
+        <button type="submit" class="auth-btn">Login</button>
+        </form>
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="{{ path('app_register') }}">Sign up</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    {# <script src="{{ asset('js/login.js') }}"></script> #}
+{% endblock %}

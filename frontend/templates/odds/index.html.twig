@@ -3,19 +3,6 @@
 {% block title %}Odds List{% endblock %}
 
 {% block body %}
-<header>
-    <div class="title-container">
-        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="site-logo">
-        <h1>Benchmark</h1>
-    </div>    
-    {% for label, messages in app.flashes %}
-        {% for message in messages %}
-            <div class="alert alert-{{ label }}">{{ message }}</div>
-        {% endfor %}
-    {% endfor %}
-</header>
-
-
 <div class="container">
     <!-- aside for scraping -->
         <aside id="sidebar">
@@ -70,7 +57,7 @@
                 
                 <button type="submit" class="scraping-btn" id="start-scraping-btn">
                     <span class="btn-text">Start Scraping</span>
-                    <span class="btn-loader" style="display: none;">En cours...</span>
+                    <span class="btn-loader" style="display: none;">In progress...</span>
                 </button>
 
                 <button type="button" class="reset-scraping-btn" id="reset-scraping-btn" style="display: none;">

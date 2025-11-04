@@ -31,3 +31,8 @@ services:
     App\Service\OddsApiService:
         arguments:
             $apiBaseUrl: '%env(BACKEND_API_URL)%'
+
+    # Configuration du service Auth
+    App\Service\AuthService:
+        arguments:
+            $apiBaseUrl: '%env(BACKEND_API_URL)%'
