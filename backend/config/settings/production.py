@@ -4,7 +4,8 @@ from .base import *
 # CORS settings
 
 INSTALLED_APPS = [
-    'django.contrib.admin',
+    'accounts.apps.AccountsConfig',  # App auth AVANT admin
+    'django.contrib.admin',  # Réactivé après migrations
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -12,10 +13,11 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_celery_beat',
     'rest_framework',
-    'corsheaders',  # ✅ Ajoute ça
+    'rest_framework_simplejwt',  # À installer
+    'drf_yasg',  # À installer
+    'corsheaders',
     'core',
-    'services',  # ✅ Ajoute l'app services pour les commandes de scraping
-    # ... autres apps
+    'services',
 ]
 
 MIDDLEWARE = [
