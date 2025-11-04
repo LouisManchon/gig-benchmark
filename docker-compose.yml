@@ -273,7 +273,7 @@ services:
       APP_SECRET: ${SYMFONY_SECRET}
       APP_ENV: dev
       APP_DEBUG: 1
-      BACKEND_API_URL: http://backend:8000/api
+      BACKEND_API_URL: http://backend:8000
       PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT}
       PHP_MAX_EXECUTION_TIME: ${PHP_MAX_EXECUTION_TIME}
     depends_on:
