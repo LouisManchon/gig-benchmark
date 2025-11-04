@@ -6,7 +6,6 @@
     background-color: #080e2d;
     box-shadow: 0px 30px 67px -40px black;
     padding: 0;
-    position: sticky;
     top: 0;
     z-index: 1000;
     font-family: "Host Grotesk", sans-serif;
@@ -104,7 +103,6 @@
 .btn-logout:hover {
     background-color: #7136c4;
     color: white;
-    transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(113, 54, 196, 0.3);
 }
 
@@ -116,7 +114,6 @@
 
 .btn-login:hover {
     background-color: white;
-    color: #080e2d;
 }
 
 .btn-register {
@@ -126,7 +123,6 @@
 }
 
 .btn-register:hover {
-    transform: translateY(-2px);
     box-shadow: 0 4px 10px rgba(113, 54, 196, 0.4);
 }
 
@@ -150,7 +146,6 @@
     z-index: 9999;
     min-width: 280px;
     max-width: 400px;
-    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 @keyframes slideInRight {
@@ -253,11 +248,8 @@
     gap: 15px;
 }
 
-/* 🟢 Statut "Logged in" */
 .user-status {
     color: white;
-    font-weight: 600;
-    font-size: 0.95rem;
     padding: 8px 16px;
     background: rgba(46, 213, 115, 0.2); /* Vert doux */
     border-radius: 20px;
@@ -277,9 +269,8 @@
 /* 🔴 Bouton Logout */
 .btn-logout {
     color: white;
-    font-weight: 600;
     text-decoration: none;
-    padding: 10px 24px;
+    padding: 8px 20px;
     background: rgba(255, 71, 87, 0.2); /* Rouge doux */
     border-radius: 25px;
     border: 2px solid rgba(255, 71, 87, 0.3);
@@ -292,16 +283,14 @@
 .btn-logout:hover {
     background: rgba(255, 71, 87, 0.3);
     border-color: rgba(255, 71, 87, 0.5);
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(255, 71, 87, 0.3);
 }
 
 /* 🔵 Bouton Login */
 .btn-login {
     color: white;
-    font-weight: 600;
     text-decoration: none;
-    padding: 10px 24px;
+    padding: 8px 20px;
     background: rgba(52, 152, 219, 0.2); /* Bleu doux */
     border-radius: 25px;
     border: 2px solid rgba(52, 152, 219, 0.3);
@@ -313,16 +302,14 @@
 .btn-login:hover {
     background: rgba(52, 152, 219, 0.3);
     border-color: rgba(52, 152, 219, 0.5);
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
 }
 
 /* 🟣 Bouton Register */
 .btn-register {
     color: white;
-    font-weight: 600;
     text-decoration: none;
-    padding: 10px 24px;
+    padding: 8px 20px;
     background: rgba(155, 89, 182, 0.2); /* Violet doux */
     border-radius: 25px;
     border: 2px solid rgba(155, 89, 182, 0.3);
@@ -334,6 +321,5 @@
 .btn-register:hover {
     background: rgba(155, 89, 182, 0.3);
     border-color: rgba(155, 89, 182, 0.5);
-    transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
 }

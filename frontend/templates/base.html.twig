@@ -25,7 +25,7 @@
     {% endblock %}
 </head>
 <body>
-    <!-- Navbar (toujours affichée) -->
+    <!-- Navbar -->
     <nav class="top-navbar">
         <div class="navbar-container">
             <a href="{{ path('odds_list') }}" class="navbar-brand">
@@ -34,9 +34,6 @@
             </a>
 
             <div class="navbar-user">
-                <span class="user-status" id="user-logged-in" style="display: none;">
-                    🟢 Logged in
-                </span>
 
                 <a href="#" class="btn-logout" id="btn-logout" style="display: none;">
                     Logout

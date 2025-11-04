@@ -5,7 +5,7 @@
     align-items: flex-start;
     min-height: calc(100vh - 80px); /* Minus navbar height */
     padding: 40px 20px 20px 20px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(90deg, #080e2d, #7136c4, #57e5ca);
 }
 
 .auth-card {
@@ -63,7 +63,7 @@
 
 .auth-form .form-control:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #7136c4;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
@@ -73,6 +73,7 @@
 }
 
 .auth-btn {
+    font-family: "Host Grotesk", sans-serif;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     padding: 14px 24px;
@@ -86,7 +87,7 @@
 }
 
 .auth-btn:hover {
-    transform: translateY(-2px);
+    transform: translateY(-1px);
     box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
 }
 
