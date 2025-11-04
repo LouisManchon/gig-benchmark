@@ -7,6 +7,7 @@ use App\Service\OddsApiService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
 
@@ -14,8 +15,15 @@ class OddsController extends AbstractController
 {
     #[Route('/', name: 'home')]
     #[Route('/odds', name: 'odds_list')]
-    public function index(Request $request, OddsApiService $apiService): Response
+    public function index(Request $request, OddsApiService $apiService, SessionInterface $session): Response
     {
+        if (!$session->has('jwt_token')) {
+            $this->addFlash('error', 'You must be logged in to access this page.');
+            return $this->redirectToRoute('app_login');
+        }
+
+        $token = $session->get('jwt_token');
+
         // Initialisation par défaut
         $form = null;
         $oddsWithEvolution = [];

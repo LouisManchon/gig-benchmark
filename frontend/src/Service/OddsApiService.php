@@ -17,25 +17,25 @@ class OddsApiService
 
     public function getDistinctSports(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/sports');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/api/sports');
         return $response->toArray();
     }
 
     public function getDistinctBookmakers(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/bookmakers');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/api/bookmakers');
         return $response->toArray();
     }
 
     public function getDistinctLeagues(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/leagues');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/api/leagues');
         return $response->toArray();
     }
 
     public function getDistinctMatches(): array
     {
-        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/matches');
+        $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/api/matches');
         return $response->toArray();
     }
 
@@ -62,7 +62,7 @@ class OddsApiService
             $queryParams['end'] = $filters['end'];
         }
 
-        $url = $this->apiBaseUrl . '/odds';
+        $url = $this->apiBaseUrl . '/api/odds';
         if (!empty($queryParams)) {
             $url .= '?' . http_build_query($queryParams);
         }
@@ -96,7 +96,7 @@ class OddsApiService
             $queryParams['end'] = $filters['end'];
         }
 
-        $url = $this->apiBaseUrl . '/avg-trj';
+        $url = $this->apiBaseUrl . '/api/avg-trj';
         if (!empty($queryParams)) {
             $url .= '?' . http_build_query($queryParams);
         }
@@ -131,7 +131,7 @@ class OddsApiService
                 $queryParams['end'] = $filters['end'];
             }
 
-            $url = $this->apiBaseUrl . '/odds-with-evolution';
+            $url = $this->apiBaseUrl . '/api/odds-with-evolution';
             if (!empty($queryParams)) {
                 $url .= '?' . http_build_query($queryParams);
             }
@@ -170,7 +170,7 @@ class OddsApiService
                 $queryParams['end'] = $filters['end'];
             }
 
-            $url = $this->apiBaseUrl . '/avg-trj-with-evolution';
+            $url = $this->apiBaseUrl . '/api/avg-trj-with-evolution';
             if (!empty($queryParams)) {
                 $url .= '?' . http_build_query($queryParams);
             }
@@ -190,7 +190,7 @@ class OddsApiService
     public function triggerScraping(string $scraper): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/scraping/trigger', [
+            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/api/scraping/trigger', [
                 'json' => ['scraper' => $scraper]
             ]);
 
@@ -207,7 +207,7 @@ class OddsApiService
     public function scrapeAllFootball(): array
     {
         try {
-            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/scraping/football/all');
+            $response = $this->httpClient->request('POST', $this->apiBaseUrl . '/api/scraping/football/all');
             return $response->toArray();
         } catch (\Exception $e) {
             error_log('❌ API Error (scrapeAllFootball): ' . $e->getMessage());
@@ -221,7 +221,7 @@ class OddsApiService
     public function getLastScrapingDate(): ?string
     {
         try {
-            $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/last-scraping-date');
+            $response = $this->httpClient->request('GET', $this->apiBaseUrl . '/api/last-scraping-date');
             $data = $response->toArray();
             return $data['last_scraping_date'] ?? null;
         } catch (\Exception $e) {
