@@ -2,9 +2,15 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Vérifier si on est sur la page odds et que le formulaire n'a pas été soumis
     const urlParams = new URLSearchParams(window.location.search);
-    const formSubmitted = urlParams.has('sport') || urlParams.has('bookmaker') ||
-                          urlParams.has('match') || urlParams.has('league') ||
-                          urlParams.has('dateRange');
+
+    // Chercher les paramètres qui commencent par 'odds_filter'
+    let formSubmitted = false;
+    for (let [key, value] of urlParams.entries()) {
+        if (key.startsWith('odds_filter[') && value) {
+            formSubmitted = true;
+            break;
+        }
+    }
 
     // Si le formulaire a été soumis, ne pas charger en AJAX (déjà chargé par PHP)
     if (formSubmitted) {

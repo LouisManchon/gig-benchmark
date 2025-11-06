@@ -100,6 +100,10 @@ class OddsController extends AbstractController
 
             $form->handleRequest($request);
             error_log("⏱️ Form created: " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
+            error_log("🔍 Form submitted: " . ($form->isSubmitted() ? 'YES' : 'NO'));
+            if ($form->isSubmitted()) {
+                error_log("🔍 Form valid: " . ($form->isValid() ? 'YES' : 'NO'));
+            }
 
             // --- Préparation des filtres ---
             $filters = [];
@@ -119,7 +123,12 @@ class OddsController extends AbstractController
                 $leagueFilter = $form->get('league')->getData();
                 $dateRange = $form->get('dateRange')->getData();
 
-                error_log('🔍 Match filter value: ' . var_export($matchFilter, true));
+                error_log('🔍 Form data received:');
+                error_log('   → Sport: ' . var_export($sportFilter, true));
+                error_log('   → Bookmaker: ' . var_export($bookmakerFilter, true));
+                error_log('   → League: ' . var_export($leagueFilter, true));
+                error_log('   → Match: ' . var_export($matchFilter, true));
+                error_log('   → DateRange: ' . var_export($dateRange, true));
 
                 // Sport
                 if ($sportFilter) {
@@ -136,14 +145,10 @@ class OddsController extends AbstractController
                 
                 // Match (simple)
                 if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
-                    error_log('🔍 MATCH FILTER DETECTED: ' . $matchFilter);
-                    
                     if (is_numeric($matchFilter)) {
                         $filters['match'] = $matchFilter;
-                        error_log('   → Filtering by ID: ' . $matchFilter);
                     } else {
                         $filters['match_name'] = $matchFilter;
-                        error_log('   → Filtering by name: ' . $matchFilter);
                     }
                 }
                 
@@ -196,7 +201,8 @@ class OddsController extends AbstractController
             $allOdds = [];
             $avgTrjRaw = [];
 
-            if ($form->isSubmitted() && !empty($filters)) {
+            if ($form->isSubmitted()) {
+                // Le formulaire a été soumis, charger les données avec les filtres (même s'ils sont vides)
                 $allOdds = $apiService->getOddsWithEvolution($filters);
 
                 error_log("⏱️ API called (odds): " . round((microtime(true) - $startTime) * 1000, 2) . "ms");
