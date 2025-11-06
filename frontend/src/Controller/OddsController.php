@@ -521,40 +521,56 @@ class OddsController extends AbstractController
     {
         try {
             $filters = [];
-            
+
             $sportFilter = $request->query->get('sport');
             $bookmakerFilter = $request->query->get('bookmaker');
             $matchFilter = $request->query->get('match');
             $leagueFilter = $request->query->get('league');
             $dateRange = $request->query->get('dateRange');
 
+            error_log('🔍 Export CSV - Filters received:');
+            error_log('   → Sport: ' . var_export($sportFilter, true));
+            error_log('   → Bookmaker: ' . var_export($bookmakerFilter, true));
+            error_log('   → League: ' . var_export($leagueFilter, true));
+            error_log('   → Match: ' . var_export($matchFilter, true));
+            error_log('   → DateRange: ' . var_export($dateRange, true));
+
+            // Sport
             if ($sportFilter && $sportFilter !== 'all') {
                 $filters['sport'] = $sportFilter;
             }
-            
+
+            // Bookmaker (peut être une chaîne avec virgules)
             if ($bookmakerFilter && $bookmakerFilter !== 'all') {
                 $filters['bookmaker'] = $bookmakerFilter;
             }
-            
-            if ($matchFilter && $matchFilter !== 'all') {
-                $filters['match'] = $matchFilter;
+
+            // Match (peut être ID numérique ou nom)
+            if ($matchFilter && $matchFilter !== 'all' && $matchFilter !== '') {
+                if (is_numeric($matchFilter)) {
+                    $filters['match'] = $matchFilter;
+                } else {
+                    $filters['match_name'] = $matchFilter;
+                }
             }
-            
+
+            // League (peut être une chaîne avec virgules)
             if ($leagueFilter && $leagueFilter !== 'all') {
                 $filters['league'] = $leagueFilter;
             }
 
+            // Date range
             if ($dateRange && trim($dateRange) !== '') {
                 if (str_contains($dateRange, ' to ')) {
                     $dates = explode(' to ', $dateRange);
                 } else {
                     $dates = [$dateRange];
                 }
-                
+
                 try {
                     $start = new \DateTime(trim($dates[0]), new \DateTimeZone('UTC'));
                     $start->setTime(0, 0, 0);
-                    
+
                     if (isset($dates[1])) {
                         $end = new \DateTime(trim($dates[1]), new \DateTimeZone('UTC'));
                         $end->setTime(23, 59, 59);
@@ -562,13 +578,15 @@ class OddsController extends AbstractController
                         $end = clone $start;
                         $end->setTime(23, 59, 59);
                     }
-                    
+
                     $filters['start'] = $start->format('Y-m-d H:i:s');
                     $filters['end'] = $end->format('Y-m-d H:i:s');
                 } catch (\Exception $e) {
                     error_log('Date error: ' . $e->getMessage());
                 }
             }
+
+            error_log('🔍 Export CSV - Final filters: ' . json_encode($filters));
 
             // Utilise la méthode normale pour l'export (pas besoin de l'évolution dans le CSV)
             $allOdds = $apiService->getOddsWithFilters($filters);

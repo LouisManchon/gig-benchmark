@@ -203,8 +203,20 @@ document.addEventListener('DOMContentLoaded', function() {
         // Initialiser au chargement
         console.log('🚀 Initial match list update');
         updateMatchList();
+
+        // Restaurer la valeur du match depuis l'URL (après updateMatchList)
+        setTimeout(() => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const matchFromUrl = urlParams.get('odds_filter[match]');
+
+            if (matchFromUrl && matchFromUrl !== '' && window.matchChoices) {
+                console.log('🔄 Restoring match from URL:', matchFromUrl);
+                window.matchChoices.setChoiceByValue(matchFromUrl);
+                console.log('✅ Match restored from URL');
+            }
+        }, 100);
     }
-    
+
     // ============================================
     // 3. FLATPICKR AVEC RACCOURCIS
     // ============================================
@@ -407,52 +419,54 @@ document.addEventListener('DOMContentLoaded', function() {
     // ============================================
     const exportBtn = document.getElementById('export-csv-btn');
     const oddsFilterForm = document.querySelector('form[name="odds_filter"]');
-    
+
     if (exportBtn && oddsFilterForm) {
         exportBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             const params = new URLSearchParams();
-            
+
             const sport = oddsFilterForm.querySelector('[name="odds_filter[sport]"]')?.value;
             const match = oddsFilterForm.querySelector('[name="odds_filter[match]"]')?.value;
             const dateRange = oddsFilterForm.querySelector('[name="odds_filter[dateRange]"]')?.value;
-            
+
             if (sport && sport !== '' && sport !== 'all') {
                 params.append('sport', sport);
             }
-            
+
             if (match && match !== '' && match !== 'all') {
                 params.append('match', match);
             }
-            
+
             if (dateRange && dateRange !== '') {
                 params.append('dateRange', dateRange);
             } else {
-                alert('⚠️ Veuillez sélectionner une période');
+                alert('⚠️ Please select a date range');
                 return;
             }
-            
-            const bookmakerCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[bookmaker][]"]:checked');
-            if (bookmakerCheckboxes.length > 0) {
-                const bookmakerValues = Array.from(bookmakerCheckboxes)
-                    .map(cb => cb.value)
-                    .filter(v => v !== 'all')
+
+            // Bookmaker - C'est un <select multiple>, pas des checkboxes
+            const bookmakerSelect = oddsFilterForm.querySelector('select[name="odds_filter[bookmaker][]"]');
+            if (bookmakerSelect) {
+                const bookmakerValues = Array.from(bookmakerSelect.selectedOptions)
+                    .map(option => option.value)
+                    .filter(v => v !== '' && v !== 'all')
                     .join(',');
-                
+
                 if (bookmakerValues) {
                     params.append('bookmaker', bookmakerValues);
                 }
             }
-            
-            const leagueCheckboxes = oddsFilterForm.querySelectorAll('input[name="odds_filter[league][]"]:checked');
-            if (leagueCheckboxes.length > 0) {
-                const leagueValues = Array.from(leagueCheckboxes)
-                    .map(cb => cb.value)
-                    .filter(v => v !== 'all')
+
+            // League - C'est un <select multiple>, pas des checkboxes
+            const leagueSelect = oddsFilterForm.querySelector('select[name="odds_filter[league][]"]');
+            if (leagueSelect) {
+                const leagueValues = Array.from(leagueSelect.selectedOptions)
+                    .map(option => option.value)
+                    .filter(v => v !== '' && v !== 'all')
                     .join(',');
-                
+
                 if (leagueValues) {
                     params.append('league', leagueValues);
                 }
