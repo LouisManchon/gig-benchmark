@@ -84,14 +84,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             console.log('✅ Choices initialized on match');
 
-            // 👇 Écouter les changements de sélection
+            // 👇 Listen to selection changes
             matchSelect.addEventListener('change', function() {
                 const selectedValue = matchSelect.value;
                 const selectedText = matchSelect.options[matchSelect.selectedIndex]?.text || 'All matches';
                 console.log('✅ Match selected:', { value: selectedValue, text: selectedText });
             }, true);
 
-            // Charger les données des matchs et initialiser le filtrage
+            // Load match data and initialize filtering
             initializeMatchFilter();
         }
     }
@@ -124,8 +124,8 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('❌ matchChoices not initialized');
             return;
         }
-        
-        // Fonction pour mettre à jour la liste des matchs
+
+        // Function to update the match list
         function updateMatchList() {
             const sportSelect = document.querySelector('select[name="odds_filter[sport]"]');
             const selectedSport = sportSelect ? sportSelect.value : null;
@@ -134,11 +134,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 : [];
             
             console.log('🔍 Filtering matches:', { sport: selectedSport, leagues: selectedLeagues });
-            
-            // Filtrer les matchs
+
+            // Filter matches
             let filteredMatches = allMatches;
-            
-            // Filtre par sport
+
+            // Filter by sport
             if (selectedSport && selectedSport !== 'all' && selectedSport !== '') {
                 filteredMatches = filteredMatches.filter(match => {
                     const matchSportId = match.league?.sport?.id;
@@ -146,8 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 console.log('   → After sport filter:', filteredMatches.length);
             }
-            
-            // Filtre par ligues
+
+            // Filter by leagues
             if (selectedLeagues.length > 0) {
                 filteredMatches = filteredMatches.filter(match => {
                     const matchLeagueId = match.league?.id;
@@ -155,8 +155,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
                 console.log('   → After league filter:', filteredMatches.length);
             }
-            
-            // Préparer les choix pour Choices.js
+
+            // Prepare choices for Choices.js
             const choicesArray = [
                 { value: '', label: 'All matches', selected: false }
             ];
@@ -175,14 +175,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             console.log('📋 Updating choices with', choicesArray.length, 'options');
 
-            // Mettre à jour Choices.js
+            // Update Choices.js
             window.matchChoices.clearStore();
             window.matchChoices.setChoices(choicesArray, 'value', 'label', true);
 
             console.log('✅ Match choices updated');
         }
-        
-        // Écouter les changements de sport
+
+        // Listen to sport changes
         const sportSelect = document.querySelector('select[name="odds_filter[sport]"]');
         if (sportSelect) {
             sportSelect.addEventListener('change', function() {
@@ -190,8 +190,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMatchList();
             });
         }
-        
-        // Écouter les changements de ligue
+
+        // Listen to league changes
         if (window.leagueChoices) {
             const leagueElement = window.leagueChoices.passedElement.element;
             leagueElement.addEventListener('change', function() {
@@ -199,12 +199,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateMatchList();
             });
         }
-        
-        // Initialiser au chargement
+
+        // Initialize on load
         console.log('🚀 Initial match list update');
         updateMatchList();
 
-        // Restaurer la valeur du match depuis l'URL (après updateMatchList)
+        // Restore match value from URL (after updateMatchList)
         setTimeout(() => {
             const urlParams = new URLSearchParams(window.location.search);
             const matchFromUrl = urlParams.get('odds_filter[match]');
@@ -218,7 +218,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ============================================
-    // 3. FLATPICKR AVEC RACCOURCIS
+    // 3. FLATPICKR WITH SHORTCUTS
     // ============================================
     setTimeout(function() {
         const dateInput = document.querySelector('.js-date-range');
@@ -340,29 +340,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 // ============================================
-    // GESTION SOUMISSION FORMULAIRE
+    // FORM SUBMISSION HANDLING
     // ============================================
     const oddsFilterFor = document.querySelector('form[name="odds_filter"]');
     if (oddsFilterFor) {
         oddsFilterFor.addEventListener('submit', function(e) {
             console.log('🚀 Form submitting...');
-            
-            // Vérifier la valeur du match
+
+            // Check match value
             if (window.matchChoices) {
                 const matchValue = window.matchChoices.getValue(true);
                 console.log('📋 Match value from Choices:', matchValue);
                 
                 const matchSelect = document.querySelector('select[name="odds_filter[match]"]');
                 console.log('📋 Match select value:', matchSelect ? matchSelect.value : 'null');
-                
-                // Si différents, forcer la mise à jour
+
+                // If different, force update
                 if (matchSelect && matchValue && matchSelect.value !== matchValue) {
                     console.log('⚠️ Values differ! Updating select...');
                     matchSelect.value = matchValue;
                 }
             }
-            
-            // Log tous les champs
+
+            // Log all fields
             const formData = new FormData(this);
             console.log('📤 Form data being sent:');
             for (let [key, value] of formData.entries()) {
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Bookmaker - C'est un <select multiple>, pas des checkboxes
+            // Bookmaker - It's a <select multiple>, not checkboxes
             const bookmakerSelect = oddsFilterForm.querySelector('select[name="odds_filter[bookmaker][]"]');
             if (bookmakerSelect) {
                 const bookmakerValues = Array.from(bookmakerSelect.selectedOptions)
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // League - C'est un <select multiple>, pas des checkboxes
+            // League - It's a <select multiple>, not checkboxes
             const leagueSelect = oddsFilterForm.querySelector('select[name="odds_filter[league][]"]');
             if (leagueSelect) {
                 const leagueValues = Array.from(leagueSelect.selectedOptions)
@@ -478,7 +478,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ============================================
-// GESTION DU SCRAPING
+// SCRAPING MANAGEMENT
 // ============================================
 (function() {
     'use strict';
@@ -519,7 +519,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let isSubmitting = false;
 
         // ============================================
-        // SAUVEGARDE & RESTAURATION DE L'ÉTAT
+        // STATE SAVE & RESTORE
         // ============================================
         function saveScrapingState(state) {
             sessionStorage.setItem('scrapingState', JSON.stringify(state));
@@ -534,40 +534,40 @@ document.addEventListener('DOMContentLoaded', function() {
             sessionStorage.removeItem('scrapingState');
         }
 
-        // Vérifier au chargement si un scraping est en cours
+        // Check on load if a scraping is in progress
         function checkAndResumeScrapingOnLoad() {
             const state = getScrapingState();
 
             if (state && state.inProgress) {
-                console.log('🔄 Scraping en cours détecté, reconnexion...');
+                console.log('🔄 Scraping in progress detected, reconnecting...');
 
-                // Afficher la progress bar
+                // Show progress bar
                 if (progressContainer) {
                     progressContainer.style.display = 'block';
                 }
 
-                // Désactiver le bouton
+                // Disable the button
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     if (btnText) btnText.style.display = 'none';
                     if (btnLoader) btnLoader.style.display = 'inline';
                 }
 
-                // Activer l'indicateur visuel
+                // Enable visual indicator
                 const sidebarTitle = document.querySelector('.sidebar-title');
                 if (sidebarTitle) {
                     sidebarTitle.classList.add('scraping-active');
                 }
 
-                // Afficher le bouton reset
+                // Show reset button
                 toggleResetButton(true);
 
-                // Reprendre le polling
+                // Resume polling
                 resumeScrapingProgress(state.sport, state.leagues, state.currentLeagueIndex);
             }
         }
 
-        // Activer/désactiver l'indicateur visuel
+        // Enable/disable visual indicator
         function setScrapingActiveIndicator(active) {
             const sidebarTitle = document.querySelector('.sidebar-title');
             if (sidebarTitle) {
@@ -579,7 +579,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Afficher/masquer le bouton reset
+        // Show/hide reset button
         function toggleResetButton(show) {
             const resetBtn = document.getElementById('reset-scraping-btn');
             if (resetBtn) {
@@ -587,20 +587,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Fonction pour réinitialiser complètement le scraping
+        // Function to completely reset scraping
         function forceResetScraping() {
             console.log('🔄 Force reset scraping...');
 
-            // Nettoyer le sessionStorage
+            // Clean sessionStorage
             clearScrapingState();
 
-            // Arrêter le polling
+            // Stop polling
             if (pollingInterval) {
                 clearInterval(pollingInterval);
                 pollingInterval = null;
             }
 
-            // Réinitialiser l'UI
+            // Reset UI
             setScrapingActiveIndicator(false);
             toggleResetButton(false);
 
@@ -620,7 +620,7 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log('✅ Scraping reset complete');
         }
 
-        // Ajouter l'event listener sur le bouton reset
+        // Add event listener on reset button
         const resetScrapingBtn = document.getElementById('reset-scraping-btn');
         if (resetScrapingBtn) {
             resetScrapingBtn.addEventListener('click', function() {
@@ -669,7 +669,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             .replace(/[òóôõö]/g, 'o')
                             .replace(/[ùúûü]/g, 'u')
                             .replace(/'/g, '')
-                            .replace(/\s+/g, '_')
+                            .replace(/[-\s]+/g, '_')
                             .replace(/[^a-z0-9_]/g, '');
 
                         leaguesBySport[sportKey].push({
@@ -754,7 +754,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     progressMessage.textContent = '❌ Error';
                 }
 
-                // En cas d'erreur, nettoyer et réactiver
+                // In case of error, clean and reactivate
                 clearScrapingState();
                 setScrapingActiveIndicator(false);
                 toggleResetButton(false);
@@ -775,15 +775,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (bookmakersCount) bookmakersCount.textContent = '-';
             if (progressMessage) progressMessage.textContent = 'Initializing...';
         }
-        
+
         async function startScrapingWithProgress(sport, leagues) {
-            // Activer l'indicateur visuel
+            // Enable visual indicator
             setScrapingActiveIndicator(true);
 
-            // Afficher le bouton reset
+            // Show reset button
             toggleResetButton(true);
 
-            // Sauvegarder l'état initial
+            // Save initial state
             saveScrapingState({
                 inProgress: true,
                 sport: sport,
@@ -795,7 +795,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const league = leagues[i];
                 const scraper = `${sport}.${league}`;
 
-                // Mettre à jour l'état avec la league actuelle
+                // Update state with current league
                 saveScrapingState({
                     inProgress: true,
                     sport: sport,
@@ -833,7 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
 
-            // Nettoyage de l'état à la fin
+            // Clean up state at the end
             clearScrapingState();
             setScrapingActiveIndicator(false);
             toggleResetButton(false);
@@ -842,13 +842,13 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => window.location.reload(), 3000);
         }
 
-        // Nouvelle fonction pour reprendre le scraping après rechargement
+        // New function to resume scraping after reload
         async function resumeScrapingProgress(sport, leagues, startIndex) {
             for (let i = startIndex; i < leagues.length; i++) {
                 const league = leagues[i];
                 const scraper = `${sport}.${league}`;
 
-                // Mettre à jour l'état
+                // Update state
                 saveScrapingState({
                     inProgress: true,
                     sport: sport,
@@ -860,11 +860,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     progressMessage.textContent = `🔄 ${league.replace('_', ' ')}...`;
                 }
 
-                // Vérifier si le scraping est déjà en cours côté serveur
+                // Check if scraping is already in progress server-side
                 await pollScrapingProgress(scraper);
             }
 
-            // Nettoyage
+            // Cleanup
             clearScrapingState();
             setScrapingActiveIndicator(false);
             toggleResetButton(false);
@@ -942,9 +942,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         // ============================================
-        // INITIALISATION AU CHARGEMENT
+        // INITIALIZATION ON LOAD
         // ============================================
-        // Vérifier si un scraping est en cours au chargement
+        // Check if scraping is in progress on load
         checkAndResumeScrapingOnLoad();
     }
 
@@ -984,7 +984,7 @@ document.addEventListener('DOMContentLoaded', function() {
             statusText.textContent = 'Inactive';
         }
 
-        // Afficher la prochaine exécution
+        // Display next execution
         const nextRunInfo = document.getElementById('next-run-info');
         const nextRunText = document.getElementById('next-run-text');
 
@@ -1016,7 +1016,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const enabled = this.checked;
 
             try {
-                // Désactiver le toggle pendant la requête
+                // Disable toggle during request
                 this.disabled = true;
 
                 const response = await fetch('/api/scraping/auto/toggle', {
@@ -1030,7 +1030,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
 
                 if (data.success) {
-                    // Recharger le statut complet pour avoir la prochaine exécution
+                    // Reload full status to get next execution
                     await loadAutoScrapingStatus();
                     console.log('✅ Auto scraping:', data.enabled ? 'enabled' : 'disabled');
                 } else {
@@ -1049,7 +1049,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Charger le statut au démarrage
+        // Load status on startup
         loadAutoScrapingStatus();
     }
 })();

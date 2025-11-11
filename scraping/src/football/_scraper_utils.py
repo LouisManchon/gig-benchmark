@@ -265,5 +265,5 @@ def scrape_league(league_name, league_url, display_name=None):
     finally:
         if driver:
             driver.quit()
-        if connection:
+        if connection and connection.is_open:
             connection.close()

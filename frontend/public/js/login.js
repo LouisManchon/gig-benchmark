@@ -1,20 +1,20 @@
-console.log('🔐 Login script - Initialisation...');
+console.log('🔐 Login script - Initialization...');
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('🔄 DOM chargé pour login.js');
+    console.log('🔄 DOM loaded for login.js');
 
     const loginForm = document.getElementById('login-form');
 
     if (!loginForm) {
-        console.log('❌ Formulaire de connexion non trouvé');
+        console.log('❌ Login form not found');
         return;
     }
 
-    console.log('✅ Formulaire de login trouvé');
+    console.log('✅ Login form found');
 
     loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        console.log('📤 Envoi du formulaire de connexion...');
+        console.log('📤 Sending login form...');
 
         const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
@@ -33,24 +33,24 @@ document.addEventListener('DOMContentLoaded', function() {
                 })
             });
 
-            console.log('📡 Réponse reçue, status:', response.status);
+            console.log('📡 Response received, status:', response.status);
 
             if (!response.ok) {
                 const errorData = await response.json().catch(() => ({}));
-                console.error('❌ Erreur API:', errorData);
-                throw new Error(errorData.detail || 'Identifiants invalides');
+                console.error('❌ API Error:', errorData);
+                throw new Error(errorData.detail || 'Invalid credentials');
             }
 
             const data = await response.json();
             console.log('📦 Data:', data);
 
-            console.log('📦 Réponse complète:', data);
+            console.log('📦 Full response:', data);
 
             if (data.access_token || data.tokens?.access) {
-                console.log('✅ Connexion réussie !');
-                console.log('💾 Sauvegarde des tokens...');
+                console.log('✅ Login successful!');
+                console.log('💾 Saving tokens...');
 
-                // Gérer les 2 formats possibles de réponse
+                // Handle both possible response formats
                 const accessToken = data.access_token || data.tokens?.access;
                 const refreshToken = data.refresh_token || data.tokens?.refresh;
 
@@ -58,21 +58,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('refresh_token', refreshToken);
                 localStorage.setItem('user', JSON.stringify(data.user));
 
-                console.log('✅ Token sauvegardé:', accessToken.substring(0, 20) + '...');
-                console.log('🔄 Redirection vers /odds...');
+                console.log('✅ Token saved:', accessToken.substring(0, 20) + '...');
+                console.log('🔄 Redirecting to /odds...');
 
-                // Attendre 100ms pour être sûr que localStorage est bien écrit
+                // Wait 100ms to ensure localStorage is written
                 setTimeout(() => {
                     window.location.replace('/odds');
                 }, 100);
 
             } else {
-                throw new Error('Tokens manquants dans la réponse');
+                throw new Error('Missing tokens in response');
             }
 
         } catch (error) {
-            console.error('❌ Erreur de connexion:', error.message);
-            alert('Erreur : ' + error.message);
+            console.error('❌ Login error:', error.message);
+            alert('Error: ' + error.message);
         }
     });
 });

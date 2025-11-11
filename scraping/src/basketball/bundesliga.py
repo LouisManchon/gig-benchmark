@@ -3,7 +3,7 @@
 from ._scraper_utils import scrape_league
 
 
-def scrape_bundesliga():
+def scrape_bundesliga_basketball():
     """Scrape Bundesliga"""
     return scrape_league(
         league_name="Bundesliga",

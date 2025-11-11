@@ -210,7 +210,7 @@ from src.tennis.atp_athens import scrape_atp_athens
 
 # BASKETBALL
 from src.basketball.nba import scrape_nba
-from src.basketball.bundesliga import scrape_bundesliga
+from src.basketball.bundesliga import scrape_bundesliga_basketball
 from src.basketball.nbl import scrape_nbl
 from src.basketball.euroligue import scrape_euroligue
 from src.basketball.eurocup import scrape_eurocup
@@ -442,7 +442,7 @@ SCRAPERS_REGISTRY['tennis.wta_jiujiang'] = scrape_wta_jiujiang
 SCRAPERS_REGISTRY['tennis.wta_finals_riyadh'] = scrape_wta_finals_riyadh
 SCRAPERS_REGISTRY['tennis.atp_athens'] = scrape_atp_athens
 SCRAPERS_REGISTRY['basketball.nba'] = scrape_nba
-SCRAPERS_REGISTRY['basketball.bundesliga'] = scrape_bundesliga
+SCRAPERS_REGISTRY['basketball.bundesliga'] = scrape_bundesliga_basketball
 SCRAPERS_REGISTRY['basketball.nbl'] = scrape_nbl
 SCRAPERS_REGISTRY['basketball.euroligue'] = scrape_euroligue
 SCRAPERS_REGISTRY['basketball.eurocup'] = scrape_eurocup

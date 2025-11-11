@@ -1,9 +1,9 @@
-// Chargement asynchrone des odds
+// Asynchronous loading of odds
 document.addEventListener('DOMContentLoaded', function() {
-    // Vérifier si on est sur la page odds et que le formulaire n'a pas été soumis
+    // Check if we're on the odds page and the form hasn't been submitted
     const urlParams = new URLSearchParams(window.location.search);
 
-    // Chercher les paramètres qui commencent par 'odds_filter'
+    // Look for parameters starting with 'odds_filter'
     let formSubmitted = false;
     for (let [key, value] of urlParams.entries()) {
         if (key.startsWith('odds_filter[') && value) {
@@ -12,7 +12,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Si le formulaire a été soumis, ne pas charger en AJAX (déjà chargé par PHP)
+    // If the form was submitted, don't load via AJAX (already loaded by PHP)
     if (formSubmitted) {
         console.log('Form was submitted, skipping AJAX load');
         return;
@@ -20,20 +20,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
     console.log('Initial page load - loading data via AJAX...');
 
-    // Afficher un loader
+    // Show a loader
     showLoader();
 
-    // Récupérer la date du jour (déjà dans le champ dateRange)
+    // Get today's date (already in the dateRange field)
     const dateRangeInput = document.querySelector('input[name="odds_filter[dateRange]"]');
     const todayDate = dateRangeInput ? dateRangeInput.value : '';
 
-    // Construire l'URL de l'API - Utiliser le chemin Symfony (frontend-api pour éviter le conflit avec Django)
+    // Build the API URL - Use Symfony path (frontend-api to avoid conflict with Django)
     const baseUrl = window.location.origin;
     const apiUrl = baseUrl + '/frontend-api/odds/load' + (todayDate ? '?dateRange=' + encodeURIComponent(todayDate) : '');
 
     console.log('Fetching data from:', apiUrl);
 
-    // Appel AJAX
+    // AJAX call
     fetch(apiUrl)
         .then(response => {
             console.log('Response received:', response.status, response.statusText);
@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.log('   → Odds count:', data.odds ? data.odds.length : 0);
                 console.log('   → AvgTrj count:', data.avgTrj ? data.avgTrj.length : 0);
 
-                // Remplir la table avgTrj
+                // Fill the avgTrj table
                 fillAvgTrjTable(data.avgTrj);
 
-                // Remplir la table des odds
+                // Fill the odds table
                 fillOddsTable(data.odds);
 
-                // Masquer le loader
+                // Hide the loader
                 hideLoader();
             } else {
                 console.error('❌ Error loading data:', data.error);
@@ -73,13 +73,13 @@ document.addEventListener('DOMContentLoaded', function() {
 function showLoader() {
     const tables = document.querySelector('.tables');
     if (tables) {
-        // Ne pas remplacer innerHTML, juste ajouter le loader au début
+        // Don't replace innerHTML, just add the loader at the beginning
         const loader = document.createElement('div');
         loader.className = 'loader-container';
         loader.innerHTML = '<div class="loader"></div><p>Search data...</p>';
         tables.insertBefore(loader, tables.firstChild);
 
-        // Masquer les tables pendant le chargement
+        // Hide tables during loading
         const avgtrjTable = tables.querySelector('.avgtrj');
         const allMatchsTable = tables.querySelector('.all_matchs');
         if (avgtrjTable) avgtrjTable.style.display = 'none';
@@ -93,7 +93,7 @@ function hideLoader() {
         loaderContainer.remove();
     }
 
-    // Réafficher les tables
+    // Show tables again
     const tables = document.querySelector('.tables');
     if (tables) {
         const avgtrjTable = tables.querySelector('.avgtrj');

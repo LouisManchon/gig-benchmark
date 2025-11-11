@@ -1,6 +1,6 @@
 /**
  * 🚪 LOGOUT FUNCTIONALITY
- * Gère la déconnexion (localStorage + session Symfony)
+ * Handles logout (localStorage + Symfony session)
  */
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -10,16 +10,16 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
 
-            console.log('🚪 Déconnexion en cours...');
+            console.log('🚪 Logging out...');
 
-            // 1. Supprimer les tokens du localStorage
+            // 1. Remove tokens from localStorage
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
 
-            // 2. Message de confirmation
-            console.log('✅ Tokens supprimés du localStorage');
+            // 2. Confirmation message
+            console.log('✅ Tokens removed from localStorage');
 
-            // 3. Redirection vers login
+            // 3. Redirect to login
             window.location.href = '/login';
         });
     }
