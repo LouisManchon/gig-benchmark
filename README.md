@@ -41,20 +41,20 @@ The platform consists of **9 Docker services** orchestrated with Docker Compose:
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                     GIG-BENCHMARK PLATFORM                   │
+│                     GIG-BENCHMARK PLATFORM                  │
 ├─────────────────────────────────────────────────────────────┤
-│                                                               │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐   │
-│  │  Nginx   │  │   PHP    │  │ Backend  │  │  MySQL   │   │
-│  │  :10014  │◄─┤ Symfony  │◄─┤  Django  │◄─┤  :3307   │   │
-│  └──────────┘  └──────────┘  │  :8000   │  └──────────┘   │
-│                               └────┬─────┘                   │
-│                                    │                         │
-│  ┌──────────┐  ┌──────────┐  ┌───▼─────┐  ┌──────────┐   │
-│  │ Selenium │◄─┤ Scraping │◄─┤RabbitMQ │◄─┤ Consumer │   │
-│  │  :4444   │  │  Worker  │  │ :5672   │  │   Odds   │   │
-│  └──────────┘  └──────────┘  └─────────┘  └──────────┘   │
-│                                    ▲                         │
+│                                                             │
+│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
+│  │  Nginx   │  │   PHP    │  │ Backend  │  │  MySQL   │     │
+│  │  :10014  │◄─┤ Symfony  │◄─┤  Django  │◄─┤  :3307   │     │
+│  └──────────┘  └──────────┘  │  :8000   │  └──────────┘     │
+│                               └────┬─────┘                  │
+│                                    │                        │
+│  ┌──────────┐  ┌──────────┐  ┌───▼─────┐  ┌──────────┐      │
+│  │ Selenium │◄─┤ Scraping │◄─┤RabbitMQ │◄─┤ Consumer │      │
+│  │  :4444   │  │  Worker  │  │ :5672   │  │   Odds   │      │
+│  └──────────┘  └──────────┘  └─────────┘  └──────────┘      │
+│                                    ▲                        │
 │                               ┌────┴─────┐                  │
 │                               │  Celery  │                  │
 │                               │ Worker + │                  │
@@ -294,7 +294,7 @@ Here's how a complete scraping cycle works:
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│ 1. TRIGGER                                                  │
+│ 1. TRIGGER                                                 │
 │    User clicks "Scrape" → Frontend sends request           │
 │    OR: python send_task.py football.ligue_1                │
 └──────────────────┬─────────────────────────────────────────┘
@@ -307,7 +307,7 @@ Here's how a complete scraping cycle works:
                    │
                    ▼
 ┌────────────────────────────────────────────────────────────┐
-│ 3. SCRAPING WORKER                                          │
+│ 3. SCRAPING WORKER                                         │
 │    - Consumes message from "scraping_tasks"                │
 │    - Loads scraper: scraping/src/football/ligue_1.py       │
 │    - Connects to Selenium (port 4444)                      │
@@ -326,7 +326,7 @@ Here's how a complete scraping cycle works:
                    │
                    ▼
 ┌────────────────────────────────────────────────────────────┐
-│ 5. CONSUMER ODDS                                            │
+│ 5. CONSUMER ODDS                                           │
 │    - Consumes messages from "odds" queue                   │
 │    - Parses JSON data                                      │
 │    - Creates/updates database records:                     │
@@ -337,13 +337,13 @@ Here's how a complete scraping cycle works:
                    │
                    ▼
 ┌────────────────────────────────────────────────────────────┐
-│ 6. MYSQL DATABASE                                           │
+│ 6. MYSQL DATABASE                                          │
 │    Data stored and ready for display                       │
 └──────────────────┬─────────────────────────────────────────┘
                    │
                    ▼
 ┌────────────────────────────────────────────────────────────┐
-│ 7. FRONTEND DISPLAY                                         │
+│ 7. FRONTEND DISPLAY                                        │
 │    - User visits http://localhost:10014                    │
 │    - Frontend queries Django API                           │
 │    - Odds displayed with TRJ calculation                   │
@@ -414,31 +414,14 @@ import pika
 
 def scrape_new_league():
     """Scrape odds for New League"""
-    connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq'))
-    channel = connection.channel()
-
-    driver = setup_driver()
-
-    try:
-        # Your scraping logic here
-        driver.get('https://betting-site.com/new-league')
-
-        # Extract data
-        matches = []  # Extract matches
-
-        for match in matches:
-            publish_odds(channel, {
-                'match': match,
-                'odds': {},
-                'trj': 0.0
-            })
-    finally:
-        driver.quit()
-        if connection and connection.is_open:
-            connection.close()
+    return scrape_league(
+        league_name="New League",
+        league_url="https://www.coteur.com/NewLeague",
+        display_name="NewLeague"
+    )
 ```
 
-2. Register it in `scraping/src/registry.py`:
+2. Register it in `scraping/src/worker.py`:
 
 ```python
 SCRAPERS = {
@@ -462,6 +445,7 @@ Currently supported football leagues:
 - **Serie A** (Italy) - `football.serie_a`
 - **La Liga** (Spain) - `football.la_liga`
 
+And others more.
 ---
 
 ## 🤝 Contributing
@@ -478,17 +462,10 @@ Contributions are welcome! Please follow these guidelines:
 
 ---
 
-## 📝 License
-
-This project is licensed under the MIT License.
-
----
-
 ## 🐛 Known Issues
 
 - Scraping may fail if betting sites change their HTML structure
 - Large scraping jobs may require increasing Selenium memory limit
-- Some bookmakers may block automated access
 
 ---
 
@@ -499,3 +476,5 @@ For questions or support, please open an issue on GitHub.
 ---
 
 **Built with ❤️ using Django, Symfony, Selenium, RabbitMQ, and Docker**
+
+Dorine Lemée, Simon Paulin and Louis and Manchon.
