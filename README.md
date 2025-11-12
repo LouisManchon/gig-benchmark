@@ -4,6 +4,8 @@
 
 The platform uses a distributed microservices architecture with automated web scraping, message queue processing, and a modern web interface to provide real-time odds comparison and arbitrage opportunity detection.
 
+You can see our landing page for visual presentation : https://dougd0ug.github.io/gig-benchmark-project/
+
 ---
 
 ## 📋 Table of Contents
